@@ -212,10 +212,9 @@ function stopLiveClock() {
 }
 
 // ─── WC LIVE SCORE POLLING ──────────────────────────────────────────────
-var wcPollInterval = null;
 var wcPollTimer = null;
 function startWCPolling() {
-  if (wcPollInterval) return;
+  if (wcPollTimer) return;
   function poll() {
     Store.fetchWorldCupData().then(function(wc) {
       var hasLive = (wc.games || []).some(function(g){ return g.status === 'live'; });

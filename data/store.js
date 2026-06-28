@@ -190,7 +190,13 @@ var Store = (function() {
       }
       state.worldCup.groups = groups;
       state.worldCup.teams = teams;
-      state.worldCup.predictions = API.generateWCPredictions(state.worldCup.games);
+
+      var existingPreds = state.worldCup.predictions || [];
+      var newPreds = API.generateWCPredictions(state.worldCup.games);
+      var newIds = newPreds.map(function(p){ return p.id; });
+      var preserved = existingPreds.filter(function(p){ return newIds.indexOf(p.id) === -1; });
+      state.worldCup.predictions = preserved.concat(newPreds);
+
       notify();
       return state.worldCup;
     }).catch(function(e) {

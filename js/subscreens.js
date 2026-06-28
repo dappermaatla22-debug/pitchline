@@ -933,7 +933,23 @@ function renderWCSummary(game, pred) {
   html += '<button class="btn btn-secondary" onclick="savePrediction(\'' + (pred ? pred.id : '') + '\')">' + ICONS.bookmark + '</button>';
   html += '</div>';
 
-  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + game.home + '</div>' + renderFormGuide(['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + game.away + '</div>' + renderFormGuide(['D','W','L','W','W']) + '</div></div></div>';
+  var wcAll = Store.getWorldCup().games || [];
+  function getTeamForm(teamName) {
+    var results = [];
+    wcAll.filter(function(g){ return (g.status === 'finished') && (g.home === teamName || g.away === teamName); }).slice(-5).forEach(function(g) {
+      var isHome = g.home === teamName;
+      var hs = parseInt(g.homeScore) || 0;
+      var as = parseInt(g.awayScore) || 0;
+      if (hs === as) results.push('D');
+      else if ((isHome && hs > as) || (!isHome && as > hs)) results.push('W');
+      else results.push('L');
+    });
+    while (results.length < 5) results.push('');
+    return results;
+  }
+  var homeForm = getTeamForm(game.home);
+  var awayForm = getTeamForm(game.away);
+  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + game.home + '</div>' + renderFormGuide(homeForm) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + game.away + '</div>' + renderFormGuide(awayForm) + '</div></div></div>';
 
   if (isFinished || isLive) {
     var timelineEvents = [];

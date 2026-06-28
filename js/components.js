@@ -23,7 +23,7 @@ var TEAM_COLORS = {
   'Argentina': {bg:'#74ACDF',fg:'#fff',flag:'ar'}, 'France': {bg:'#002395',fg:'#fff',flag:'fr'}, 'England': {bg:'#CF081F',fg:'#fff',flag:'gb-eng'},
   'Spain': {bg:'#AA151B',fg:'#fff',flag:'es'}, 'Portugal': {bg:'#006600',fg:'#fff',flag:'pt'}, 'Italy': {bg:'#004B87',fg:'#fff',flag:'it'},
   'Netherlands': {bg:'#FF6600',fg:'#fff',flag:'nl'}, 'Belgium': {bg:'#ED2939',fg:'#fff',flag:'be'}, 'Mexico': {bg:'#006847',fg:'#fff',flag:'mx'},
-  'Canada': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'Morocco': {bg:'#C1272D',fg:'#fff',flag:'ma'}, 'Uruguay': {bg:'#5FC2DA',fg:'#000',flag:'uy'},
+  'Canada': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'South Africa': {bg:'#007749',fg:'#FFB81C',flag:'za'}, 'Morocco': {bg:'#C1272D',fg:'#fff',flag:'ma'}, 'Uruguay': {bg:'#5FC2DA',fg:'#000',flag:'uy'},
   'Croatia': {bg:'#171796',fg:'#fff',flag:'hr'}, 'Senegal': {bg:'#00853E',fg:'#fff',flag:'sn'}, 'Ecuador': {bg:'#FFD100',fg:'#000',flag:'ec'},
   'Serbia': {bg:'#C6363C',fg:'#fff',flag:'rs'}, 'Ghana': {bg:'#CE1126',fg:'#fff',flag:'gh'}, 'Cameroon': {bg:'#007A5E',fg:'#fff',flag:'cm'},
   'Tunisia': {bg:'#E70013',fg:'#fff',flag:'tn'}, 'Iran': {bg:'#239F40',fg:'#fff',flag:'ir'}, 'Saudi Arabia': {bg:'#006C35',fg:'#fff',flag:'sa'},
