@@ -558,7 +558,14 @@ function lazyLoadScreen(screenId, renderFn) {
 }
 
 // Navigation
+var _screenDirection = 'left';
+var _subScreens = ['match-detail','pred-detail','team-profile','comparison','search','notifications-screen','saved','favorites','settings','news-detail','standings','wc-match-detail'];
+
 function navigate(screenId, data) {
+  var isSubScreen = _subScreens.indexOf(screenId) > -1;
+  var wasSubScreen = _subScreens.indexOf(currentScreen) > -1;
+  _screenDirection = isSubScreen ? 'left' : (wasSubScreen ? 'right' : 'left');
+
   if (screenId !== currentScreen) screenHistory.push(currentScreen);
   currentScreen = screenId;
   document.querySelectorAll('.nav-item').forEach(function(el) {
@@ -572,6 +579,7 @@ function navigateBack() {
   if (screenHistory.length === 0) { navigate('home'); return; }
   var prev = screenHistory.pop();
   currentScreen = prev;
+  _screenDirection = 'right';
   document.querySelectorAll('.nav-item').forEach(function(el) {
     el.classList.toggle('active', el.dataset.tab === prev);
   });
@@ -611,7 +619,7 @@ function renderScreen(screenId, data) {
   } catch(e) {
     html = '<div class="error-boundary"><div class="error-boundary-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div style="font-size:16px;font-weight:600;">Something went wrong</div><div style="font-size:13px;color:var(--text-secondary);">Please try again</div><button class="btn btn-primary" onclick="navigate(\'home\')">Go Home</button></div>';
   }
-  main.innerHTML = '<div class="screen active">' + html + '</div>';
+  main.innerHTML = '<div class="screen active slide-' + (_screenDirection || 'left') + '">' + html + '</div>';
   setTodayDate();
   attachScreenListeners();
 
@@ -871,13 +879,33 @@ function setTodayDate() {
 function renderLoadingState() {
   var skels = '';
   for (var i = 0; i < 3; i++) {
-    skels += '<div class="skeleton skeleton-card" style="animation-delay:' + (i*80) + 'ms;"></div>';
+    skels += '<div class="skeleton skeleton-card anim-fade-in anim-delay-' + (i+1) + '"></div>';
   }
   return '<div style="padding:0 16px;">' +
     '<div class="skeleton skeleton-live" style="margin-bottom:16px;"></div>' +
-    '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;">Loading matches...</div>' +
     skels +
-    '</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+    '</div>';
+}
+
+function renderMatchCardSkeleton() {
+  return '<div class="skeleton" style="height:100px;border-radius:var(--r-lg);margin-bottom:10px;padding:16px;animation:fadeInUp 350ms cubic-bezier(0.16,1,0.3,1) both;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+    '<div class="skeleton-line" style="width:80px;height:14px;"></div>' +
+    '<div class="skeleton-line" style="width:40px;height:14px;"></div>' +
+    '<div class="skeleton-line" style="width:80px;height:14px;"></div>' +
+    '</div>' +
+    '<div class="skeleton-line short" style="margin-top:12px;height:10px;"></div>' +
+    '</div>';
+}
+
+function renderPredCardSkeleton() {
+  return '<div class="skeleton" style="height:130px;border-radius:var(--r-lg);margin-bottom:10px;padding:16px;animation:fadeInUp 350ms cubic-bezier(0.16,1,0.3,1) both;">' +
+    '<div style="display:flex;justify-content:space-between;">' +
+    '<div><div class="skeleton-line" style="width:100px;height:14px;"></div><div class="skeleton-line short" style="width:60px;height:10px;margin-top:6px;"></div></div>' +
+    '<div class="skeleton skeleton-circle" style="width:48px;height:48px;"></div>' +
+    '</div>' +
+    '<div class="skeleton-line medium" style="margin-top:12px;height:10px;"></div>' +
+    '</div>';
 }
 
 function renderErrorState(msg) {

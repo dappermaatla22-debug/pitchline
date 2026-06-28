@@ -36,6 +36,9 @@ function renderMatchTabContent(matchId, tab) {
 }
 
 function renderMatchSummary(match, pred) {
+  var isLive = match.status === 'live';
+  var isFinished = match.status === 'finished';
+
   var predHtml = pred
     ? '<div class="card card-accent-left" style="margin-bottom:14px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">AI Prediction</div><div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div></div>'
     : '<div class="card" style="margin-bottom:14px;text-align:center;padding:20px;"><div style="color:var(--text-muted);font-size:14px;">No prediction available for this match</div></div>';
@@ -48,35 +51,48 @@ function renderMatchSummary(match, pred) {
   html += '<button class="btn btn-secondary" onclick="openComparison(\'' + match.home + '\',\'' + match.away + '\')">' + ICONS.compare + '</button>';
   html += '</div>';
 
+  var preview = generateMatchPreview(match.home, match.away, match.league);
+  html += '<div class="card" style="margin-bottom:14px;padding:12px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Match Preview</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + preview + '</div></div>';
+
   html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + match.home + '</div>' + renderFormGuide((pred && pred.homeForm) ? pred.homeForm : ['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + match.away + '</div>' + renderFormGuide((pred && pred.awayForm) ? pred.awayForm : ['D','W','L','W','W']) + '</div></div></div>';
 
-  var venue = getVenueInfo(match.id);
-  var weather = getWeatherInfo();
-  html += '<div class="card" style="margin-bottom:14px;padding:12px 16px;"><div style="font-size:13px;font-weight:600;margin-bottom:10px;">Venue & Weather</div><div style="display:flex;gap:16px;flex-wrap:wrap;">';
-  html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Stadium</div><div style="font-size:13px;font-weight:600;">' + venue.name + '</div><div style="font-size:12px;color:var(--text-secondary);">' + venue.city + ' \u00b7 ' + venue.capacity.toLocaleString() + ' seats</div></div>';
-  html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Weather</div><div style="font-size:13px;font-weight:600;">' + weather.temp + ' ' + weather.condition + '</div><div style="font-size:12px;color:var(--text-secondary);">Humidity: ' + weather.humidity + '</div></div>';
-  html += '</div></div>';
+  if (isLive || isFinished) {
+    html += renderMatchTimeline(match);
+  }
 
-  var preview = generateMatchPreview(match.home, match.away, match.league);
-  html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Match Preview</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + preview + '</div></div>';
+  if (isFinished) {
+    html += renderMatchInjuries(match);
+  }
 
-  html += renderMatchTimeline(match);
-
-  html += renderMatchInjuries(match);
+  if (isLive) {
+    html += '<div class="card" style="margin-bottom:14px;text-align:center;padding:16px;"><div style="font-size:13px;color:var(--text-muted);">Stats and lineups update live during the match</div></div>';
+  }
 
   html += '<div style="height:16px;"></div>';
   return html;
 }
 
 function renderMatchTimeline(match) {
-  var timelineEvents = [
-    {min:'78',type:'goal',team:'home',player:'B. Saka',detail:'Goal \u2014 Assisted by Martin Odegaard'},
-    {min:'65',type:'yellow',team:'away',player:'E. Fernandez',detail:'Yellow Card \u2014 Foul on Martin Odegaard'},
-    {min:'52',type:'sub',team:'home',player:'J. Havertz',detail:'Subbed on for G. Jesus'},
-    {min:'45',type:'halftime',detail:'Half Time'},
-    {min:'34',type:'goal',team:'away',player:'C. Palmer',detail:'Goal \u2014 Penalty'},
-    {min:'12',type:'goal',team:'home',player:'K. Havertz',detail:'Goal \u2014 Header from corner kick'},
-  ];
+  var isFinished = match.status === 'finished';
+  var isLive = match.status === 'live';
+
+  var homeShort = match.home.split(' ').pop().substring(0,3);
+  var awayShort = match.away.split(' ').pop().substring(0,3);
+
+  var timelineEvents = [];
+  if (isFinished || isLive) {
+    var homeGoals = match.score ? parseInt(match.score.split('-')[0].trim()) : 0;
+    var awayGoals = match.score ? parseInt(match.score.split('-')[1].trim()) : 0;
+
+    timelineEvents.push({min:'45',type:'halftime',detail:'Half Time \u2014 ' + homeGoals + ' - ' + awayGoals});
+    if (homeGoals > 0) timelineEvents.push({min:'34',type:'goal',team:'home',player:match.home + ' Goal',detail:'Goal \u2014 ' + match.home});
+    if (awayGoals > 0) timelineEvents.push({min:'41',type:'goal',team:'away',player:match.away + ' Goal',detail:'Goal \u2014 ' + match.away});
+    if (isFinished) {
+      timelineEvents.push({min:'90',type:'halftime',detail:'Full Time \u2014 ' + (match.score || '0 - 0')});
+    }
+  }
+
+  if (timelineEvents.length === 0) return '';
 
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Timeline</div><div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;padding:8px 16px;">';
   timelineEvents.forEach(function(ev) {
@@ -89,13 +105,13 @@ function renderMatchTimeline(match) {
     else if (ev.type === 'halftime') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'; }
 
     if (ev.type === 'halftime') {
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);justify-content:center;"><span style="font-size:12px;color:var(--text-muted);font-weight:500;">Half Time</span></div>';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);justify-content:center;"><span style="font-size:12px;color:var(--text-muted);font-weight:500;">' + ev.detail + '</span></div>';
     } else {
       html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);' + (ev.type === 'goal' ? 'background:rgba(52,200,122,0.05);margin:0 -16px;padding:10px 16px;border-radius:var(--r-sm);' : '') + '">';
       html += '<span style="font-size:12px;color:var(--text-muted);width:32px;flex-shrink:0;font-weight:600;">' + ev.min + '\'</span>';
       html += '<div style="color:' + iconColor + ';flex-shrink:0;margin-top:2px;">' + iconHtml + '</div>';
       html += '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text-primary);">' + ev.player + '</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + ev.detail + '</div></div>';
-      html += '<div style="font-size:11px;color:var(--text-muted);">' + (ev.team === 'home' ? match.home.substring(0,3) : match.away.substring(0,3)) + '</div>';
+      html += '<div style="font-size:11px;color:var(--text-muted);">' + (ev.team === 'home' ? homeShort : awayShort) + '</div>';
       html += '</div>';
     }
   });
@@ -104,7 +120,12 @@ function renderMatchTimeline(match) {
 }
 
 function renderMatchInjuries(match) {
-  var injuries = [{team:match.home,player:'M. Saliba',pos:'DF',status:'Out'},{team:match.away,player:'R. James',pos:'DF',status:'Doubtful'}];
+  var homePlayers = ['Saliba','Gabriel','Odegaard','Saka','Rice'];
+  var awayPlayers = ['James','Fernandez','Palmer','Jackson','Madueke'];
+  var injuries = [
+    {team:match.home,player:homePlayers[Math.abs(match.home.charCodeAt(0)) % homePlayers.length],pos:'DF',status:'Doubtful'},
+    {team:match.away,player:awayPlayers[Math.abs(match.away.charCodeAt(0)) % awayPlayers.length],pos:'MF',status:'Questionable'}
+  ];
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Injury Report</div><div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
   injuries.forEach(function(inj) {
     html += '<div class="list-row" style="cursor:default;"><div><div style="font-size:13px;font-weight:600;">' + inj.player + ' <span style="color:var(--text-muted);font-weight:400;">(' + inj.pos + ')</span></div><div style="font-size:12px;color:var(--text-muted);">' + inj.team + '</div></div><span class="confidence-badge ' + (inj.status === 'Out' ? 'badge-risky' : 'badge-moderate') + '">' + inj.status + '</span></div>';
@@ -186,13 +207,32 @@ function renderMatchLineups(match) {
 
 // ─── Stats Tab ────────────────────────────────────────────────────────────────
 function renderMatchStats(match) {
+  var isLive = match.status === 'live';
+  var isFinished = match.status === 'finished';
+
+  if (!isLive && !isFinished) {
+    return '<div class="card" style="margin-bottom:14px;text-align:center;padding:24px;"><div style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">Match Statistics</div><div style="font-size:13px;color:var(--text-secondary);">Detailed stats will be available once the match kicks off.</div></div>';
+  }
+
+  var homeHash = 0;
+  var awayHash = 0;
+  for (var i = 0; i < match.home.length; i++) { homeHash = ((homeHash << 5) - homeHash) + match.home.charCodeAt(i); homeHash = homeHash & homeHash; }
+  for (var j = 0; j < match.away.length; j++) { awayHash = ((awayHash << 5) - awayHash) + match.away.charCodeAt(j); awayHash = awayHash & awayHash; }
+
+  var possession = 45 + Math.abs(homeHash % 20);
+  var shots = 8 + Math.abs(homeHash % 12);
+  var shotsOn = Math.floor(shots * (0.3 + Math.abs(homeHash % 4) / 10));
+  var corners = 3 + Math.abs(homeHash % 7);
+  var fouls = 8 + Math.abs(homeHash % 8);
+  var xg = (0.5 + Math.abs(homeHash % 25) / 10).toFixed(2);
+
   var stats = [
-    {label:'Possession',home:'58%',away:'42%',homeVal:58,awayVal:42},
-    {label:'Shots',home:'16',away:'9',homeVal:64,awayVal:36},
-    {label:'Shots on Target',home:'7',away:'3',homeVal:70,awayVal:30},
-    {label:'Corners',home:'8',away:'4',homeVal:67,awayVal:33},
-    {label:'Fouls',home:'11',away:'14',homeVal:44,awayVal:56},
-    {label:'xG',home:'2.14',away:'0.87',homeVal:71,awayVal:29}
+    {label:'Possession',home:possession + '%',away:(100-possession) + '%',homeVal:possession,awayVal:100-possession},
+    {label:'Shots',home:String(shots),away:String(14 + Math.abs(awayHash % 8)),homeVal:Math.round(shots/(shots+14+Math.abs(awayHash % 8))*100),awayVal:Math.round((14+Math.abs(awayHash % 8))/(shots+14+Math.abs(awayHash % 8))*100)},
+    {label:'Shots on Target',home:String(shotsOn),away:String(3 + Math.abs(awayHash % 5)),homeVal:Math.round(shotsOn/(shotsOn+3+Math.abs(awayHash % 5))*100),awayVal:Math.round((3+Math.abs(awayHash % 5))/(shotsOn+3+Math.abs(awayHash % 5))*100)},
+    {label:'Corners',home:String(corners),away:String(3 + Math.abs(awayHash % 5)),homeVal:Math.round(corners/(corners+3+Math.abs(awayHash % 5))*100),awayVal:Math.round((3+Math.abs(awayHash % 5))/(corners+3+Math.abs(awayHash % 5))*100)},
+    {label:'Fouls',home:String(fouls),away:String(9 + Math.abs(awayHash % 6)),homeVal:Math.round(fouls/(fouls+9+Math.abs(awayHash % 6))*100),awayVal:Math.round((9+Math.abs(awayHash % 6))/(fouls+9+Math.abs(awayHash % 6))*100)},
+    {label:'xG',home:xg,away:(0.4 + Math.abs(awayHash % 18) / 10).toFixed(2),homeVal:Math.round(parseFloat(xg)/(parseFloat(xg)+0.4+Math.abs(awayHash % 18)/10)*100),awayVal:Math.round((0.4+Math.abs(awayHash%18)/10)/(parseFloat(xg)+0.4+Math.abs(awayHash%18)/10)*100)}
   ];
 
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Match Statistics</div><div class="card" style="padding:12px 16px;">';
@@ -259,24 +299,39 @@ function renderXGChart(match) {
 
 // ─── H2H Tab ──────────────────────────────────────────────────────────────────
 function renderMatchH2H(match) {
-  var h2h = [
-    {date:'Mar 2024',result:'1 - 2',out:'A'},
-    {date:'Oct 2023',result:'2 - 0',out:'H'},
-    {date:'Apr 2023',result:'3 - 3',out:'D'},
-    {date:'Nov 2022',result:'1 - 0',out:'H'},
-    {date:'Feb 2022',result:'0 - 1',out:'A'}
-  ];
+  var homeHash = 0;
+  var awayHash = 0;
+  for (var i = 0; i < match.home.length; i++) { homeHash = ((homeHash << 5) - homeHash) + match.home.charCodeAt(i); homeHash = homeHash & homeHash; }
+  for (var j = 0; j < match.away.length; j++) { awayHash = ((awayHash << 5) - awayHash) + match.away.charCodeAt(j); awayHash = awayHash & awayHash; }
 
-  var homeWins = h2h.filter(function(h){ return h.out === 'H'; }).length;
-  var draws = h2h.filter(function(h){ return h.out === 'D'; }).length;
-  var awayWins = h2h.filter(function(h){ return h.out === 'A'; }).length;
+  var combinedHash = Math.abs(homeHash + awayHash);
+  var homeWins = 1 + combinedHash % 3;
+  var draws = combinedHash % 2;
+  var awayWins = 1 + (combinedHash >> 3) % 3;
+
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var h2h = [];
+  var currentYear = new Date().getFullYear();
+  for (var k = 0; k < 5; k++) {
+    var yr = currentYear - k;
+    var mIdx = (combinedHash + k * 3) % 12;
+    var outcome;
+    if (k < homeWins) outcome = 'H';
+    else if (k < homeWins + draws) outcome = 'D';
+    else outcome = 'A';
+    var homeGoals = outcome === 'H' ? 1 + (combinedHash % 3) : outcome === 'D' ? 1 + (combinedHash % 2) : (combinedHash % 2);
+    var awayGoals = outcome === 'A' ? 1 + (combinedHash % 3) : outcome === 'D' ? homeGoals : (combinedHash % 2);
+    h2h.push({date: months[mIdx] + ' ' + yr, result: homeGoals + ' - ' + awayGoals, out: outcome});
+  }
+
+  var total = homeWins + draws + awayWins;
 
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Head to Head</div>';
 
   html += '<div class="card" style="margin-bottom:12px;padding:16px;text-align:center;"><div style="display:flex;justify-content:center;gap:24px;margin-bottom:12px;">';
-  html += '<div><div style="font-size:24px;font-weight:700;color:var(--success);">' + homeWins + '</div><div style="font-size:11px;color:var(--text-muted);">Home Wins</div></div>';
+  html += '<div><div style="font-size:24px;font-weight:700;color:var(--success);">' + homeWins + '</div><div style="font-size:11px;color:var(--text-muted);">' + match.home.split(' ')[0] + ' Wins</div></div>';
   html += '<div><div style="font-size:24px;font-weight:700;color:var(--warning);">' + draws + '</div><div style="font-size:11px;color:var(--text-muted);">Draws</div></div>';
-  html += '<div><div style="font-size:24px;font-weight:700;color:var(--danger);">' + awayWins + '</div><div style="font-size:11px;color:var(--text-muted);">Away Wins</div></div>';
+  html += '<div><div style="font-size:24px;font-weight:700;color:var(--danger);">' + awayWins + '</div><div style="font-size:11px;color:var(--text-muted);">' + match.away.split(' ')[0] + ' Wins</div></div>';
   html += '</div>';
   html += '<div style="display:flex;height:6px;border-radius:3px;overflow:hidden;">';
   html += '<div style="flex:' + homeWins + ';background:var(--success);"></div>';
@@ -284,13 +339,15 @@ function renderMatchH2H(match) {
   html += '<div style="flex:' + awayWins + ';background:var(--danger);"></div>';
   html += '</div></div>';
 
-  html += '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Last 5 Meetings</div>';
+  html += '<div style="font-size:13px;font-weight:600;margin-bottom:8px;">Last ' + h2h.length + ' Meetings</div>';
   html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;padding:4px 16px;">';
   h2h.forEach(function(h) {
     var label = h.out === 'H' ? match.home.split(' ')[0] : h.out === 'A' ? match.away.split(' ')[0] : 'Draw';
     html += '<div class="h2h-row"><span class="h2h-date">' + h.date + '</span><span class="h2h-result">' + match.home + ' ' + h.result + ' ' + match.away + '</span><span class="h2h-outcome h2h-' + h.out + '">' + label + '</span></div>';
   });
   html += '</div></div>';
+
+  html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Key Facts</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">In ' + total + ' meetings between these sides, ' + match.home + ' have won ' + homeWins + ' time' + (homeWins !== 1 ? 's' : '') + '. ' + match.away + ' have won ' + awayWins + ' time' + (awayWins !== 1 ? 's' : '') + ', with ' + draws + ' draw' + (draws !== 1 ? 's' : '') + ' between them.</div></div>';
 
   html += '<div style="height:16px;"></div>';
   return html;
@@ -302,6 +359,7 @@ function renderMatchDetailScreen(matchId) {
   var match = matches.find(function(m){ return m.id === matchId; });
   if (!match) return renderEmptyState('matches','Match not found','This match could not be loaded.','Go Back',"navigateBack()");
   var isLive = match.status === 'live';
+  var isFinished = match.status === 'finished';
   _matchDetailTab = 'summary';
   _matchDetailId = matchId;
 
@@ -312,14 +370,11 @@ function renderMatchDetailScreen(matchId) {
   html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + teamLogo(match.home, match.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.home + '</div></div>';
-  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (isLive ? match.score : 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE ' + (match.minute || '') + '</span>' : match.time) + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (match.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE ' + (match.minute || '') + '</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : match.time) + '</div></div>';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + teamLogo(match.away, match.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.away + '</div></div>';
   html += '</div>';
   html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">' + match.league + (match.date ? ' \u00b7 ' + match.date : '') + '</div>';
   html += '</div>';
-
-  var preview = generateMatchPreview(match.home, match.away, match.league);
-  html += '<div class="card" style="margin-bottom:14px;padding:12px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Match Preview</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + preview + '</div></div>';
 
   html += '<div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-elevated);border-radius:var(--r-md);padding:4px;" id="match-tabs">';
   html += '<button class="btn btn-sm" data-tab="summary" style="flex:1;background:var(--accent);color:#fff;" onclick="switchMatchTab(\'summary\')">Summary</button>';
@@ -329,7 +384,7 @@ function renderMatchDetailScreen(matchId) {
   html += '</div>';
 
   html += '<div id="match-tab-content">';
-  html += renderMatchSummary(match, match.predId ? Store.getPredictions().find(function(p){ return p.id === match.predId; }) : null);
+  html += renderMatchTabContent(matchId, _matchDetailTab);
   html += '</div>';
 
   html += '<div style="height:20px;"></div></div>';
@@ -393,26 +448,83 @@ function renderTeamProfileScreen(teamName) {
     teamLogoUrl = teamMatches[0].home === teamName ? teamMatches[0].homeCrest : teamMatches[0].awayCrest;
   }
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + teamName + '</div><button class="btn-icon" onclick="followTeam(\'' + teamName + '\')">' + ICONS.heart + '</button></div>';
+  var wins = 0, draws = 0, losses = 0;
+  var homeWins = 0, homeDraws = 0, homeLosses = 0;
+  var awayWins = 0, awayDraws = 0, awayLosses = 0;
+  var goalsFor = 0, goalsAgainst = 0;
+  var form = [];
+
+  teamMatches.forEach(function(m) {
+    var isHome = m.home === teamName;
+    var myScore = 0, theirScore = 0;
+    if (m.score) {
+      var parts = m.score.split('-');
+      myScore = parseInt(isHome ? parts[0].trim() : parts[1].trim()) || 0;
+      theirScore = parseInt(isHome ? parts[1].trim() : parts[0].trim()) || 0;
+    }
+    goalsFor += myScore;
+    goalsAgainst += theirScore;
+
+    if (m.status === 'finished' || m.status === 'live') {
+      if (myScore > theirScore) {
+        wins++;
+        if (isHome) homeWins++; else awayWins++;
+        form.push('W');
+      } else if (myScore === theirScore) {
+        draws++;
+        if (isHome) homeDraws++; else awayDraws++;
+        form.push('D');
+      } else {
+        losses++;
+        if (isHome) homeLosses++; else awayLosses++;
+        form.push('L');
+      }
+    }
+  });
+
+  var recentForm = form.slice(-5);
+  while (recentForm.length < 5) recentForm.unshift('D');
+
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + teamName + '</div><button class="btn-icon" onclick="followTeam(\'' + teamName.replace(/'/g, "\\'") + '\')">' + ICONS.heart + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
-  html += '<div style="padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:16px;">' + teamLogo(teamName, teamLogoUrl, 56) + '<div><div style="font-size:20px;font-weight:700;letter-spacing:-0.5px;">' + teamName + '</div><div style="font-size:13px;color:var(--text-muted);">' + teamMatches.length + ' matches tracked</div></div></div>';
+  html += '<div style="padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:16px;">' + teamLogo(teamName, teamLogoUrl, 56) + '<div><div style="font-size:20px;font-weight:700;letter-spacing:-0.5px;">' + teamName + '</div><div style="font-size:13px;color:var(--text-muted);">' + teamMatches.length + ' matches tracked \u00b7 ' + teamPreds.length + ' predictions</div></div></div>';
 
-  html += '<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:16px;">' + renderScoreRing(78, 68, 'var(--accent)') + '<div><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Predicted Strength</div><div style="font-size:24px;font-weight:700;">78</div><div style="font-size:13px;color:var(--text-secondary);">' + teamPreds.length + ' predictions</div></div></div>';
+  var predStrength = 50 + wins * 5 + draws * 2 - losses * 3;
+  predStrength = Math.max(40, Math.min(95, predStrength));
+  html += '<div class="card" style="margin-bottom:16px;display:flex;align-items:center;gap:16px;">' + renderScoreRing(predStrength, 68, 'var(--accent)') + '<div><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Predicted Strength</div><div style="font-size:24px;font-weight:700;">' + predStrength + '</div><div style="font-size:13px;color:var(--text-secondary);">' + (wins + draws + losses) + ' matches played</div></div></div>';
 
-  html += '<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div>' + renderFormGuide(['W','W','D','W','L']) + '</div>';
+  html += '<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div>' + renderFormGuide(recentForm) + '</div>';
 
-  html += '<div style="display:flex;gap:10px;margin-bottom:16px;"><div class="card" style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Home Record</div><div style="display:flex;gap:12px;"><div><div style="font-size:20px;font-weight:700;color:var(--success);">8</div><div style="font-size:11px;color:var(--text-muted);">W</div></div><div><div style="font-size:20px;font-weight:700;color:var(--warning);">3</div><div style="font-size:11px;color:var(--text-muted);">D</div></div><div><div style="font-size:20px;font-weight:700;color:var(--risky);">2</div><div style="font-size:11px;color:var(--text-muted);">L</div></div></div></div><div class="card" style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Away Record</div><div style="display:flex;gap:12px;"><div><div style="font-size:20px;font-weight:700;color:var(--success);">6</div><div style="font-size:11px;color:var(--text-muted);">W</div></div><div><div style="font-size:20px;font-weight:700;color:var(--warning);">4</div><div style="font-size:11px;color:var(--text-muted);">D</div></div><div><div style="font-size:20px;font-weight:700;color:var(--risky);">3</div><div style="font-size:11px;color:var(--text-muted);">L</div></div></div></div></div>';
+  html += '<div style="display:flex;gap:10px;margin-bottom:16px;"><div class="card" style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Home Record</div><div style="display:flex;gap:12px;"><div><div style="font-size:20px;font-weight:700;color:var(--success);">' + homeWins + '</div><div style="font-size:11px;color:var(--text-muted);">W</div></div><div><div style="font-size:20px;font-weight:700;color:var(--warning);">' + homeDraws + '</div><div style="font-size:11px;color:var(--text-muted);">D</div></div><div><div style="font-size:20px;font-weight:700;color:var(--risky);">' + homeLosses + '</div><div style="font-size:11px;color:var(--text-muted);">L</div></div></div></div><div class="card" style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">Away Record</div><div style="display:flex;gap:12px;"><div><div style="font-size:20px;font-weight:700;color:var(--success);">' + awayWins + '</div><div style="font-size:11px;color:var(--text-muted);">W</div></div><div><div style="font-size:20px;font-weight:700;color:var(--warning);">' + awayDraws + '</div><div style="font-size:11px;color:var(--text-muted);">D</div></div><div><div style="font-size:20px;font-weight:700;color:var(--risky);">' + awayLosses + '</div><div style="font-size:11px;color:var(--text-muted);">L</div></div></div></div></div>';
 
-  html += '<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Matches</div><div style="display:flex;flex-direction:column;gap:8px;">';
-  teamMatches.slice(0,4).forEach(function(m) {
-    var score = m.status === 'live' ? m.score : m.time;
-    html += '<div class="card" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;"><div><span style="font-size:13px;font-weight:600;">' + m.home + ' vs ' + m.away + '</span></div><span style="font-size:13px;color:var(--text-secondary);">' + score + '</span></div>';
+  html += '<div style="display:flex;gap:10px;margin-bottom:16px;"><div class="card" style="flex:1;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--success);">' + goalsFor + '</div><div style="font-size:11px;color:var(--text-muted);">Goals For</div></div><div class="card" style="flex:1;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--risky);">' + goalsAgainst + '</div><div style="font-size:11px;color:var(--text-muted);">Goals Against</div></div><div class="card" style="flex:1;text-align:center;"><div style="font-size:20px;font-weight:700;color:var(--strong);">' + (goalsFor - goalsAgainst > 0 ? '+' : '') + (goalsFor - goalsAgainst) + '</div><div style="font-size:11px;color:var(--text-muted);">GD</div></div></div>';
+
+  html += '<div style="margin-bottom:16px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Upcoming & Recent Matches</div><div style="display:flex;flex-direction:column;gap:8px;">';
+  teamMatches.slice(0,6).forEach(function(m) {
+    var isHome = m.home === teamName;
+    var isFinished = m.status === 'finished';
+    var myScore = 0, theirScore = 0;
+    if (m.score) {
+      var parts = m.score.split('-');
+      myScore = parseInt(isHome ? parts[0].trim() : parts[1].trim()) || 0;
+      theirScore = parseInt(isHome ? parts[1].trim() : parts[0].trim()) || 0;
+    }
+    var result = isFinished ? (myScore > theirScore ? 'W' : myScore === theirScore ? 'D' : 'L') : null;
+    var resultBg = result === 'W' ? 'rgba(52,200,122,0.15)' : result === 'D' ? 'rgba(251,191,36,0.15)' : result === 'L' ? 'rgba(244,63,94,0.15)' : 'var(--bg-elevated)';
+    var resultColor = result === 'W' ? 'var(--success)' : result === 'D' ? 'var(--warning)' : result === 'L' ? 'var(--risky)' : 'var(--text-muted)';
+    var opponent = isHome ? m.away : m.home;
+    var vsText = isHome ? 'vs' : '@';
+    html += '<div class="card" style="display:flex;align-items:center;padding:10px 14px;gap:10px;cursor:pointer;" onclick="openMatchDetail(\'' + m.id + '\')">';
+    html += '<div style="width:24px;height:24px;border-radius:var(--r-sm);background:' + resultBg + ';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:' + resultColor + ';">' + (result || '?') + '</div>';
+    html += '<div style="flex:1;"><div style="font-size:13px;font-weight:600;">' + vsText + ' ' + opponent + '</div><div style="font-size:11px;color:var(--text-muted);">' + m.league + ' \u00b7 ' + m.date + '</div></div>';
+    html += '<div style="font-size:13px;font-weight:600;">' + (m.score || m.time) + '</div>';
+    html += '</div>';
   });
   html += '</div></div>';
 
-  html += '<div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'competitions\')">View Predictions</button><button class="btn btn-secondary" onclick="openComparison(\'' + teamName + '\',\'\')">Compare</button></div>';
+  html += '<div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'predictions\')">View Predictions</button><button class="btn btn-secondary" onclick="openComparison(\'' + teamName.replace(/'/g, "\\'") + '\',\'\')">Compare</button></div>';
 
   html += '<div style="height:20px;"></div></div>';
   return html;
@@ -454,8 +566,16 @@ function renderComparisonScreen(teamA, teamB) {
 
 // ─── Search Screen ────────────────────────────────────────────────────────────
 function renderSearchScreen() {
-  var recent = ['Arsenal','Premier League','Real Madrid'];
-  var trending = ['Bayern Munich','Champions League','Erling Haaland'];
+  var matches = Store.getMatches();
+  var allTeams = {};
+  matches.forEach(function(m) {
+    if (m.home && !allTeams[m.home]) allTeams[m.home] = {name:m.home, crest:m.homeCrest, league:m.league};
+    if (m.away && !allTeams[m.away]) allTeams[m.away] = {name:m.away, crest:m.awayCrest, league:m.league};
+  });
+  var teamList = Object.values(allTeams).sort(function(a,b){ return a.name.localeCompare(b.name); });
+  var topTeams = teamList.slice(0, 12);
+
+  var favTeams = Store.getFavTeams();
 
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Search</div></div>';
 
@@ -463,17 +583,35 @@ function renderSearchScreen() {
 
   html += '<div class="search-input-wrap"><div class="search-icon">' + ICONS.search + '</div><input class="search-input" id="search-field" type="text" placeholder="Teams, leagues, matches\u2026" autofocus oninput="handleSearch(this.value)"></div>';
 
-  html += '<div id="search-results"><div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Recent Searches</div>';
-  recent.forEach(function(s) {
-    html += '<div class="list-row" onclick="document.getElementById(\'search-field\').value=\'' + s + '\';handleSearch(\'' + s + '\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.search + '<span style="font-size:14px;">' + s + '</span></div>' + ICONS.chevronRight + '</div>';
-  });
-  html += '</div>';
+  html += '<div id="search-results">';
 
-  html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Trending</div>';
-  trending.forEach(function(s) {
-    html += '<div class="list-row" onclick="document.getElementById(\'search-field\').value=\'' + s + '\';handleSearch(\'' + s + '\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.trendUp + '<span style="font-size:14px;">' + s + '</span></div>' + ICONS.chevronRight + '</div>';
+  if (favTeams.length > 0) {
+    html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Your Favourites</div><div style="display:flex;flex-wrap:wrap;gap:8px;">';
+    favTeams.forEach(function(t) {
+      var info = allTeams[t];
+      html += '<div class="chip" style="cursor:pointer;" onclick="openTeamProfile(\'' + t.replace(/'/g, "\\'") + '\')">' + teamLogo(t, info ? info.crest : '', 16) + ' ' + t + '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">All Teams</div>';
+  html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
+  topTeams.forEach(function(t) {
+    html += '<div class="list-row" onclick="openTeamProfile(\'' + t.name.replace(/'/g, "\\'") + '\')"><div style="display:flex;align-items:center;gap:12px;">' + teamLogo(t.name, t.crest, 28) + '<div><div style="font-size:14px;font-weight:500;">' + t.name + '</div><div style="font-size:12px;color:var(--text-muted);">' + t.league + '</div></div></div>' + ICONS.chevronRight + '</div>';
   });
-  html += '</div></div></div>';
+  if (teamList.length > 12) {
+    html += '<div class="list-row" style="justify-content:center;color:var(--accent);font-size:13px;font-weight:600;" onclick="document.getElementById(\'search-field\').value=\'\';handleSearch(\'\')">Show All ' + teamList.length + ' Teams</div>';
+  }
+  html += '</div></div>';
+
+  var leagues = [{name:'Premier League',code:'PL'},{name:'La Liga',code:'PD'},{name:'Bundesliga',code:'BL1'},{name:'Serie A',code:'SA'},{name:'Ligue 1',code:'FL1'}];
+  html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Leagues</div><div style="display:flex;flex-wrap:wrap;gap:8px;">';
+  leagues.forEach(function(l) {
+    html += '<div class="chip" style="cursor:pointer;" onclick="openStandings(\'' + l.code + '\')">' + l.name + '</div>';
+  });
+  html += '</div></div>';
+
+  html += '</div></div>';
 
   return html;
 }
@@ -640,34 +778,113 @@ function renderNewsDetailScreen(newsId) {
 }
 
 // ─── Standings Screen ─────────────────────────────────────────────────────────
+var _standingsData = {};
+var _standingsLoading = false;
+
 function renderStandingsScreen(leagueCode) {
   var code = leagueCode || 'PL';
   var leagueNames = { 'PL':'Premier League', 'PD':'La Liga', 'BL1':'Bundesliga', 'SA':'Serie A', 'FL1':'Ligue 1', 'CL':'Champions League' };
 
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + (leagueNames[code] || code) + ' Standings</div></div>';
 
-  html += '<div class="chip-row" id="standings-chips"><div class="chip active" onclick="filterStandings(\'overall\',this)">Overall</div><div class="chip" onclick="filterStandings(\'home\',this)">Home</div><div class="chip" onclick="filterStandings(\'away\',this)">Away</div></div>';
+  html += '<div class="chip-row" id="standings-chips">';
+  html += '<div class="chip' + (STANDINGS_FILTER==='overall'?' active':'') + '" onclick="filterStandings(\'overall\',this)">Overall</div>';
+  html += '<div class="chip' + (STANDINGS_FILTER==='home'?' active':'') + '" onclick="filterStandings(\'home\',this)">Home</div>';
+  html += '<div class="chip' + (STANDINGS_FILTER==='away'?' active':'') + '" onclick="filterStandings(\'away\',this)">Away</div>';
+  html += '</div>';
 
-  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
+  html += '<div class="chip-row" style="padding-top:0;" id="standings-league-chips">';
+  var leagues = [{c:'PL',f:'\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f',n:'PL'},{c:'PD',f:'\ud83c\uddea\ud83c\uddf8',n:'La Liga'},{c:'BL1',f:'\ud83c\udde9\ud83c\uddea',n:'Bundesliga'},{c:'SA',f:'\ud83c\uddee\ud83c\uddf9',n:'Serie A'},{c:'FL1',f:'\ud83c\uddeb\ud83c\uddf7',n:'Ligue 1'}];
+  leagues.forEach(function(l) {
+    html += '<div class="chip' + (code===l.c?' active':'') + '" onclick="openStandings(\'' + l.c + '\')">' + l.f + ' ' + l.n + '</div>';
+  });
+  html += '</div>';
 
-  html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:12px;">';
+  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;" id="standings-content">';
 
+  var cached = _standingsData[code];
+  if (cached && cached.length > 0) {
+    html += renderStandingsTable(cached, code);
+  } else if (_standingsLoading) {
+    html += '<div style="margin-top:12px;">';
+    for (var i = 0; i < 10; i++) {
+      html += '<div class="skeleton" style="height:42px;border-radius:var(--r-sm);margin-bottom:4px;"></div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div style="margin-top:12px;">';
+    for (var i2 = 0; i2 < 10; i2++) {
+      html += '<div class="skeleton" style="height:42px;border-radius:var(--r-sm);margin-bottom:4px;"></div>';
+    }
+    html += '</div>';
+    _standingsLoading = true;
+    API.fetchStandings(code).then(function(data) {
+      _standingsData[code] = data;
+      _standingsLoading = false;
+      if (currentScreen === 'standings') {
+        var el = document.getElementById('standings-content');
+        if (el && data && data.length > 0) {
+          el.innerHTML = renderStandingsTable(data, code);
+        } else if (el) {
+          el.innerHTML = renderDefaultStandings(code);
+        }
+      }
+    }).catch(function() {
+      _standingsLoading = false;
+      var el = document.getElementById('standings-content');
+      if (el) el.innerHTML = renderDefaultStandings(code);
+    });
+  }
+
+  html += '<div style="height:20px;"></div></div>';
+  return html;
+}
+
+function renderStandingsTable(standings, code) {
+  var html = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:12px;">';
   html += '<div style="display:grid;grid-template-columns:32px 1fr 28px 28px 28px 28px 36px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;"><span>#</span><span>Team</span><span style="text-align:center;">W</span><span style="text-align:center;">D</span><span style="text-align:center;">L</span><span style="text-align:center;">GD</span><span style="text-align:center;">Pts</span></div>';
 
-  var standings = [
-    { pos:1, team:'Arsenal', w:24, d:5, l:3, gd:'+52', pts:77 },
-    { pos:2, team:'Liverpool', w:23, d:6, l:3, gd:'+45', pts:75 },
-    { pos:3, team:'Man City', w:22, d:5, l:5, gd:'+40', pts:71 },
-    { pos:4, team:'Aston Villa', w:18, d:6, l:8, gd:'+18', pts:60 },
-    { pos:5, team:'Tottenham', w:17, d:5, l:10, gd:'+13', pts:56 },
-    { pos:6, team:'Newcastle', w:16, d:7, l:9, gd:'+20', pts:55 },
-    { pos:7, team:'Chelsea', w:15, d:8, l:9, gd:'+8', pts:53 },
-    { pos:8, team:'Man United', w:15, d:5, l:12, gd:'-2', pts:50 },
-    { pos:9, team:'West Ham', w:14, d:6, l:12, gd:'-5', pts:48 },
-    { pos:10, team:'Brighton', w:13, d:8, l:11, gd:'+4', pts:47 }
-  ];
+  standings.forEach(function(row, i) {
+    var pos = row.position || (i + 1);
+    var team = row.team || '';
+    var pts = row.pts || 0;
+    var w = row.won || 0;
+    var d = row.drawn != null ? row.drawn : (row.draw || 0);
+    var l = row.lost || 0;
+    var gdVal = row.gd || 0;
+    var gdStr = gdVal > 0 ? '+' + gdVal : String(gdVal);
+    var crest = row.crest || '';
+    var zoneColor = pos <= 4 ? 'var(--elite)' : pos <= 6 ? 'var(--strong)' : pos >= 18 ? 'var(--risky)' : 'transparent';
+    html += '<div style="display:grid;grid-template-columns:32px 1fr 28px 28px 28px 28px 36px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;" onclick="openTeamProfile(\'' + team.replace(/'/g, "\\'") + '\')">';
+    html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);border-left:2px solid ' + zoneColor + ';padding-left:6px;">' + pos + '</span>';
+    html += '<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:13px;font-weight:600;">' + team + '</span></div>';
+    html += '<span style="font-size:13px;text-align:center;color:var(--text-secondary);">' + w + '</span>';
+    html += '<span style="font-size:13px;text-align:center;color:var(--text-secondary);">' + d + '</span>';
+    html += '<span style="font-size:13px;text-align:center;color:var(--text-secondary);">' + l + '</span>';
+    html += '<span style="font-size:13px;text-align:center;color:var(--text-secondary);">' + gdStr + '</span>';
+    html += '<span style="font-size:13px;font-weight:700;text-align:center;">' + pts + '</span>';
+    html += '</div>';
+  });
 
-  standings.forEach(function(row) {
+  html += '</div>';
+  html += '<div style="display:flex;gap:12px;margin:16px 0;font-size:11px;color:var(--text-muted);"><div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--elite);"></span> Champions League</div><div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--strong);"></span> Europa League</div><div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--risky);"></span> Relegation</div></div>';
+  return html;
+}
+
+function renderDefaultStandings(code) {
+  var defaults = {
+    'PL': [
+      {pos:1,team:'Arsenal',w:24,d:5,l:3,gd:'+52',pts:77},{pos:2,team:'Liverpool',w:23,d:6,l:3,gd:'+45',pts:75},
+      {pos:3,team:'Man City',w:22,d:5,l:5,gd:'+40',pts:71},{pos:4,team:'Aston Villa',w:18,d:6,l:8,gd:'+18',pts:60},
+      {pos:5,team:'Tottenham',w:17,d:5,l:10,gd:'+13',pts:56},{pos:6,team:'Newcastle',w:16,d:7,l:9,gd:'+20',pts:55},
+      {pos:7,team:'Chelsea',w:15,d:8,l:9,gd:'+8',pts:53},{pos:8,team:'Man United',w:15,d:5,l:12,gd:'-2',pts:50},
+      {pos:9,team:'West Ham',w:14,d:6,l:12,gd:'-5',pts:48},{pos:10,team:'Brighton',w:13,d:8,l:11,gd:'+4',pts:47}
+    ]
+  };
+  var rows = defaults[code] || defaults['PL'];
+  var html = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-top:12px;">';
+  html += '<div style="display:grid;grid-template-columns:32px 1fr 28px 28px 28px 28px 36px;padding:8px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;"><span>#</span><span>Team</span><span style="text-align:center;">W</span><span style="text-align:center;">D</span><span style="text-align:center;">L</span><span style="text-align:center;">GD</span><span style="text-align:center;">Pts</span></div>';
+  rows.forEach(function(row) {
     var zoneColor = row.pos <= 4 ? 'var(--elite)' : row.pos <= 6 ? 'var(--strong)' : row.pos >= 18 ? 'var(--risky)' : 'transparent';
     html += '<div style="display:grid;grid-template-columns:32px 1fr 28px 28px 28px 28px 36px;padding:10px 12px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer;" onclick="openTeamProfile(\'' + row.team + '\')">';
     html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);border-left:2px solid ' + zoneColor + ';padding-left:6px;">' + row.pos + '</span>';
@@ -679,12 +896,8 @@ function renderStandingsScreen(leagueCode) {
     html += '<span style="font-size:13px;font-weight:700;text-align:center;">' + row.pts + '</span>';
     html += '</div>';
   });
-
   html += '</div>';
-
   html += '<div style="display:flex;gap:12px;margin:16px 0;font-size:11px;color:var(--text-muted);"><div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--elite);"></span> Champions League</div><div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--strong);"></span> Europa League</div><div style="display:flex;align-items:center;gap:4px;"><span style="width:8px;height:8px;border-radius:2px;background:var(--risky);"></span> Relegation</div></div>';
-
-  html += '<div style="height:20px;"></div></div>';
   return html;
 }
 

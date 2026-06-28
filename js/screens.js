@@ -154,6 +154,7 @@ function renderWorldCupScreen() {
   html += '<div class="chip' + (filter==='upcoming'?' active':'') + '" onclick="setWCFilter(\'upcoming\',this)">Upcoming (' + upcomingGames.length + ')</div>';
   html += '<div class="chip' + (filter==='finished'?' active':'') + '" onclick="setWCFilter(\'finished\',this)">Results (' + finishedGames.length + ')</div>';
   html += '<div class="chip' + (filter==='stats'?' active':'') + '" onclick="setWCFilter(\'stats\',this)">Stats</div>';
+  html += '<div class="chip' + (filter==='bracket'?' active':'') + '" onclick="setWCFilter(\'bracket\',this)">Bracket</div>';
   html += '</div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
@@ -161,6 +162,8 @@ function renderWorldCupScreen() {
   if (games.length === 0) {
     html += renderLoadingState();
     Store.fetchWorldCupData();
+  } else if (filter === 'bracket') {
+    html += renderWCBracket(games);
   } else if (filter === 'stats') {
     html += renderWCStats(games, groups, wc.teams || []);
   } else {
@@ -196,17 +199,27 @@ function renderWorldCupScreen() {
 
     if (filter === 'all' && groups.length > 0) {
       html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">Group Standings</div>';
-      groups.forEach(function(grp) {
+
+      var sortedGroups = groups.slice().sort(function(a,b) {
+        var nameA = (a.name || '').replace('Group ','');
+        var nameB = (b.name || '').replace('Group ','');
+        return nameA.localeCompare(nameB);
+      });
+
+      var groupLetters = 'ABCDEFGHIJKL';
+      sortedGroups.forEach(function(grp, gIdx) {
+        var groupLetter = (grp.name || '').replace('Group ','') || groupLetters[gIdx] || '?';
         html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;">';
-        html += '<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Group ' + (grp.name || '?') + '</div>';
-        if (grp.standings) {
+        html += '<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;"><span style="width:24px;height:24px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">' + groupLetter + '</span>Group ' + groupLetter + '</div>';
+        if (grp.standings && grp.standings.length > 0) {
           grp.standings.forEach(function(row) {
+            var posColor = row.position <= 2 ? 'var(--success)' : 'var(--text-muted)';
             html += '<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + (row.team || '').replace(/'/g, "\\'") + '\')">';
-            html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);width:20px;">' + row.position + '</span>';
+            html += '<span style="font-size:11px;font-weight:600;color:' + posColor + ';width:16px;">' + row.position + '</span>';
             html += '<span style="font-size:13px;font-weight:600;flex:1;">' + row.team + '</span>';
-            html += '<span style="font-size:12px;color:var(--text-secondary);">' + (row.played || 0) + '</span>';
-            html += '<span style="font-size:12px;color:var(--text-secondary);">' + (row.won || 0) + '</span>';
-            html += '<span style="font-size:13px;font-weight:700;">' + (row.points || 0) + '</span>';
+            html += '<span style="font-size:12px;color:var(--text-secondary);width:20px;text-align:center;">' + (row.played || 0) + '</span>';
+            html += '<span style="font-size:12px;color:var(--text-secondary);width:20px;text-align:center;">' + (row.won || 0) + '</span>';
+            html += '<span style="font-size:13px;font-weight:700;width:20px;text-align:center;">' + (row.points || 0) + '</span>';
             html += '</div>';
           });
         }
@@ -237,6 +250,8 @@ function renderWCMatchCard(game, isLive) {
       }
     } catch(e) { formattedDate = game.date; }
   }
+  var stage = game.group ? 'Group ' + game.group : (game.type === 'knockout' || (!game.group && game.matchday)) ? 'Knockout' : '';
+  var matchday = game.matchday ? ' \u00b7 MD ' + game.matchday : '';
   return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
@@ -252,7 +267,7 @@ function renderWCMatchCard(game, isLive) {
     + teamLogo(away, awayCrest, 28)
     + '</div>'
     + '</div>'
-    + '<div class="match-meta"><span class="match-league">\u26BD World Cup 2026 &middot; Group ' + (game.group || '?') + ' &middot; Matchday ' + (game.matchday || '?') + '</span></div>'
+    + '<div class="match-meta"><span class="match-league">\u26BD World Cup 2026' + (stage ? ' \u00b7 ' + stage : '') + matchday + '</span></div>'
     + '</div>';
 }
 
@@ -299,6 +314,87 @@ function renderWCStats(games, groups, teams) {
   }
 
   html += '<div class="card" style="margin-top:16px;"><div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">Tournament Summary</div><div style="font-size:14px;color:var(--text-secondary);line-height:1.6;">The 2026 FIFA World Cup features 48 teams competing across 16 venues in the United States, Canada, and Mexico. Group stage matches are underway with ' + totalGoals + ' goals scored so far in ' + totalFinished + ' completed matches.</div></div>';
+
+  return html;
+}
+
+function renderWCBracket(games) {
+  var r16 = games.filter(function(g){ return g.matchday === 'Round of 16' || (g.stage === 'LAST_16') || (g.stage === 'ROUND_OF_16'); });
+  var qf = games.filter(function(g){ return g.matchday === 'Quarter-finals' || (g.stage === 'QUARTER_FINALS') || (g.stage === 'QUARTER'); });
+  var sf = games.filter(function(g){ return g.matchday === 'Semi-finals' || (g.stage === 'SEMI_FINALS') || (g.stage === 'SEMI'); });
+  var third = games.filter(function(g){ return g.matchday === 'Third place match' || (g.stage === 'THIRD_PLACE') || (g.stage === 'THIRD'); });
+  var final_ = games.filter(function(g){ return g.matchday === 'Final' || (g.stage === 'FINAL'); });
+
+  if (r16.length === 0 && qf.length === 0 && sf.length === 0 && final_.length === 0) {
+    r16 = games.filter(function(g){ return g.type === 'knockout' || (!g.group && g.status !== 'live'); }).slice(0, 8);
+    if (r16.length >= 8) {
+      qf = r16.length >= 8 ? [{home:'TBD',away:'TBD',id:'qf1'},{home:'TBD',away:'TBD',id:'qf2'},{home:'TBD',away:'TBD',id:'qf3'},{home:'TBD',away:'TBD',id:'qf4'}] : [];
+      sf = [{home:'TBD',away:'TBD',id:'sf1'},{home:'TBD',away:'TBD',id:'sf2'}];
+      final_ = [{home:'TBD',away:'TBD',id:'final'}];
+    }
+  }
+
+  function bracketTeam(game, side) {
+    if (!game) return '<div class="bracket-team"><span class="bracket-team-name" style="color:var(--text-muted);">TBD</span><span class="bracket-team-score"></span></div>';
+    var name = side === 'home' ? (game.home || 'TBD') : (game.away || 'TBD');
+    var score = null;
+    if (game.homeScore != null && game.awayScore != null) {
+      score = side === 'home' ? parseInt(game.homeScore) : parseInt(game.awayScore);
+    }
+    var opponentScore = side === 'home' ? (game.awayScore != null ? parseInt(game.awayScore) : null) : (game.homeScore != null ? parseInt(game.homeScore) : null);
+    var isWinner = game.status === 'finished' && score != null && opponentScore != null && score > opponentScore;
+    var isLoser = game.status === 'finished' && score != null && opponentScore != null && score < opponentScore;
+    var cls = isWinner ? 'winner' : isLoser ? 'loser' : '';
+    return '<div class="bracket-team ' + cls + '">' +
+      teamLogo(name, side === 'home' ? game.homeCrest : game.awayCrest, 18) +
+      '<span class="bracket-team-name" onclick="event.stopPropagation();openTeamProfile(\'' + name.replace(/'/g, "\\'") + '\')">' + name + '</span>' +
+      '<span class="bracket-team-score">' + (score != null ? score : '') + '</span></div>';
+  }
+
+  function bracketMatch(game) {
+    var id = game ? game.id : '';
+    var onclick = id ? 'onclick="openWCMatchDetail(\'' + id + '\')"' : '';
+    var html = '<div class="bracket-match" ' + onclick + '>';
+    html += bracketTeam(game, 'home');
+    html += bracketTeam(game, 'away');
+    html += '</div>';
+    return html;
+  }
+
+  var html = '<div style="margin-bottom:12px;"><div style="font-size:14px;font-weight:600;margin-bottom:4px;">Knockout Bracket</div><div style="font-size:12px;color:var(--text-muted);">Swipe horizontally to see full bracket</div></div>';
+
+  html += '<div class="bracket-container">';
+
+  html += '<div class="bracket-round">';
+  html += '<div class="bracket-round-title">Round of 16</div>';
+  r16.slice(0,8).forEach(function(g) { html += bracketMatch(g); });
+  if (r16.length === 0) for (var i=0;i<8;i++) html += bracketMatch(null);
+  html += '</div>';
+
+  html += '<div class="bracket-round">';
+  html += '<div class="bracket-round-title">Quarter-finals</div>';
+  qf.slice(0,4).forEach(function(g) { html += bracketMatch(g); });
+  if (qf.length === 0) for (var j=0;j<4;j++) html += bracketMatch(null);
+  html += '</div>';
+
+  html += '<div class="bracket-round">';
+  html += '<div class="bracket-round-title">Semi-finals</div>';
+  sf.slice(0,2).forEach(function(g) { html += bracketMatch(g); });
+  if (sf.length === 0) for (var k=0;k<2;k++) html += bracketMatch(null);
+  html += '</div>';
+
+  html += '<div class="bracket-round">';
+  html += '<div class="bracket-round-title">Final</div>';
+  if (final_.length > 0) {
+    html += bracketMatch(final_[0]);
+  } else {
+    html += bracketMatch(null);
+  }
+  html += '</div>';
+
+  html += '</div>';
+
+  html += '<div class="card" style="margin-top:16px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">How the Bracket Works</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">48 teams begin in 12 groups. The top 2 from each group plus the 4 best third-placed teams advance to the Round of 16. Knockout matches are decided by extra time and penalties if needed.</div></div>';
 
   return html;
 }
