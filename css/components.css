@@ -553,29 +553,28 @@
 
 /* ─── LIVE MATCH ANIMATIONS ──────────────────────────────────────────── */
 
-/* Goal flash overlay */
+/* Goal flash overlay — clean cinematic */
 .goal-flash-overlay {
   position:fixed; inset:0; z-index:9999;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   background:rgba(0,0,0,0);
-  animation:goalFlashBg 2.5s ease both;
+  animation:goalFlashBg 2.2s cubic-bezier(0.4,0,0.2,1) both;
   pointer-events:none;
 }
 .goal-flash-text {
-  font-size:clamp(40px,12vw,64px); font-weight:900; color:#fff;
-  letter-spacing:-1px; line-height:1;
-  text-shadow:0 0 30px rgba(255,77,125,0.5), 0 0 60px rgba(255,77,125,0.2);
-  animation:goalTextPop 0.6s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+  font-size:clamp(36px,11vw,56px); font-weight:900; color:#fff;
+  letter-spacing:2px; line-height:1; text-transform:uppercase;
+  animation:goalPopIn 0.4s cubic-bezier(0.16,1,0.3,1) 0.2s both;
 }
 .goal-flash-score {
-  font-size:clamp(32px,10vw,52px); font-weight:800; color:var(--accent);
-  letter-spacing:3px; margin-top:6px; line-height:1;
-  animation:goalTextPop 0.6s cubic-bezier(0.16,1,0.3,1) 0.3s both;
+  font-size:clamp(28px,9vw,44px); font-weight:800; color:var(--accent);
+  letter-spacing:6px; margin-top:4px; line-height:1;
+  animation:goalPopIn 0.4s cubic-bezier(0.16,1,0.3,1) 0.35s both;
 }
 .goal-flash-team {
-  font-size:clamp(13px,3.5vw,16px); font-weight:600;
-  color:rgba(255,255,255,0.6); margin-top:10px;
-  animation:goalTextPop 0.6s cubic-bezier(0.16,1,0.3,1) 0.45s both;
+  font-size:clamp(12px,3vw,15px); font-weight:500;
+  color:rgba(255,255,255,0.5); margin-top:12px; letter-spacing:0.5px;
+  animation:goalPopIn 0.4s cubic-bezier(0.16,1,0.3,1) 0.5s both;
 }
 .goal-flash-particles {
   position:absolute; inset:0; overflow:hidden; pointer-events:none;
@@ -583,58 +582,58 @@
 .goal-flash-particle {
   position:absolute; border-radius:50%;
   background:var(--accent); opacity:0;
-  animation:particleFly 1.2s cubic-bezier(0.16,1,0.3,1) forwards;
+  animation:particleFly 1s cubic-bezier(0.16,1,0.3,1) forwards;
 }
 @keyframes goalFlashBg {
   0%{background:rgba(0,0,0,0)}
-  15%{background:rgba(0,0,0,0.88)}
-  80%{background:rgba(0,0,0,0.88)}
+  12%{background:rgba(0,0,0,0.92)}
+  75%{background:rgba(0,0,0,0.92)}
   100%{background:rgba(0,0,0,0)}
 }
-@keyframes goalTextPop {
-  0%{opacity:0;transform:scale(0.6) translateY(16px)}
-  60%{opacity:1;transform:scale(1.04) translateY(-2px)}
+@keyframes goalPopIn {
+  0%{opacity:0;transform:scale(0.7) translateY(12px)}
+  70%{opacity:1;transform:scale(1.02) translateY(-1px)}
   100%{opacity:1;transform:scale(1) translateY(0)}
 }
 @keyframes particleFly {
-  0%{opacity:0.9;transform:translate(0,0) scale(1)}
-  100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0.2)}
+  0%{opacity:0.8;transform:translate(0,0) scale(1)}
+  100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0)}
 }
 
-/* Score glow pulse */
+/* Score glow — subtle pulse */
 .score-glow {
-  animation:scoreGlow 1.2s ease-in-out;
+  animation:scoreGlow 1s ease-in-out;
 }
 @keyframes scoreGlow {
   0%{text-shadow:none;color:#fff}
-  30%{text-shadow:0 0 16px rgba(255,77,125,0.7), 0 0 32px rgba(255,77,125,0.3);color:var(--accent)}
+  35%{text-shadow:0 0 12px rgba(255,77,125,0.6), 0 0 24px rgba(255,77,125,0.2);color:var(--accent)}
   100%{text-shadow:none;color:#fff}
 }
 
-/* Live minute ticker */
+/* Live minute tick — clean scale */
 .live-minute-tick {
   display:inline-block;
-  animation:minuteTick 0.35s cubic-bezier(0.16,1,0.3,1);
+  animation:minuteTick 0.3s cubic-bezier(0.16,1,0.3,1);
 }
 @keyframes minuteTick {
   0%{transform:scale(1)}
-  40%{transform:scale(1.2)}
+  50%{transform:scale(1.15)}
   100%{transform:scale(1)}
 }
 
-/* Live event ticker */
+/* Live event ticker — smooth scroll */
 .live-ticker {
   overflow:hidden; white-space:nowrap; width:calc(100% + 40px);
   margin-left:-20px;
-  background:rgba(255,77,125,0.06); border-top:1px solid rgba(255,77,125,0.1);
-  padding:7px 0; margin-top:12px;
+  background:rgba(255,77,125,0.05); border-top:1px solid rgba(255,77,125,0.08);
+  padding:6px 0; margin-top:12px;
   border-radius:0 0 12px 12px;
 }
 .live-ticker-inner {
   display:inline-block;
-  animation:tickerScroll 25s linear infinite;
-  font-size:11px; font-weight:600; color:rgba(255,77,125,0.7);
-  letter-spacing:0.3px;
+  animation:tickerScroll 30s linear infinite;
+  font-size:11px; font-weight:500; color:rgba(255,77,125,0.6);
+  letter-spacing:0.2px;
 }
 @keyframes tickerScroll {
   0%{transform:translateX(100vw)}
@@ -643,43 +642,31 @@
 
 /* Match progress bar */
 .match-progress {
-  width:100%; height:3px; background:rgba(255,255,255,0.06);
-  border-radius:2px; overflow:visible; margin-top:12px;
+  width:100%; height:2px; background:rgba(255,255,255,0.06);
+  border-radius:1px; overflow:visible; margin-top:12px;
   position:relative;
 }
 .match-progress-fill {
-  height:100%; border-radius:2px;
-  background:linear-gradient(90deg, rgba(255,77,125,0.4), var(--accent));
+  height:100%; border-radius:1px;
+  background:linear-gradient(90deg, rgba(255,77,125,0.3), var(--accent));
   transition:width 1s linear;
   position:relative;
 }
 .match-progress-fill::after {
   content:''; position:absolute; right:-3px; top:50%; transform:translateY(-50%);
-  width:7px; height:7px; border-radius:50%;
-  background:var(--accent); box-shadow:0 0 8px rgba(255,77,125,0.5);
+  width:6px; height:6px; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 6px rgba(255,77,125,0.4);
   animation:pulse 2s ease infinite;
 }
 
-/* Live card shimmer effect on update */
+/* Live card update shimmer */
 .live-card-updated {
-  animation:liveCardFlash 0.8s ease;
+  animation:liveCardFlash 0.6s ease;
 }
 @keyframes liveCardFlash {
-  0%{box-shadow:0 0 0 0 rgba(255,77,125,0.3)}
-  40%{box-shadow:0 0 16px 3px rgba(255,77,125,0.15)}
+  0%{box-shadow:0 0 0 0 rgba(255,77,125,0.2)}
+  50%{box-shadow:0 0 12px 2px rgba(255,77,125,0.1)}
   100%{box-shadow:0 0 20px rgba(255,77,125,0.05)}
-}
-
-/* Live card update dot */
-.live-update-dot {
-  position:absolute; top:8px; right:8px; width:6px; height:6px;
-  border-radius:50%; background:var(--accent);
-  animation:updateDotPulse 0.8s ease;
-}
-@keyframes updateDotPulse {
-  0%{transform:scale(0);opacity:0}
-  50%{transform:scale(1.4);opacity:1}
-  100%{transform:scale(0);opacity:0}
 }
 
 @media (min-width:640px) {

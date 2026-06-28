@@ -461,17 +461,17 @@ function renderSearchScreen() {
 
   html += '<div style="overflow-y:auto;flex:1;">';
 
-  html += '<div class="search-input-wrap"><div class="search-icon">' + ICONS.search + '</div><input class="search-input" id="search-field" type="text" placeholder="Teams, leagues, matches\u2026" oninput="handleSearch(this.value)"></div>';
+  html += '<div class="search-input-wrap"><div class="search-icon">' + ICONS.search + '</div><input class="search-input" id="search-field" type="text" placeholder="Teams, leagues, matches\u2026" autofocus oninput="handleSearch(this.value)"></div>';
 
   html += '<div id="search-results"><div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Recent Searches</div>';
   recent.forEach(function(s) {
-    html += '<div class="list-row" onclick="openSearchResult(\'' + s + '\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.search + '<span style="font-size:14px;">' + s + '</span></div>' + ICONS.chevronRight + '</div>';
+    html += '<div class="list-row" onclick="document.getElementById(\'search-field\').value=\'' + s + '\';handleSearch(\'' + s + '\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.search + '<span style="font-size:14px;">' + s + '</span></div>' + ICONS.chevronRight + '</div>';
   });
   html += '</div>';
 
   html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Trending</div>';
   trending.forEach(function(s) {
-    html += '<div class="list-row" onclick="openSearchResult(\'' + s + '\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.trendUp + '<span style="font-size:14px;">' + s + '</span></div>' + ICONS.chevronRight + '</div>';
+    html += '<div class="list-row" onclick="document.getElementById(\'search-field\').value=\'' + s + '\';handleSearch(\'' + s + '\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.trendUp + '<span style="font-size:14px;">' + s + '</span></div>' + ICONS.chevronRight + '</div>';
   });
   html += '</div></div></div>';
 
@@ -481,13 +481,17 @@ function renderSearchScreen() {
 // ─── Notifications Screen ─────────────────────────────────────────────────────
 function renderNotificationsScreen() {
   var notifs = Store.getNotifications();
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Notifications</div><button class="btn btn-sm btn-ghost" onclick="clearAllNotifs()">Clear All</button></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Notifications</div>' + (notifs.length > 0 ? '<button class="btn btn-sm btn-ghost" onclick="clearAllNotifs()">Clear All</button>' : '') + '</div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;"><div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">';
 
-  notifs.forEach(function(n) {
-    html += '<div class="card ' + (n.read ? '' : 'card-accent-left') + '" style="' + (n.read ? '' : 'border-color:rgba(255,77,125,0.25);') + '" onclick="markRead(\'' + n.id + '\')"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;"><div style="flex:1;"><div style="font-size:14px;font-weight:' + (n.read ? '500' : '600') + ';margin-bottom:3px;">' + n.title + '</div><div style="font-size:13px;color:var(--text-secondary);">' + n.body + '</div><div style="font-size:12px;color:var(--text-muted);margin-top:6px;">' + n.time + '</div></div>' + (!n.read ? '<div style="width:8px;height:8px;background:var(--accent);border-radius:50%;margin-top:4px;flex-shrink:0;"></div>' : '') + '</div></div>';
-  });
+  if (notifs.length === 0) {
+    html += renderEmptyState('bell','No notifications','You\'re all caught up. Elite picks and alerts will appear here.', '','');
+  } else {
+    notifs.forEach(function(n) {
+      html += '<div class="card ' + (n.read ? '' : 'card-accent-left') + '" style="' + (n.read ? '' : 'border-color:rgba(255,77,125,0.25);') + '"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;"><div style="flex:1;cursor:pointer;" onclick="markRead(\'' + n.id + '\')"><div style="font-size:14px;font-weight:' + (n.read ? '500' : '600') + ';margin-bottom:3px;">' + n.title + '</div><div style="font-size:13px;color:var(--text-secondary);">' + n.body + '</div><div style="font-size:12px;color:var(--text-muted);margin-top:6px;">' + n.time + '</div></div><div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' + (!n.read ? '<div style="width:8px;height:8px;background:var(--accent);border-radius:50%;flex-shrink:0;"></div>' : '') + '<button onclick="deleteNotif(\'' + n.id + '\')" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text-muted);">' + ICONS.trash + '</button></div></div></div>';
+    });
+  }
 
   html += '</div><div style="height:20px;"></div></div>';
   return html;

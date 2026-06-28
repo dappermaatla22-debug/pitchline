@@ -1,8 +1,11 @@
 function renderHomeScreen() {
-  var matches = Store.getMatches();
-  var predictions = Store.getPredictions();
-  var live = matches.filter(function(m){ return m.status === 'live'; });
-  var today = predictions.filter(function(p){ return p.date === 'Today'; });
+  var allMatches = Store.getMatches();
+  var allPredictions = Store.getPredictions();
+  var filtered = getFilteredHomeMatches(allMatches, allPredictions);
+  var matches = filtered.matches;
+  var predictions = filtered.predictions;
+  var live = allMatches.filter(function(m){ return m.status === 'live'; });
+  var today = allPredictions.filter(function(p){ return p.date === 'Today'; });
   var elite = today.filter(function(p){ return p.tier === 'elite'; });
   var strong = today.filter(function(p){ return p.tier === 'strong'; });
 

@@ -289,6 +289,11 @@ var Store = (function() {
     notify();
   }
 
+  function deleteNotification(id) {
+    state.notifications = state.notifications.filter(function(n) { return n.id !== id; });
+    notify();
+  }
+
   loadUserData();
 
   return {
@@ -320,6 +325,7 @@ var Store = (function() {
     removeFavTeam: removeFavTeam,
     markNotificationRead: markNotificationRead,
     clearNotifications: clearNotifications,
+    deleteNotification: deleteNotification,
     state: state
   };
 })();

@@ -687,9 +687,27 @@ function removeFavTeam(name) {
   navigate('favorites');
 }
 
+var DATE_FILTER = 'today';
 function filterDate(val, el) {
-  document.querySelectorAll('#date-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  DATE_FILTER = val;
+  document.querySelectorAll('#date-chips .date-chip').forEach(function(c){ c.classList.remove('active'); });
   if (el) el.classList.add('active');
+  // Re-render home screen with filtered data
+  renderScreen('home');
+}
+
+function getFilteredHomeMatches(matches, predictions) {
+  var f = DATE_FILTER;
+  if (f === 'today') {
+    return { matches: matches.filter(function(m){ return m.status !== 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date === 'Today'; }) };
+  } else if (f === 'tomorrow') {
+    return { matches: matches.filter(function(m){ return m.status === 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date === 'Tomorrow'; }) };
+  } else {
+    // Specific weekday — filter by date string match
+    var filtered = predictions.filter(function(p){ return p.date && p.date.toLowerCase().indexOf(f) > -1; });
+    var filteredMatches = matches.filter(function(m){ return m.date && m.date.toLowerCase().indexOf(f) > -1; });
+    return { matches: filteredMatches.length ? filteredMatches : matches, predictions: filtered.length ? filtered : predictions };
+  }
 }
 
 function filterMatchDate(val, el) {
@@ -704,11 +722,20 @@ function handleSearch(val) {
   var q = val.toLowerCase();
   var matches = Store.getMatches();
   var predictions = Store.getPredictions();
+  var wc = Store.getWorldCup();
   var results = matches.filter(function(m){
     return m.home.toLowerCase().indexOf(q) > -1 || m.away.toLowerCase().indexOf(q) > -1 || m.league.toLowerCase().indexOf(q) > -1;
   });
   var predResults = predictions.filter(function(p){
-    return p.home.toLowerCase().indexOf(q) > -1 || p.away.toLowerCase().indexOf(q) > -1;
+    return p.home.toLowerCase().indexOf(q) > -1 || p.away.toLowerCase().indexOf(q) > -1 || p.league.toLowerCase().indexOf(q) > -1;
+  });
+  var wcResults = (wc.games || []).filter(function(g){
+    var home = (g.home || '').toLowerCase();
+    var away = (g.away || '').toLowerCase();
+    return home.indexOf(q) > -1 || away.indexOf(q) > -1;
+  });
+  var newsResults = (typeof NEWS_DATA !== 'undefined' ? NEWS_DATA : []).filter(function(n){
+    return n.title.toLowerCase().indexOf(q) > -1 || n.summary.toLowerCase().indexOf(q) > -1 || n.category.toLowerCase().indexOf(q) > -1;
   });
   var html = '';
   if (results.length) {
@@ -721,7 +748,17 @@ function handleSearch(val) {
     html += predResults.slice(0,5).map(function(p){ return '<div class="list-row" onclick="openPredDetail(\'' + p.id + '\')"><div><div style="font-size:14px;font-weight:500;">' + p.home + ' vs ' + p.away + '</div><div style="font-size:12px;color:var(--text-muted);">' + p.league + ' \u00b7 ' + p.confidence + '%</div></div>' + ICONS.chevronRight + '</div>'; }).join('');
     html += '</div>';
   }
-  if (!results.length && !predResults.length) {
+  if (wcResults.length) {
+    html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">World Cup 2026</div>';
+    html += wcResults.slice(0,5).map(function(g){ return '<div class="list-row" onclick="openWCMatchDetail(\'' + g.id + '\')"><div><div style="font-size:14px;font-weight:500;">' + (g.home||'TBD') + ' vs ' + (g.away||'TBD') + '</div><div style="font-size:12px;color:var(--text-muted);">Group ' + (g.group||'?') + '</div></div>' + ICONS.chevronRight + '</div>'; }).join('');
+    html += '</div>';
+  }
+  if (newsResults.length) {
+    html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">News</div>';
+    html += newsResults.slice(0,3).map(function(n){ return '<div class="list-row" onclick="openNewsDetail(\'' + n.id + '\')"><div><div style="font-size:14px;font-weight:500;">' + n.title + '</div><div style="font-size:12px;color:var(--text-muted);">' + n.category + '</div></div>' + ICONS.chevronRight + '</div>'; }).join('');
+    html += '</div>';
+  }
+  if (!results.length && !predResults.length && !wcResults.length && !newsResults.length) {
     html = '<div style="padding:40px 16px;text-align:center;color:var(--text-muted);">No results for "' + val + '"</div>';
   }
   res.innerHTML = html;
@@ -731,12 +768,17 @@ function openSearchResult(name) { showToast('Opening ' + name); }
 
 function markRead(id) {
   Store.markNotificationRead(id);
-  navigate('notifications-screen');
+  renderScreen('notifications-screen');
+}
+
+function deleteNotif(id) {
+  Store.deleteNotification(id);
+  renderScreen('notifications-screen');
 }
 
 function clearAllNotifs() {
   Store.clearNotifications();
-  navigate('notifications-screen');
+  renderScreen('notifications-screen');
   showToast('All notifications cleared');
 }
 
