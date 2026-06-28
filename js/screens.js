@@ -18,13 +18,16 @@ function renderHomeScreen() {
   }
 
   var html = '<div class="app-header"><div class="header-logo">PITCH<span>LINE</span></div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button><button class="btn-icon" onclick="navigate(\'notifications-screen\')" style="position:relative;">' + ICONS.bell + (Store.getUnreadCount() > 0 ? '<span class="notif-badge">' + Store.getUnreadCount() + '</span>' : '') + '</button></div></div>';
-  html += '<div style="overflow-y:auto;flex:1;">';
+  html += '<div style="overflow-y:auto;flex:1;position:relative;">';
+
+  html += '<div id="pull-indicator" class="pull-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></div>';
+
   html += '<div class="chip-row date-selector" id="date-chips">' + dateChips + '</div>';
 
   html += '<div class="quick-access-row">'
     + '<div class="quick-card" onclick="navigate(\'fixtures\')">'
     + '<div class="quick-card-icon" style="background:rgba(79,142,247,0.15);color:var(--strong);">' + ICONS.matches + '</div>'
-    + '<div class="quick-card-label">Fixtures</div>'
+    + '<div class="quick-card-label">' + (typeof t === 'function' ? t('fixtures') : 'Fixtures') + '</div>'
     + '<div class="quick-card-sub">' + matches.length + ' matches</div>'
     + '</div>'
     + '<div class="quick-card" onclick="navigate(\'worldcup\')">'
@@ -34,26 +37,26 @@ function renderHomeScreen() {
     + '</div>'
     + '<div class="quick-card" onclick="navigate(\'stats\')">'
     + '<div class="quick-card-icon" style="background:rgba(52,200,122,0.15);color:var(--elite);">' + ICONS.predictions + '</div>'
-    + '<div class="quick-card-label">Stats</div>'
+    + '<div class="quick-card-label">' + (typeof t === 'function' ? t('predict') : 'Stats') + '</div>'
     + '<div class="quick-card-sub">' + predictions.length + ' preds</div>'
     + '</div>'
     + '</div>';
 
   if (live.length > 0) {
-    html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">Live Now</span><span style="font-size:12px;font-weight:600;color:var(--danger);background:rgba(244,63,94,0.12);padding:2px 8px;border-radius:var(--r-full);">' + live.length + '</span></div><span class="section-link" onclick="navigate(\'competitions\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding:0 var(--sp-4) 4px;scroll-snap-type:x mandatory;scrollbar-width:none;">' + live.map(function(m) { return renderLiveMatchCard(m); }).join('') + '</div></div>';
+    html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">' + (typeof t === 'function' ? t('liveNow') : 'Live Now') + '</span><span style="font-size:12px;font-weight:600;color:var(--danger);background:rgba(244,63,94,0.12);padding:2px 8px;border-radius:var(--r-full);">' + live.length + '</span></div><span class="section-link" onclick="navigate(\'fixtures\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding:0 var(--sp-4) 4px;scroll-snap-type:x mandatory;scrollbar-width:none;">' + live.map(function(m) { return renderLiveMatchCard(m); }).join('') + '</div></div>';
   }
 
   if (predictions.length === 0 && matches.length === 0) {
     html += renderLoadingState();
   } else {
-    if (elite.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--elite);"></div><span class="section-title">Elite Picks</span></div><span class="section-link" onclick="navigate(\'predictions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + elite.slice(0,2).map(renderPredCard).join('') + '</div></div>';
-    if (strong.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--strong);"></div><span class="section-title">Strong Picks</span></div><span class="section-link" onclick="navigate(\'predictions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + strong.slice(0,2).map(renderPredCard).join('') + '</div></div>';
+    if (elite.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--elite);"></div><span class="section-title">' + (typeof t === 'function' ? t('elitePicks') : 'Elite Picks') + '</span></div><span class="section-link" onclick="navigate(\'predictions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + elite.slice(0,2).map(renderPredCard).join('') + '</div></div>';
+    if (strong.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--strong);"></div><span class="section-title">' + (typeof t === 'function' ? t('strongPicks') : 'Strong Picks') + '</span></div><span class="section-link" onclick="navigate(\'predictions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + strong.slice(0,2).map(renderPredCard).join('') + '</div></div>';
 
     var risky = predictions.filter(function(p){ return p.tier==='moderate'||p.tier==='risky'; });
-    if (risky.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);"></div><span class="section-title">Avoid List</span></div></div><div class="card" style="background:var(--risky-dim);border-color:rgba(244,63,94,0.2);">' + risky.slice(0,4).map(function(p){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(244,63,94,0.12);cursor:pointer;" onclick="openPredDetail(\'' + p.id + '\')"><span style="font-size:13px;color:var(--text-secondary);">' + p.home + ' vs ' + p.away + '</span><span style="font-size:13px;font-weight:600;color:var(--risky);">' + p.confidence + '%</span></div>'; }).join('') + '</div></div>';
+    if (risky.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);"></div><span class="section-title">' + (typeof t === 'function' ? t('avoidList') : 'Avoid List') + '</span></div></div><div class="card" style="background:var(--risky-dim);border-color:rgba(244,63,94,0.2);">' + risky.slice(0,4).map(function(p){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(244,63,94,0.12);cursor:pointer;" onclick="openPredDetail(\'' + p.id + '\')"><span style="font-size:13px;color:var(--text-secondary);">' + p.home + ' vs ' + p.away + '</span><span style="font-size:13px;font-weight:600;color:var(--risky);">' + p.confidence + '%</span></div>'; }).join('') + '</div></div>';
   }
 
-  html += '<div class="section"><div class="section-header"><span class="section-title">All Matches</span><span class="section-link" onclick="navigate(\'fixtures\')">Browse</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + matches.slice(0,6).map(renderMatchCard).join('') + '</div></div>';
+  html += '<div class="section"><div class="section-header"><span class="section-title">' + (typeof t === 'function' ? t('allMatches') : 'All Matches') + '</span><span class="section-link" onclick="navigate(\'fixtures\')">Browse</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + matches.slice(0,6).map(renderMatchCard).join('') + '</div></div>';
   html += '<div style="height:20px;"></div></div>';
   return html;
 }
@@ -121,15 +124,13 @@ function renderWorldCupScreen() {
           html += renderWCMatchCard(g, true);
         });
         html += '</div>';
-      } else if (filter === 'live') {
-        html += '<div style="padding:40px 0;text-align:center;color:var(--text-muted);">No live matches right now</div>';
       }
     }
 
     if (filter === 'all' || filter === 'upcoming') {
       if (upcomingGames.length > 0) {
         html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">Upcoming (' + upcomingGames.length + ')</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
-        upcomingGames.slice(0, filter==='upcoming' ? 999 : 4).forEach(function(g) {
+        upcomingGames.forEach(function(g) {
           html += renderWCMatchCard(g, false);
         });
         html += '</div>';
@@ -139,7 +140,7 @@ function renderWorldCupScreen() {
     if (filter === 'all' || filter === 'finished') {
       if (finishedGames.length > 0) {
         html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">Results (' + finishedGames.length + ')</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
-        finishedGames.slice(0, filter==='finished' ? 999 : 4).forEach(function(g) {
+        finishedGames.forEach(function(g) {
           html += renderWCMatchCard(g, false);
         });
         html += '</div>';
@@ -147,7 +148,23 @@ function renderWorldCupScreen() {
     }
 
     if (filter === 'all' && groups.length > 0) {
-      html += renderWCGroups(games, groups, wc.teams || []);
+      html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">Group Standings</div>';
+      groups.slice(0,4).forEach(function(grp) {
+        html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;">';
+        html += '<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Group ' + (grp.name || '?') + '</div>';
+        if (grp.standings) {
+          grp.standings.forEach(function(row) {
+            html += '<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);gap:8px;">';
+            html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);width:20px;">' + row.position + '</span>';
+            html += '<span style="font-size:13px;font-weight:600;flex:1;">' + row.team + '</span>';
+            html += '<span style="font-size:12px;color:var(--text-secondary);">' + (row.played || 0) + '</span>';
+            html += '<span style="font-size:12px;color:var(--text-secondary);">' + (row.won || 0) + '</span>';
+            html += '<span style="font-size:13px;font-weight:700;">' + (row.points || 0) + '</span>';
+            html += '</div>';
+          });
+        }
+        html += '</div>';
+      });
     }
   }
 
@@ -155,113 +172,72 @@ function renderWorldCupScreen() {
   return html;
 }
 
-function renderWCMatchCard(g, isLive) {
-  var scorers = '';
-  if (g.homeScorers && g.status === 'finished' || isLive) {
-    scorers = g.homeScorers || '';
-    if (scorers) scorers = scorers.replace(/\{/g,'').replace(/\}/g,'').replace(/"/g,'');
-  }
-  var html = '<div class="match-card" onclick="openWCMatchDetail(\'' + g.id + '\')" style="' + (isLive ? 'border-color:rgba(244,63,94,0.3);' : '') + '">';
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><span style="font-size:11px;color:var(--text-muted);">Group ' + g.group + ' \u00b7 Matchday ' + g.matchday + '</span>';
-  if (isLive) {
-    html += '<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--danger);font-weight:600;"><span style="width:6px;height:6px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></span>LIVE</span>';
-  } else if (g.status === 'finished') {
-    html += '<span style="font-size:11px;color:var(--success);font-weight:600;">FT</span>';
-  } else {
-    html += '<span style="font-size:11px;color:var(--text-muted);">' + g.date + '</span>';
-  }
-  html += '</div>';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:4px 0;">';
-  html += '<span style="font-size:14px;font-weight:600;flex:1;text-align:left;">' + g.home + '</span>';
-  html += '<span style="font-size:20px;font-weight:800;letter-spacing:-1px;min-width:60px;text-align:center;">' + (g.score || ' - ') + '</span>';
-  html += '<span style="font-size:14px;font-weight:600;flex:1;text-align:right;">' + g.away + '</span>';
-  html += '</div>';
-  if (scorers && (g.status === 'finished' || isLive)) {
-    html += '<div style="font-size:11px;color:var(--text-muted);margin-top:4px;line-height:1.4;">' + scorers + '</div>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function renderWCGroups(games, groups, teams) {
-  var teamMap = {};
-  teams.forEach(function(t) { teamMap[t.id || t._id] = t.name_en || t.name || ''; });
-
-  var html = '<div style="font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">Group Standings</div>';
-  groups.forEach(function(group) {
-    html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:10px;">';
-    html += '<div style="padding:10px 14px;font-size:13px;font-weight:700;color:var(--accent);border-bottom:1px solid var(--border);">Group ' + group.name + '</div>';
-    html += '<div style="display:grid;grid-template-columns:20px 1fr repeat(5,28px) 32px;padding:6px 12px;border-bottom:1px solid var(--border);font-size:9px;font-weight:600;color:var(--text-muted);text-transform:uppercase;"><span></span><span></span><span style="text-align:center;">P</span><span style="text-align:center;">W</span><span style="text-align:center;">D</span><span style="text-align:center;">L</span><span style="text-align:center;">GF</span><span style="text-align:center;">Pts</span></div>';
-    (group.teams || []).forEach(function(t, i) {
-      var teamName = teamMap[t.team_id] || 'Team ' + t.team_id;
-      var zoneColor = i < 2 ? 'var(--elite)' : 'transparent';
-      html += '<div style="display:grid;grid-template-columns:20px 1fr repeat(5,28px) 32px;padding:7px 12px;border-bottom:1px solid var(--border);align-items:center;">';
-      html += '<span style="font-size:10px;font-weight:600;color:var(--text-muted);border-left:2px solid ' + zoneColor + ';padding-left:4px;">' + (i+1) + '</span>';
-      html += '<span style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + teamName + '</span>';
-      html += '<span style="font-size:10px;text-align:center;color:var(--text-secondary);">' + t.mp + '</span>';
-      html += '<span style="font-size:10px;text-align:center;color:var(--text-secondary);">' + t.w + '</span>';
-      html += '<span style="font-size:10px;text-align:center;color:var(--text-secondary);">' + t.d + '</span>';
-      html += '<span style="font-size:10px;text-align:center;color:var(--text-secondary);">' + t.l + '</span>';
-      html += '<span style="font-size:10px;text-align:center;color:var(--text-secondary);">' + t.gf + '</span>';
-      html += '<span style="font-size:10px;font-weight:700;text-align:center;">' + t.pts + '</span>';
-      html += '</div>';
-    });
-    html += '</div>';
-  });
-  return html;
+function renderWCMatchCard(game, isLive) {
+  var statusColor = isLive ? 'var(--danger)' : game.status === 'finished' ? 'var(--success)' : 'var(--text-muted)';
+  var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : game.local_date || '';
+  return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
+    + '<div class="match-teams">'
+    + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
+    + teamLogo(game.home_team_name_en, null, 28)
+    + '<span class="team-name">' + game.home_team_name_en + '</span>'
+    + '</div>'
+    + '<div style="text-align:center;">'
+    + '<span class="vs-badge" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
+    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;">' + statusText + '</div>'
+    + '</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
+    + '<span class="team-name away">' + game.away_team_name_en + '</span>'
+    + teamLogo(game.away_team_name_en, null, 28)
+    + '</div>'
+    + '</div>'
+    + '<div class="match-meta"><span class="match-league">Group ' + (game.group || '?') + ' · Matchday ' + (game.matchday || '?') + '</span></div>'
+    + '</div>';
 }
 
 function renderWCStats(games, groups, teams) {
-  var teamMap = {};
-  teams.forEach(function(t) { teamMap[t.id || t._id] = t.name_en || t.name || ''; });
-
-  var totalGoals = 0, totalMatches = 0, totalFinished = 0;
+  var totalGoals = 0;
+  var totalFinished = 0;
   var teamGoals = {};
   games.forEach(function(g) {
     if (g.status === 'finished' && g.homeScore && g.awayScore) {
-      var hg = parseInt(g.homeScore) || 0;
-      var ag = parseInt(g.awayScore) || 0;
-      totalGoals += hg + ag;
-      totalMatches++;
-      teamGoals[g.home] = (teamGoals[g.home] || 0) + hg;
-      teamGoals[g.away] = (teamGoals[g.away] || 0) + ag;
+      var h = parseInt(g.homeScore);
+      var a = parseInt(g.awayScore);
+      totalGoals += h + a;
+      totalFinished++;
+      if (!teamGoals[g.home_team_name_en]) teamGoals[g.home_team_name_en] = 0;
+      if (!teamGoals[g.away_team_name_en]) teamGoals[g.away_team_name_en] = 0;
+      teamGoals[g.home_team_name_en] += h;
+      teamGoals[g.away_team_name_en] += a;
     }
-    totalFinished++;
   });
+  var avgGoals = totalFinished > 0 ? (totalGoals / totalFinished).toFixed(1) : '0.0';
 
-  var sorted = Object.keys(teamGoals).sort(function(a,b){ return teamGoals[b] - teamGoals[a]; });
+  var html = '<div style="font-size:14px;font-weight:600;margin-bottom:12px;">Tournament Statistics</div>';
 
-  var html = '<div style="margin-top:12px;">';
-
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">';
-  html += '<div class="card" style="text-align:center;padding:16px 8px;"><div style="font-size:28px;font-weight:800;color:var(--accent);">' + totalGoals + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Total Goals</div></div>';
-  html += '<div class="card" style="text-align:center;padding:16px 8px;"><div style="font-size:28px;font-weight:800;color:var(--success);">' + totalMatches + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Matches Played</div></div>';
-  html += '<div class="card" style="text-align:center;padding:16px 8px;"><div style="font-size:28px;font-weight:800;color:var(--warning);">' + (totalMatches > 0 ? (totalGoals / totalMatches).toFixed(1) : '0') + '</div><div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Goals / Match</div></div>';
+  html += '<div class="stat-grid" style="margin-bottom:16px;">';
+  html += '<div class="stat-card"><div class="stat-label">Total Goals</div><div class="stat-value">' + totalGoals + '</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">Matches Played</div><div class="stat-value">' + totalFinished + '</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">Goals/Match</div><div class="stat-value" style="color:var(--accent);">' + avgGoals + '</div></div>';
+  html += '<div class="stat-card"><div class="stat-label">Total Teams</div><div class="stat-value">' + (teams.length || games.length * 2) + '</div></div>';
   html += '</div>';
 
+  var sorted = Object.keys(teamGoals).sort(function(a,b){ return teamGoals[b] - teamGoals[a]; }).slice(0,8);
   if (sorted.length > 0) {
-    html += '<div style="font-size:12px;font-weight:600;color:var(--accent);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Top Scoring Teams</div>';
-    html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;">';
-    sorted.slice(0,8).forEach(function(name, i) {
-      var pct = teamGoals[name] / (teamGoals[sorted[0]] || 1) * 100;
-      html += '<div style="padding:10px 14px;border-bottom:1px solid var(--border);"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><span style="font-size:12px;font-weight:600;">' + name + '</span><span style="font-size:13px;font-weight:700;color:var(--accent);">' + teamGoals[name] + ' goals</span></div><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%;background:var(--accent);"></div></div></div>';
+    html += '<div style="font-size:14px;font-weight:600;margin-bottom:10px;">Top Scoring Teams</div>';
+    html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
+    sorted.forEach(function(team, i) {
+      html += '<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;">';
+      html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);width:20px;">' + (i+1) + '</span>';
+      html += teamLogo(team, null, 24);
+      html += '<span style="font-size:13px;font-weight:600;flex:1;">' + team + '</span>';
+      html += '<span style="font-size:14px;font-weight:700;color:var(--accent);">' + teamGoals[team] + '</span>';
+      html += '</div>';
     });
     html += '</div>';
   }
 
-  var liveGames = games.filter(function(g){ return g.status === 'live'; });
-  var finishedGames = games.filter(function(g){ return g.status === 'finished'; });
-  var upcomingGames = games.filter(function(g){ return g.status === 'upcoming'; });
-  html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:8px;">Tournament Summary</div>';
-  html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Total Matches</span><span style="font-size:13px;font-weight:700;">' + games.length + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Finished</span><span style="font-size:13px;font-weight:700;color:var(--success);">' + finishedGames.length + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Live</span><span style="font-size:13px;font-weight:700;color:var(--danger);">' + liveGames.length + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Upcoming</span><span style="font-size:13px;font-weight:700;">' + upcomingGames.length + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;"><span style="font-size:13px;color:var(--text-secondary);">Groups</span><span style="font-size:13px;font-weight:700;">A \u2013 L</span></div>';
-  html += '</div>';
+  html += '<div class="card" style="margin-top:16px;"><div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:6px;">Tournament Summary</div><div style="font-size:14px;color:var(--text-secondary);line-height:1.6;">The 2026 FIFA World Cup features 48 teams competing across 16 venues in the United States, Canada, and Mexico. Group stage matches are underway with ' + totalGoals + ' goals scored so far in ' + totalFinished + ' completed matches.</div></div>';
 
-  html += '</div>';
   return html;
 }
 
@@ -272,9 +248,7 @@ function renderPredictionsScreen() {
   var moderate = predictions.filter(function(p){ return p.tier === 'moderate'; });
   var risky = predictions.filter(function(p){ return p.tier === 'risky'; });
 
-  var activeFilter = 'all';
-
-  var html = '<div class="app-header"><div class="header-title">Predictions</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
+  var html = '<div class="app-header"><div class="header-title">Predictions</div><div class="header-actions"><button class="btn-icon" onclick="showBetSlip()" title="Bet Slip">' + ICONS.download + '</button><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
 
   html += '<div class="chip-row" id="pred-filter-chips">';
   html += '<div class="chip active" onclick="filterPreds(\'all\',this)">All <span style="opacity:0.6;">(' + predictions.length + ')</span></div>';
@@ -370,6 +344,7 @@ function renderStatsScreen() {
   var predCount = predictions.length;
   var eliteCount = predictions.filter(function(p){ return p.tier === 'elite'; }).length;
   var avgConf = predCount > 0 ? Math.round(predictions.reduce(function(a,p){ return a+p.confidence; },0)/predCount) : 0;
+  var accStats = typeof getAccuracyStats === 'function' ? getAccuracyStats() : {total:0,correct:0};
 
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Statistics</div></div>';
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
@@ -412,18 +387,30 @@ function renderStatsScreen() {
 }
 
 function renderNewsScreen() {
-  var html = '<div class="app-header"><div class="header-title">News</div></div>';
-  html += '<div class="chip-row"><div class="chip active">All</div><div class="chip">Transfers</div><div class="chip">Injuries</div><div class="chip">Analysis</div></div>';
-  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;margin-top:12px;">';
-  html += '<div style="display:flex;flex-direction:column;gap:12px;">';
+  var html = '<div class="app-header"><div class="header-title">News</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
+  html += '<div class="chip-row"><div class="chip active">All</div><div class="chip">Transfers</div><div class="chip">Analysis</div><div class="chip">Injuries</div><div class="chip">Tactics</div></div>';
+  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
+
+  var NEWS_DATA = [
+    { id:'n1', category:'Transfer', catColor:'var(--accent)', title:'Man City eyeing January move for midfield target', summary:'Manchester City are reportedly monitoring a key midfield target ahead of the January transfer window.', time:'15 min ago' },
+    { id:'n2', category:'Analysis', catColor:'var(--success)', title:'Champions League predictions updated after draw', summary:'Following the latest Champions League group stage draw, our prediction models have been recalibrated.', time:'1 hr ago' },
+    { id:'n3', category:'Injury', catColor:'var(--warning)', title:'Key striker doubts for weekend showdown', summary:'A crucial striker is facing a race to be fit for this weekend\'s important fixture.', time:'3 hrs ago' },
+    { id:'n4', category:'Tactics', catColor:'var(--strong)', title:'How Arsenal\'s new formation could change the title race', summary:'Arsenal\'s tactical shift to a 3-4-3 formation has been producing impressive results.', time:'5 hrs ago' },
+    { id:'n5', category:'Transfer', catColor:'var(--accent)', title:'Barcelona targeting Premier League defender', summary:'Barcelona have reportedly identified a Premier League defender as their top transfer target.', time:'8 hrs ago' },
+    { id:'n6', category:'Analysis', catColor:'var(--success)', title:'xG breakdown: Which teams are overperforming?', summary:'Our latest expected goals analysis reveals some surprising overperformers across Europe.', time:'12 hrs ago' }
+  ];
+
   NEWS_DATA.forEach(function(article) {
-    var iconSvg = '';
-    if (article.image === 'transfer') iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="' + article.catColor + '" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>';
-    else if (article.image === 'analysis') iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="' + article.catColor + '" stroke-width="1.5"><path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/></svg>';
-    else iconSvg = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="' + article.catColor + '" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>';
-    html += '<div class="match-card" style="padding:14px;cursor:pointer;" onclick="openNewsDetail(\'' + article.id + '\')"><div style="display:flex;gap:12px;"><div style="width:56px;height:56px;background:var(--bg-elevated);border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + iconSvg + '</div><div style="flex:1;min-width:0;"><div style="font-size:11px;font-weight:600;color:' + article.catColor + ';text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;">' + article.category + '</div><div style="font-size:14px;font-weight:600;margin-bottom:3px;line-height:1.3;">' + article.title + '</div><div style="font-size:12px;color:var(--text-muted);">' + article.time + '</div></div></div></div>';
+    html += '<div class="news-card" style="margin-bottom:12px;" onclick="openNewsDetail(\'' + article.id + '\')">';
+    html += '<div class="news-card-img" style="background:linear-gradient(135deg,var(--bg-elevated),var(--bg-card));"><span style="font-size:11px;font-weight:600;color:' + article.catColor + ';text-transform:uppercase;letter-spacing:0.5px;">' + article.category + '</span></div>';
+    html += '<div style="padding:12px;">';
+    html += '<div style="font-size:15px;font-weight:600;margin-bottom:6px;line-height:1.3;">' + article.title + '</div>';
+    html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.4;margin-bottom:8px;">' + article.summary + '</div>';
+    html += '<div style="font-size:12px;color:var(--text-muted);">' + article.time + '</div>';
+    html += '</div></div>';
   });
-  html += '</div></div><div style="height:20px;"></div></div>';
+
+  html += '<div style="height:20px;"></div></div>';
   return html;
 }
 
@@ -432,13 +419,18 @@ function renderProfileScreen() {
   var savedCount = Store.getSavedPredictions().length;
   var unreadCount = Store.getUnreadCount();
   var favTeams = Store.getFavTeams();
+  var accStats = typeof getAccuracyStats === 'function' ? getAccuracyStats() : {total:0,correct:0};
+  var accuracy = accStats.total > 0 ? Math.round((accStats.correct / accStats.total) * 100) : 0;
+
   var html = '<div class="app-header"><div class="header-title">Profile</div><button class="btn-icon" onclick="navigate(\'settings\')">' + ICONS.settings + '</button></div>';
   html += '<div style="overflow-y:auto;flex:1;">';
   html += '<div style="padding:24px 16px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);"><div style="width:64px;height:64px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);">' + (u.initials || u.name.substring(0,2).toUpperCase()) + '</div><div style="flex:1;"><div style="font-size:18px;font-weight:700;">' + u.name + '</div><div style="font-size:13px;color:var(--text-muted);margin-top:2px;">' + u.plan + ' Plan</div></div><button class="btn btn-sm btn-secondary" onclick="openEditProfile()">Edit</button></div>';
-  html += '<div style="padding:20px 16px 0;"><div class="stat-grid"><div class="stat-card"><div class="stat-label">Tracked</div><div class="stat-value">' + u.stats.tracked + '</div></div><div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" style="color:var(--success);">' + u.stats.correctPct + '%</div></div><div class="stat-card"><div class="stat-label">Elite Hit</div><div class="stat-value" style="color:var(--elite);">' + u.stats.eliteHitPct + '%</div></div><div class="stat-card"><div class="stat-label">Streak</div><div class="stat-value" style="color:var(--warning);">' + u.stats.streak + '</div><div class="stat-sub">correct</div></div></div></div>';
+  html += '<div style="padding:20px 16px 0;"><div class="stat-grid"><div class="stat-card"><div class="stat-label">Tracked</div><div class="stat-value">' + u.stats.tracked + '</div></div><div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" style="color:var(--success);">' + accuracy + '%</div></div><div class="stat-card"><div class="stat-label">Elite Hit</div><div class="stat-value" style="color:var(--elite);">' + u.stats.eliteHitPct + '%</div></div><div class="stat-card"><div class="stat-label">Streak</div><div class="stat-value" style="color:var(--warning);">' + u.stats.streak + '</div><div class="stat-sub">correct</div></div></div></div>';
+
   html += '<div style="margin:20px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
   html += '<div class="list-row" onclick="navigate(\'worldcup\')"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:18px;">&#127775;</span><div><div style="font-size:14px;font-weight:500;">World Cup 2026</div><div style="font-size:12px;color:var(--text-muted);">Matches, standings, stats</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'competitions\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.trophy + '<div><div style="font-size:14px;font-weight:500;">Competitions</div><div style="font-size:12px;color:var(--text-muted);">All leagues &amp; matches</div></div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="list-row" onclick="showBetSlip()"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.download + '<div><div style="font-size:14px;font-weight:500;">Bet Slip</div><div style="font-size:12px;color:var(--text-muted);">Generate from saved picks</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'saved\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.bookmark + '<div><div style="font-size:14px;font-weight:500;">Saved Predictions</div><div style="font-size:12px;color:var(--text-muted);">' + savedCount + ' saved</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'favorites\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.heart + '<div><div style="font-size:14px;font-weight:500;">Favourite Teams</div><div style="font-size:12px;color:var(--text-muted);">' + favTeams.join(', ') + '</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'notifications-screen\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.bell + '<div><div style="font-size:14px;font-weight:500;">Notifications</div><div style="font-size:12px;color:var(--text-muted);">' + unreadCount + ' unread</div></div></div>' + ICONS.chevronRight + '</div>';

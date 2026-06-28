@@ -168,6 +168,8 @@
       });
     }
 
+    applyTheme(localStorage.getItem('pitchline-theme') || 'dark');
+
     document.getElementById('bottom-nav').style.display = 'flex';
     navigate('home');
 
@@ -191,6 +193,8 @@
     setInterval(function() {
       Store.refreshMatches();
     }, 60000);
+
+    setTimeout(function() { requestNotificationPermission(); }, 3000);
 
     if (!localStorage.getItem('pitchline-onboarded')) {
       setTimeout(showOnboarding, 1200);

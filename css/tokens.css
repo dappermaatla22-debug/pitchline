@@ -40,3 +40,19 @@
   --header-h: 60px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+[data-theme="light"] {
+  --bg-base:       #f5f5f5;
+  --bg-surface:    #ffffff;
+  --bg-elevated:   #f0f0f0;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f8f8f8;
+  --bg-input:      #f0f0f0;
+  --bg-overlay:    rgba(0,0,0,0.5);
+  --text-primary:   #121212;
+  --text-secondary: rgba(0,0,0,0.6);
+  --text-muted:     rgba(0,0,0,0.35);
+  --text-inverse:   #ffffff;
+  --border:         rgba(0,0,0,0.08);
+  --border-strong:  rgba(0,0,0,0.15);
+}
