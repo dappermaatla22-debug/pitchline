@@ -689,6 +689,37 @@ var API = (function() {
     });
   }
 
+  function computeVerdict(outcome, homeScore, awayScore) {
+    if (homeScore == null || awayScore == null) return null;
+    var hs = parseInt(homeScore);
+    var as = parseInt(awayScore);
+    var actualResult = hs > as ? 'Home Win' : hs < as ? 'Away Win' : 'Draw';
+    var totalGoals = hs + as;
+    var btts = hs > 0 && as > 0;
+    var over25 = totalGoals > 2.5;
+
+    if (outcome === actualResult) return 'correct';
+    if (outcome === 'Over 2.5 Goals' && over25) return 'correct';
+    if (outcome === 'Under 2.5 Goals' && !over25) return 'correct';
+    if (outcome === 'BTTS' && btts) return 'correct';
+    if (outcome === 'BTTS No' && !btts) return 'correct';
+    return 'wrong';
+  }
+
+  function attachVerdicts(predictions, games) {
+    var gamesById = {};
+    games.forEach(function(g) { gamesById[g.id] = g; });
+    return predictions.map(function(p) {
+      var game = gamesById[p.matchId];
+      if (game && game.status === 'finished' && game.homeScore != null) {
+        p.verdict = computeVerdict(p.outcome, game.homeScore, game.awayScore);
+        p.actualScore = game.homeScore + ' - ' + game.awayScore;
+        p.actualResult = parseInt(game.homeScore) > parseInt(game.awayScore) ? 'Home Win' : parseInt(game.homeScore) < parseInt(game.awayScore) ? 'Away Win' : 'Draw';
+      }
+      return p;
+    });
+  }
+
   // ─── WC Match Detail ───────────────────────────────────────────────────
   function fetchWCMatchDetail(wcGameId) {
     var fdId = wcGameId.replace('wc_', '');
@@ -740,6 +771,8 @@ var API = (function() {
     fetchWCMatchDetail: fetchWCMatchDetail,
     generatePredictions: generatePredictions,
     generateWCPredictions: generateWCPredictions,
+    computeVerdict: computeVerdict,
+    attachVerdicts: attachVerdicts,
     getTeamBadge: getTeamBadge,
     searchTeamBadge: searchTeamBadge,
     batchLoadBadges: batchLoadBadges,

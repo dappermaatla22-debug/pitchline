@@ -100,7 +100,7 @@ var Store = (function() {
           state.todayMatches = allMatches.filter(function(m) { return m.date === 'Today'; });
           state.tomorrowMatches = allMatches.filter(function(m) { return m.date === 'Tomorrow'; });
           state.weekMatches = allMatches.filter(function(m) { return m.status === 'upcoming'; });
-          state.predictions = API.generatePredictions(allMatches);
+          state.predictions = API.attachVerdicts(API.generatePredictions(allMatches), allMatches);
           allMatches.forEach(function(m) {
             var pred = state.predictions.find(function(p) { return p.matchId === m.id; });
             if (pred) m.predId = pred.id;
@@ -133,7 +133,7 @@ var Store = (function() {
           state.todayMatches = matches.filter(function(m) { return m.date === 'Today'; });
           state.tomorrowMatches = matches.filter(function(m) { return m.date === 'Tomorrow'; });
           state.weekMatches = matches.filter(function(m) { return m.status === 'upcoming'; });
-          state.predictions = API.generatePredictions(matches);
+          state.predictions = API.attachVerdicts(API.generatePredictions(matches), matches);
           matches.forEach(function(m) {
             var pred = state.predictions.find(function(p) { return p.matchId === m.id; });
             if (pred) m.predId = pred.id;
@@ -195,7 +195,7 @@ var Store = (function() {
       var newPreds = API.generateWCPredictions(state.worldCup.games);
       var newIds = newPreds.map(function(p){ return p.id; });
       var preserved = existingPreds.filter(function(p){ return newIds.indexOf(p.id) === -1; });
-      state.worldCup.predictions = preserved.concat(newPreds);
+      state.worldCup.predictions = API.attachVerdicts(preserved.concat(newPreds), state.worldCup.games);
 
       notify();
       return state.worldCup;

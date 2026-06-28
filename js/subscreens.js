@@ -330,6 +330,13 @@ function renderPredDetailScreen(predId) {
 
   html += '<div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:20px;">' + renderScoreRing(pred.confidence, 80) + '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Confidence Score</div><div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;">' + pred.outcome + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + confText + '</div></div></div>';
 
+  if (pred.verdict) {
+    var vColor = pred.verdict === 'correct' ? 'var(--success)' : 'var(--danger)';
+    var vIcon = pred.verdict === 'correct' ? '✅' : '❌';
+    var vText = pred.verdict === 'correct' ? 'Prediction Correct!' : 'Prediction Wrong';
+    html += '<div class="card" style="margin-bottom:14px;background:' + vColor + '15;border:1px solid ' + vColor + '30;"><div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:24px;">' + vIcon + '</span><div><div style="font-size:15px;font-weight:700;color:' + vColor + ';">' + vText + '</div><div style="font-size:13px;color:var(--text-secondary);">Actual: ' + (pred.actualScore || '') + ' · ' + (pred.actualResult || '') + '</div></div></div><button class="btn btn-sm btn-secondary" onclick="shareResult(\'' + pred.id + '\')">' + ICONS.share + ' Share</button></div></div>';
+  }
+
   var models = pred.models || {};
   var modelsObj = {};
   if (Array.isArray(models)) {
@@ -922,7 +929,13 @@ function renderWCSummary(game, pred) {
   } catch(e) {}
 
   var predHtml = pred
-    ? '<div class="card card-accent-left" style="margin-bottom:14px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">AI Prediction</div><div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div></div>'
+    ? '<div class="card card-accent-left" style="margin-bottom:14px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">AI Prediction</div>'
+    + (pred.verdict === 'correct' ? '<div style="background:var(--success);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">✅ CORRECT</div>' : pred.verdict === 'wrong' ? '<div style="background:var(--danger);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">❌ WRONG</div>' : '')
+    + '</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div>'
+    + (pred.verdict ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Actual Result</div><div style="font-size:14px;font-weight:700;">' + (pred.actualScore || '') + ' · ' + (pred.actualResult || '') + '</div></div><button class="btn btn-sm btn-secondary" onclick="shareResult(\'' + pred.id + '\')">' + ICONS.share + ' Share Result</button></div>' : '')
+    + '</div>'
     : '<div class="card" style="margin-bottom:14px;text-align:center;padding:20px;"><div style="color:var(--text-muted);font-size:14px;">No prediction available</div></div>';
 
   var html = predHtml;

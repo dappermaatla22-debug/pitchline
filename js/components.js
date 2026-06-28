@@ -187,13 +187,16 @@ function renderPredCard(pred) {
     + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="event.stopPropagation();openTeamProfile(\'' + pred.away.replace(/'/g, "\\'") + '\')">' + pred.away + '</span>'
     + teamLogo(pred.away, pred.awayCrest, 22)
     + '</div>'
-    + '<div class="pred-outcome" style="margin-top:6px;">\u2192 ' + pred.outcome + '</div>'
+    + '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
+    + '<div class="pred-outcome">\u2192 ' + pred.outcome + '</div>'
+    + (pred.verdict === 'correct' ? '<span style="background:var(--success);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">✅ CORRECT</span>' : pred.verdict === 'wrong' ? '<span style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">❌ WRONG</span>' : '')
+    + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' + renderScoreRing(pred.confidence, 60) + renderConfidenceBadge(pred.tier) + '</div>'
     + '</div>'
     + '<div class="pred-card-bottom">'
     + '<div style="flex:1;margin-right:16px;"><div class="agreement-label"><span>Model Agreement</span><span style="color:var(--text-primary);font-weight:600;">' + pred.agreement + '%</span></div>' + renderProgressBar(pred.agreement, agreeColor) + '</div>'
-    + '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();savePrediction(\'' + pred.id + '\')">Save</button>'
+    + (pred.verdict ? '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();shareResult(\'' + pred.id + '\')">' + ICONS.share + '</button>' : '<button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();savePrediction(\'' + pred.id + '\')">Save</button>')
     + '</div></div>';
 }
 

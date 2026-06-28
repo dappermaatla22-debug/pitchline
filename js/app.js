@@ -427,6 +427,128 @@ function sharePred(predId) {
   }
 }
 
+function shareResult(predId) {
+  var pred = Store.getPredictions().find(function(p){ return p.id === predId; });
+  if (!pred) pred = Store.getWCPredictions().find(function(p){ return p.id === predId; });
+  if (!pred || !pred.verdict) { showToast('Match not finished yet'); return; }
+
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 720;
+    canvas.height = 720;
+    var ctx = canvas.getContext('2d');
+
+    var isCorrect = pred.verdict === 'correct';
+    var grad = ctx.createLinearGradient(0, 0, 720, 720);
+    if (isCorrect) {
+      grad.addColorStop(0, '#0a2e1a');
+      grad.addColorStop(0.5, '#0f3d24');
+      grad.addColorStop(1, '#145c2e');
+    } else {
+      grad.addColorStop(0, '#2e0a0a');
+      grad.addColorStop(0.5, '#3d0f0f');
+      grad.addColorStop(1, '#5c1414');
+    }
+    ctx.fillStyle = grad;
+    if (ctx.roundRect) {
+      ctx.beginPath();
+      ctx.roundRect(0, 0, 720, 720, 40);
+      ctx.fill();
+    } else {
+      ctx.fillRect(0, 0, 720, 720);
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 28px Inter, sans-serif';
+    ctx.fillText('PITCH', 40, 60);
+    ctx.fillStyle = '#FF4D7D';
+    ctx.fillText('LINE', 130, 60);
+
+    ctx.fillStyle = isCorrect ? '#34c87a' : '#f43f5e';
+    ctx.font = 'bold 60px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(isCorrect ? '✅ CORRECT' : '❌ WRONG', 360, 150);
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillText('PREDICTION', 40, 220);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px Inter, sans-serif';
+    ctx.fillText(pred.outcome, 40, 250);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillText('CONFIDENCE', 40, 310);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px Inter, sans-serif';
+    ctx.fillText(pred.confidence + '%', 40, 340);
+
+    ctx.beginPath();
+    ctx.arc(600, 330, 50, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+    var angle = (pred.confidence / 100) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(600, 330, 50, -Math.PI / 2, -Math.PI / 2 + angle);
+    ctx.strokeStyle = isCorrect ? '#34c87a' : '#f43f5e';
+    ctx.lineWidth = 6;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(pred.confidence + '%', 600, 338);
+    ctx.textAlign = 'left';
+
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(40, 380, 640, 1);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillText('ACTUAL RESULT', 40, 420);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 36px Inter, sans-serif';
+    ctx.fillText(pred.home + ' ' + (pred.actualScore || '') + ' ' + pred.away, 40, 470);
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = 'bold 18px Inter, sans-serif';
+    ctx.fillText(pred.actualResult || '', 40, 510);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(40, 550, 640, 1);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillText(pred.league + ' · ' + pred.time, 40, 590);
+
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.font = '12px Inter, sans-serif';
+    ctx.fillText('pitchline.app', 40, 680);
+
+    canvas.toBlob(function(blob) {
+      if (!blob) { showToast('Failed to generate image'); return; }
+      if (navigator.share && navigator.canShare) {
+        var file = new File([blob], 'pitchline-result.png', {type:'image/png'});
+        if (navigator.canShare({files:[file]})) {
+          navigator.share({ files:[file], title:'Pitchline Result', text: pred.home + ' vs ' + pred.away + ' — ' + (isCorrect ? '✅ Correct!' : '❌ Wrong') + ' (' + pred.outcome + ' vs ' + pred.actualResult + ')' });
+          return;
+        }
+      }
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'pitchline-result-' + predId + '.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Result card downloaded');
+    });
+  } catch(e) {
+    console.warn('Share result failed:', e);
+    showToast('Share failed — try again');
+  }
+}
+
 function shareMatch(matchId) {
   var matches = Store.getMatches();
   var match = matches.find(function(m){ return m.id === matchId; });
