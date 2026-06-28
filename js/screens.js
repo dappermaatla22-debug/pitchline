@@ -267,15 +267,17 @@ function renderWCStats(games, groups, teams) {
 
 function renderPredictionsScreen() {
   var predictions = Store.getPredictions();
-  var elite = predictions.filter(function(p){ return p.tier === 'elite'; });
-  var strong = predictions.filter(function(p){ return p.tier === 'strong'; });
-  var moderate = predictions.filter(function(p){ return p.tier === 'moderate'; });
-  var risky = predictions.filter(function(p){ return p.tier === 'risky'; });
+  var wcPreds = Store.getWCPredictions();
+  var allPreds = predictions.concat(wcPreds);
+  var elite = allPreds.filter(function(p){ return p.tier === 'elite'; });
+  var strong = allPreds.filter(function(p){ return p.tier === 'strong'; });
+  var moderate = allPreds.filter(function(p){ return p.tier === 'moderate'; });
+  var risky = allPreds.filter(function(p){ return p.tier === 'risky'; });
 
   var html = '<div class="app-header"><div class="header-title">Predictions</div><div class="header-actions"><button class="btn-icon" onclick="showBetSlip()" title="Bet Slip">' + ICONS.download + '</button><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
 
   html += '<div class="chip-row" id="pred-filter-chips">';
-  html += '<div class="chip active" onclick="filterPreds(\'all\',this)">All <span style="opacity:0.6;">(' + predictions.length + ')</span></div>';
+  html += '<div class="chip active" onclick="filterPreds(\'all\',this)">All <span style="opacity:0.6;">(' + allPreds.length + ')</span></div>';
   html += '<div class="chip" onclick="filterPreds(\'elite\',this)"><span style="color:var(--elite);">&#9679;</span> Elite <span style="opacity:0.6;">(' + elite.length + ')</span></div>';
   html += '<div class="chip" onclick="filterPreds(\'strong\',this)"><span style="color:var(--strong);">&#9679;</span> Strong <span style="opacity:0.6;">(' + strong.length + ')</span></div>';
   html += '<div class="chip" onclick="filterPreds(\'moderate\',this)"><span style="color:var(--moderate);">&#9679;</span> Moderate <span style="opacity:0.6;">(' + moderate.length + ')</span></div>';
@@ -284,10 +286,10 @@ function renderPredictionsScreen() {
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;" id="pred-list">';
 
-  if (predictions.length === 0) {
+  if (allPreds.length === 0) {
     html += renderEmptyState('predictions','No predictions yet','Check back closer to match time for AI-powered predictions.','Go Home',"navigate('home')");
   } else {
-    html += '<div style="display:flex;flex-direction:column;gap:10px;">' + predictions.map(renderPredCard).join('') + '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;">' + allPreds.map(renderPredCard).join('') + '</div>';
   }
 
   html += '<div style="height:20px;"></div></div>';
@@ -297,7 +299,7 @@ function renderPredictionsScreen() {
 function filterPreds(tier, el) {
   document.querySelectorAll('#pred-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
   el.classList.add('active');
-  var predictions = Store.getPredictions();
+  var predictions = Store.getPredictions().concat(Store.getWCPredictions());
   var filtered = tier === 'all' ? predictions : predictions.filter(function(p){ return p.tier === tier; });
   var list = document.getElementById('pred-list');
   if (list) {

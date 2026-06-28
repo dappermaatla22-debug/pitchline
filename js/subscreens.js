@@ -689,6 +689,171 @@ function renderStandingsScreen(leagueCode) {
 }
 
 // ─── World Cup Match Detail Screen ────────────────────────────────────────────
+var _wcDetailTab = 'summary';
+var _wcDetailId = null;
+
+function switchWCTab(tab) {
+  _wcDetailTab = tab;
+  var content = document.getElementById('wc-tab-content');
+  var tabBtns = document.querySelectorAll('#wc-tabs .btn');
+  tabBtns.forEach(function(b) {
+    b.style.background = 'transparent';
+    b.style.color = 'var(--text-secondary)';
+  });
+  var active = document.querySelector('#wc-tabs [data-tab="' + tab + '"]');
+  if (active) {
+    active.style.background = 'var(--accent)';
+    active.style.color = '#fff';
+  }
+  if (content && _wcDetailId) {
+    content.innerHTML = renderWCTabContent(_wcDetailId, tab);
+  }
+}
+
+function renderWCTabContent(gameId, tab) {
+  var wc = Store.getWorldCup();
+  var game = (wc.games || []).find(function(g){ return g.id === gameId; });
+  if (!game) return '';
+  var pred = (wc.predictions || []).find(function(p){ return p.matchId === gameId || p.id === 'wcpred_' + gameId; });
+  switch (tab) {
+    case 'summary': return renderWCSummary(game, pred);
+    case 'lineups': return renderWCLineups(game);
+    case 'stats':   return renderWCStats(game);
+    case 'h2h':     return renderWCH2H(game);
+    default:        return renderWCSummary(game, pred);
+  }
+}
+
+function renderWCSummary(game, pred) {
+  var predHtml = pred
+    ? '<div class="card card-accent-left" style="margin-bottom:14px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">AI Prediction</div><div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div></div>'
+    : '<div class="card" style="margin-bottom:14px;text-align:center;padding:20px;"><div style="color:var(--text-muted);font-size:14px;">No prediction available</div></div>';
+
+  var html = predHtml;
+
+  html += '<div style="display:flex;gap:10px;margin-bottom:14px;">';
+  html += '<button class="btn btn-primary" style="flex:1;" onclick="openPredDetail(\'' + (pred ? pred.id : '') + '\')">' + ICONS.eye + ' View Analysis</button>';
+  html += '<button class="btn btn-secondary" onclick="savePrediction(\'' + (pred ? pred.id : '') + '\')">' + ICONS.bookmark + '</button>';
+  html += '</div>';
+
+  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + game.home + '</div>' + renderFormGuide(['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + game.away + '</div>' + renderFormGuide(['D','W','L','W','W']) + '</div></div></div>';
+
+  html += '<div class="card" style="margin-bottom:14px;padding:12px 16px;"><div style="font-size:13px;font-weight:600;margin-bottom:10px;">Tournament Info</div><div style="display:flex;gap:16px;flex-wrap:wrap;">';
+  html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Competition</div><div style="font-size:13px;font-weight:600;">FIFA World Cup 2026</div></div>';
+  html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Group</div><div style="font-size:13px;font-weight:600;">' + (game.group || 'Knockout') + '</div></div>';
+  html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Matchday</div><div style="font-size:13px;font-weight:600;">' + (game.matchday || '-') + '</div></div>';
+  html += '</div></div>';
+
+  var preview = generateMatchPreview(game.home, game.away, 'FIFA World Cup 2026');
+  html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Match Preview</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + preview + '</div></div>';
+
+  html += '<div style="height:16px;"></div>';
+  return html;
+}
+
+function renderWCLineups(game) {
+  var formations = ['4-3-3','4-2-3-1','3-5-2','4-4-2','3-4-3','5-3-2'];
+  var homeFormation = formations[Math.abs(hashCode(game.id)) % formations.length];
+  var awayFormation = formations[Math.abs(hashCode(game.id + 'a')) % formations.length];
+
+  var homePlayers = [
+    {num:'1',name:game.home.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:92},
+    {num:'2',name:'RB',pos:'RB',x:18,y:78},{num:'4',name:'CB',pos:'CB',x:38,y:80},
+    {num:'5',name:'CB',pos:'CB',x:62,y:80},{num:'3',name:'LB',pos:'LB',x:82,y:78},
+    {num:'6',name:'CDM',pos:'CDM',x:50,y:65},{num:'8',name:'CM',pos:'CM',x:35,y:58},
+    {num:'10',name:'CM',pos:'CM',x:65,y:58},{num:'7',name:'RW',pos:'RW',x:15,y:45},
+    {num:'9',name:'ST',pos:'ST',x:50,y:40},{num:'11',name:'LW',pos:'LW',x:85,y:45}
+  ];
+  var awayPlayers = [
+    {num:'1',name:game.away.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:8},
+    {num:'2',name:'RB',pos:'RB',x:82,y:22},{num:'4',name:'CB',pos:'CB',x:62,y:20},
+    {num:'5',name:'CB',pos:'CB',x:38,y:20},{num:'3',name:'LB',pos:'LB',x:18,y:22},
+    {num:'6',name:'CDM',pos:'CDM',x:50,y:35},{num:'8',name:'CM',pos:'CM',x:35,y:42},
+    {num:'10',name:'CM',pos:'CM',x:65,y:42},{num:'7',name:'RW',pos:'RW',x:85,y:55},
+    {num:'9',name:'ST',pos:'ST',x:50,y:60},{num:'11',name:'LW',pos:'LW',x:15,y:55}
+  ];
+
+  var tc_home = getTeamColor(game.home);
+  var tc_away = getTeamColor(game.away);
+
+  var html = '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;">' + game.home + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + homeFormation + '</span></div>';
+  html += '<div class="pitch-container">';
+  html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:100%;background:rgba(255,255,255,0.2);position:absolute;"></div></div>';
+  html += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);"></div>';
+  html += '<div style="position:absolute;top:50%;left:50%;width:20%;aspect-ratio:1;border:2px solid rgba(255,255,255,0.2);border-radius:50%;transform:translate(-50%,-50%);"></div>';
+  homePlayers.forEach(function(p) {
+    html += '<div class="pitch-player" style="left:' + p.x + '%;top:' + p.y + '%;"><div class="pitch-player-num" style="background:' + tc_home.bg + ';">' + p.num + '</div><div class="pitch-player-name">' + p.name + '</div></div>';
+  });
+  html += '</div></div>';
+
+  html += '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;">' + game.away + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + awayFormation + '</span></div>';
+  html += '<div class="pitch-container" style="transform:scaleY(-1);">';
+  html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:100%;background:rgba(255,255,255,0.2);position:absolute;"></div></div>';
+  html += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);"></div>';
+  html += '<div style="position:absolute;top:50%;left:50%;width:20%;aspect-ratio:1;border:2px solid rgba(255,255,255,0.2);border-radius:50%;transform:translate(-50%,-50%);"></div>';
+  awayPlayers.forEach(function(p) {
+    html += '<div class="pitch-player" style="left:' + p.x + '%;top:' + p.y + '%;"><div class="pitch-player-num" style="background:' + tc_away.bg + ';">' + p.num + '</div><div class="pitch-player-name">' + p.name + '</div></div>';
+  });
+  html += '</div></div>';
+
+  html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Bench</div>';
+  html += '<div style="display:flex;gap:12px;">';
+  html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.home + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">Sub 1, Sub 2, Sub 3, Sub 4, Sub 5, Sub 6, Sub 7</div></div>';
+  html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.away + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">Sub 1, Sub 2, Sub 3, Sub 4, Sub 5, Sub 6, Sub 7</div></div>';
+  html += '</div></div>';
+
+  return html;
+}
+
+function renderWCStats(game) {
+  var homeGoals = game.homeScore ? parseInt(game.homeScore) : 0;
+  var awayGoals = game.awayScore ? parseInt(game.awayScore) : 0;
+  var totalGoals = homeGoals + awayGoals;
+
+  var stats = [
+    {label:'Goals Scored',home:String(homeGoals),away:String(awayGoals),homeVal:totalGoals>0?Math.round((homeGoals/totalGoals)*100):50,awayVal:totalGoals>0?Math.round((awayGoals/totalGoals)*100):50},
+    {label:'Possession (est.)',home:'55%',away:'45%',homeVal:55,awayVal:45},
+    {label:'Shots (est.)',home:'12',away:'9',homeVal:57,awayVal:43},
+    {label:'Shots on Target (est.)',home:'5',away:'3',homeVal:63,awayVal:37},
+    {label:'Corners (est.)',home:'6',away:'4',homeVal:60,awayVal:40},
+    {label:'xG (est.)',home:(homeGoals * 0.9 + 0.3).toFixed(2),away:(awayGoals * 0.9 + 0.3).toFixed(2),homeVal:60,awayVal:40}
+  ];
+
+  var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Match Statistics</div><div class="card" style="padding:12px 16px;">';
+  stats.forEach(function(s) {
+    html += '<div class="stat-bar-row">';
+    html += '<span class="stat-bar-val left">' + s.home + '</span>';
+    html += '<div class="stat-bar-track">';
+    html += '<div class="stat-bar-left" style="width:' + s.homeVal + '%;"></div>';
+    html += '<div class="stat-bar-right" style="width:' + s.awayVal + '%;"></div>';
+    html += '</div>';
+    html += '<span class="stat-bar-val right">' + s.away + '</span>';
+    html += '</div>';
+    html += '<div style="text-align:center;font-size:11px;color:var(--text-muted);margin-bottom:8px;">' + s.label + '</div>';
+  });
+  html += '</div></div>';
+
+  if (game.homeScorers && game.homeScorers !== 'null') {
+    html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">' + game.home + ' Goals</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.homeScorers.replace(/\{|\"|\}/g,'') + '</div></div>';
+  }
+  if (game.awayScorers && game.awayScorers !== 'null') {
+    html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">' + game.away + ' Goals</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.awayScorers.replace(/\{|\"|\}/g,'') + '</div></div>';
+  }
+
+  return html;
+}
+
+function renderWCH2H(game) {
+  var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Head to Head</div>';
+  html += '<div class="card" style="margin-bottom:12px;padding:16px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);line-height:1.6;">Historical head-to-head data between these nations in FIFA World Cup competitions. Previous meetings may include group stage, knockout, and friendly matches.</div></div>';
+  html += '<div class="card" style="margin-bottom:12px;padding:16px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Tournament Path</div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">' + game.home + '</span><span style="font-size:13px;font-weight:600;">Group ' + (game.group || '?') + '</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="font-size:13px;color:var(--text-secondary);">' + game.away + '</span><span style="font-size:13px;font-weight:600;">Group ' + (game.group || '?') + '</span></div>';
+  html += '</div></div>';
+  html += '<div style="height:16px;"></div>';
+  return html;
+}
+
 function renderWCMatchDetailScreen(wcGameId) {
   var wc = Store.getWorldCup();
   var game = (wc.games || []).find(function(g){ return g.id === wcGameId; });
@@ -696,44 +861,34 @@ function renderWCMatchDetailScreen(wcGameId) {
 
   var isLive = game.status === 'live';
   var isFinished = game.status === 'finished';
+  _wcDetailTab = 'summary';
+  _wcDetailId = wcGameId;
+
+  var pred = (wc.predictions || []).find(function(p){ return p.matchId === wcGameId || p.id === 'wcpred_' + wcGameId; });
 
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + game.home + ' vs ' + game.away + '</div><button class="btn-icon" onclick="shareMatch(\'' + wcGameId + '\')">' + ICONS.share + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
-  html += '<div style="padding:24px 0 20px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
-  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Group ' + game.group + ' \u00b7 Matchday ' + game.matchday + '</div>';
+  html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
-  html += '<div style="text-align:center;flex:1;"><div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
-  html += '<div style="text-align:center;"><div style="font-size:32px;font-weight:800;letter-spacing:-2px;">' + (game.score || ' - ') + '</div>';
-  if (isLive) {
-    html += '<div style="font-size:13px;color:var(--danger);margin-top:4px;font-weight:600;">LIVE</div>';
-  } else if (isFinished) {
-    html += '<div style="font-size:13px;color:var(--success);margin-top:4px;font-weight:600;">Full Time</div>';
-  } else {
-    html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px;">' + (game.local_date || game.date || '') + '</div>';
-  }
+  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">' + teamLogo(game.home, game.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : (game.date || '')) + '</div></div>';
+  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">' + teamLogo(game.away, game.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
   html += '</div>';
-  html += '<div style="text-align:center;flex:1;"><div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">FIFA World Cup 2026 \u00b7 Group ' + (game.group || '?') + ' \u00b7 Matchday ' + (game.matchday || '?') + '</div>';
   html += '</div>';
 
-  if (game.homeScorers && game.homeScorers !== 'null') {
-    html += '<div style="margin-top:12px;text-align:left;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">' + game.home + ' Scorers</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.homeScorers.replace(/\{/g,'').replace(/\}/g,'').replace(/"/g,'') + '</div></div>';
-  }
-  if (game.awayScorers && game.awayScorers !== 'null') {
-    html += '<div style="margin-top:8px;text-align:left;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">' + game.away + ' Scorers</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.awayScorers.replace(/\{/g,'').replace(/\}/g,'').replace(/"/g,'') + '</div></div>';
-  }
+  html += '<div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-elevated);border-radius:var(--r-md);padding:4px;" id="wc-tabs">';
+  html += '<button class="btn btn-sm" data-tab="summary" style="flex:1;background:var(--accent);color:#fff;" onclick="switchWCTab(\'summary\')">Summary</button>';
+  html += '<button class="btn btn-sm btn-ghost" data-tab="lineups" style="flex:1;" onclick="switchWCTab(\'lineups\')">Line Up</button>';
+  html += '<button class="btn btn-sm btn-ghost" data-tab="stats" style="flex:1;" onclick="switchWCTab(\'stats\')">Stats</button>';
+  html += '<button class="btn btn-sm btn-ghost" data-tab="h2h" style="flex:1;" onclick="switchWCTab(\'h2h\')">H2H</button>';
   html += '</div>';
 
-  html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;">';
-  html += '<div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Match Info</div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Competition</span><span style="font-size:13px;font-weight:600;">FIFA World Cup 2026</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Group</span><span style="font-size:13px;font-weight:600;">' + game.group + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Matchday</span><span style="font-size:13px;font-weight:600;">' + game.matchday + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;"><span style="font-size:13px;color:var(--text-secondary);">Type</span><span style="font-size:13px;font-weight:600;">' + (game.type || 'Group Stage') + '</span></div>';
+  html += '<div id="wc-tab-content">';
+  html += renderWCSummary(game, pred);
   html += '</div>';
-
-  html += '<div style="display:flex;gap:10px;margin-bottom:16px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'worldcup\')">Back to World Cup</button></div>';
 
   html += '<div style="height:20px;"></div></div>';
   return html;

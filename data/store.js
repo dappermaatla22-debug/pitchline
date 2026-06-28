@@ -12,7 +12,8 @@ var Store = (function() {
       games: [],
       groups: [],
       teams: [],
-      stadiums: []
+      stadiums: [],
+      predictions: []
     },
     user: {
       name: 'Alex Morgan',
@@ -181,6 +182,7 @@ var Store = (function() {
       }
       state.worldCup.groups = groups;
       state.worldCup.teams = teams;
+      state.worldCup.predictions = API.generateWCPredictions(state.worldCup.games);
       notify();
       return state.worldCup;
     }).catch(function(e) {
@@ -242,6 +244,7 @@ var Store = (function() {
   function getUser() { return state.user; }
   function getTeamDetail() { return state.teamDetail; }
   function getWorldCup() { return state.worldCup; }
+  function getWCPredictions() { return state.worldCup.predictions || []; }
   function isLoading() { return state.loading; }
   function getError() { return state.error; }
 
@@ -325,6 +328,7 @@ var Store = (function() {
     getUser: getUser,
     getTeamDetail: getTeamDetail,
     getWorldCup: getWorldCup,
+    getWCPredictions: getWCPredictions,
     getSavedPredictions: getSavedPredictions,
     getUnreadCount: getUnreadCount,
     getFavTeams: getFavTeams,
