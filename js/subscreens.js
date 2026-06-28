@@ -361,10 +361,13 @@ function renderPredDetailScreen(predId) {
 
 // ─── Team Profile Screen ──────────────────────────────────────────────────────
 function renderTeamProfileScreen(teamName) {
-  var predictions = Store.getPredictions();
+  var predictions = Store.getPredictions().concat(Store.getWCPredictions());
   var teamPreds = predictions.filter(function(p){ return p.home === teamName || p.away === teamName; });
   var matches = Store.getMatches();
-  var teamMatches = matches.filter(function(m){ return m.home === teamName || m.away === teamName; });
+  var wcGames = (Store.getWorldCup().games || []).map(function(g) {
+    return { id: 'wc_' + g.id, home: g.home, away: g.away, score: g.score, status: g.status, homeCrest: g.homeCrest, awayCrest: g.awayCrest, date: g.date, league: 'FIFA World Cup 2026', leagueFlag: '\uD83C\uDDFA\uD83C\uDDFF' };
+  });
+  var teamMatches = matches.concat(wcGames).filter(function(m){ return m.home === teamName || m.away === teamName; });
 
   var teamLogoUrl = null;
   if (teamMatches.length) {

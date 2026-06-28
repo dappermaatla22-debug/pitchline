@@ -107,7 +107,7 @@ function sendNotification(title, body, icon) {
 }
 
 // Sound alerts
-var soundEnabled = localStorage.getItem('pitchline-sound') === 'true';
+var soundEnabled = localStorage.getItem('pitchline-sound') !== 'false';
 function toggleSound() {
   soundEnabled = !soundEnabled;
   localStorage.setItem('pitchline-sound', soundEnabled);
@@ -213,16 +213,24 @@ function stopLiveClock() {
 
 // ─── WC LIVE SCORE POLLING ──────────────────────────────────────────────
 var wcPollInterval = null;
+var wcPollTimer = null;
 function startWCPolling() {
   if (wcPollInterval) return;
-  wcPollInterval = setInterval(function() {
+  function poll() {
     Store.fetchWorldCupData().then(function(wc) {
+      var hasLive = (wc.games || []).some(function(g){ return g.status === 'live'; });
       checkWCScoreChange(wc.games || []);
+      if (wcPollTimer) clearTimeout(wcPollTimer);
+      wcPollTimer = setTimeout(poll, hasLive ? 15000 : 30000);
+    }).catch(function() {
+      if (wcPollTimer) clearTimeout(wcPollTimer);
+      wcPollTimer = setTimeout(poll, 30000);
     });
-  }, 30000);
+  }
+  poll();
 }
 function stopWCPolling() {
-  if (wcPollInterval) { clearInterval(wcPollInterval); wcPollInterval = null; }
+  if (wcPollTimer) { clearTimeout(wcPollTimer); wcPollTimer = null; }
 }
 
 // ─── GOAL FLASH OVERLAY ─────────────────────────────────────────────────
@@ -379,6 +387,7 @@ function generateShareCard(pred) {
 
 function sharePred(predId) {
   var pred = Store.getPredictions().find(function(p){ return p.id === predId; });
+  if (!pred) pred = Store.getWCPredictions().find(function(p){ return p.id === predId; });
   if (!pred) { showToast('Nothing to share'); return; }
 
   var canvas = generateShareCard(pred);
