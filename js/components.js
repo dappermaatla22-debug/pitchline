@@ -1,43 +1,44 @@
 var TEAM_COLORS = {
-  'Arsenal': {bg:'#EF0107',fg:'#fff'}, 'Chelsea': {bg:'#034694',fg:'#fff'}, 'Liverpool': {bg:'#C8102E',fg:'#fff'},
-  'Man City': {bg:'#6CABDD',fg:'#fff'}, 'Manchester City': {bg:'#6CABDD',fg:'#fff'}, 'Tottenham': {bg:'#132257',fg:'#fff'},
-  'Tottenham Hotspur': {bg:'#132257',fg:'#fff'}, 'Newcastle': {bg:'#241F20',fg:'#fff'}, 'Newcastle United': {bg:'#241F20',fg:'#fff'},
-  'Aston Villa': {bg:'#670E36',fg:'#fff'}, 'Brighton': {bg:'#0057B8',fg:'#fff'}, 'Brighton & Hove Albion': {bg:'#0057B8',fg:'#fff'},
-  'West Ham': {bg:'#7A263A',fg:'#fff'}, 'West Ham United': {bg:'#7A263A',fg:'#fff'}, 'Wolves': {bg:'#FDB913',fg:'#000'},
-  'Wolverhampton': {bg:'#FDB913',fg:'#000'}, 'Crystal Palace': {bg:'#1B458F',fg:'#fff'}, 'Brentford': {bg:'#E30613',fg:'#fff'},
-  'Fulham': {bg:'#000000',fg:'#fff'}, 'Bournemouth': {bg:'#DA291C',fg:'#fff'}, 'Nottingham Forest': {bg:'#DD0000',fg:'#fff'},
-  'Everton': {bg:'#003399',fg:'#fff'}, 'Ipswich': {bg:'#0044AA',fg:'#fff'}, 'Leicester': {bg:'#003090',fg:'#fff'},
-  'Southampton': {bg:'#D71920',fg:'#fff'}, 'Real Madrid': {bg:'#FEBE10',fg:'#000'}, 'Atletico Madrid': {bg:'#CB3524',fg:'#fff'},
-  'Barcelona': {bg:'#A50044',fg:'#fff'}, 'FC Barcelona': {bg:'#A50044',fg:'#fff'}, 'Sevilla': {bg:'#D4001E',fg:'#fff'},
-  'Valencia': {bg:'#EE3524',fg:'#fff'}, 'Bayern Munich': {bg:'#DC052D',fg:'#fff'}, 'Dortmund': {bg:'#FDE100',fg:'#000'},
-  'Borussia Dortmund': {bg:'#FDE100',fg:'#000'}, 'Bayer Leverkusen': {bg:'#E32221',fg:'#fff'}, 'RB Leipzig': {bg:'#DD0741',fg:'#fff'},
-  'PSG': {bg:'#004170',fg:'#fff'}, 'Paris Saint-Germain': {bg:'#004170',fg:'#fff'}, 'Lyon': {bg:'#241948',fg:'#fff'},
-  'Olympique Lyon': {bg:'#241948',fg:'#fff'}, 'Inter Milan': {bg:'#0068A8',fg:'#fff'}, 'Inter': {bg:'#0068A8',fg:'#fff'},
-  'AC Milan': {bg:'#FB090B',fg:'#fff'}, 'Milan': {bg:'#FB090B',fg:'#fff'}, 'Juventus': {bg:'#000000',fg:'#fff'},
-  'Napoli': {bg:'#12A0D7',fg:'#fff'}, 'AS Roma': {bg:'#8E1F2F',fg:'#fff'}, 'Roma': {bg:'#8E1F2F',fg:'#fff'},
-  'Lazio': {bg:'#87D8F7',fg:'#000'}, 'Man United': {bg:'#DA291C',fg:'#fff'}, 'Manchester United': {bg:'#DA291C',fg:'#fff'},
-  'Australia': {bg:'#FFCD00',fg:'#000'}, 'Turkey': {bg:'#E30A17',fg:'#fff'}, 'Qatar': {bg:'#8D1B3D',fg:'#fff'},
-  'Switzerland': {bg:'#D52B1E',fg:'#fff'}, 'United States': {bg:'#002868',fg:'#fff'}, 'Germany': {bg:'#000000',fg:'#fff'},
-  'Ivory Coast': {bg:'#F77F00',fg:'#000'}, 'Japan': {bg:'#003087',fg:'#fff'}, 'Brazil': {bg:'#009739',fg:'#fff'},
-  'Argentina': {bg:'#74ACDF',fg:'#fff'}, 'France': {bg:'#002395',fg:'#fff'}, 'England': {bg:'#CF081F',fg:'#fff'},
-  'Spain': {bg:'#AA151B',fg:'#fff'}, 'Portugal': {bg:'#006600',fg:'#fff'}, 'Italy': {bg:'#004B87',fg:'#fff'},
-  'Netherlands': {bg:'#FF6600',fg:'#fff'}, 'Belgium': {bg:'#ED2939',fg:'#fff'}, 'Mexico': {bg:'#006847',fg:'#fff'},
-  'Canada': {bg:'#FF0000',fg:'#fff'}, 'Morocco': {bg:'#C1272D',fg:'#fff'}, 'Uruguay': {bg:'#5FC2DA',fg:'#000'},
-  'Croatia': {bg:'#171796',fg:'#fff'}, 'Senegal': {bg:'#00853E',fg:'#fff'}, 'Ecuador': {bg:'#FFD100',fg:'#000'},
-  'Serbia': {bg:'#C6363C',fg:'#fff'}, 'Ghana': {bg:'#CE1126',fg:'#fff'}, 'Cameroon': {bg:'#007A5E',fg:'#fff'},
-  'Tunisia': {bg:'#E70013',fg:'#fff'}, 'Iran': {bg:'#239F40',fg:'#fff'}, 'Saudi Arabia': {bg:'#006C35',fg:'#fff'},
-  'South Korea': {bg:'#003478',fg:'#fff'}, 'Wales': {bg:'#00AB39',fg:'#fff'}, 'Poland': {bg:'#DC143C',fg:'#fff'},
-  'Senegal': {bg:'#00853E',fg:'#fff'}, 'Peru': {bg:'#D91023',fg:'#fff'}, 'Greece': {bg:'#0D5EAF',fg:'#fff'},
-  'Scotland': {bg:'#003078',fg:'#fff'}, 'Norway': {bg:'#BA0C2F',fg:'#fff'}, 'Sweden': {bg:'#006AA7',fg:'#fff'},
-  'Denmark': {bg:'#C8102E',fg:'#fff'}, 'Austria': {bg:'#ED2939',fg:'#fff'}, 'Czech Republic': {bg:'#11457E',fg:'#fff'},
-  'Hungary': {bg:'#477050',fg:'#fff'}, 'Romania': {bg:'#002B7F',fg:'#fff'}, 'Ukraine': {bg:'#FFD500',fg:'#000'},
-  'Colombia': {bg:'#FCD116',fg:'#000'}, 'Chile': {bg:'#D52B1E',fg:'#fff'}, 'Paraguay': {bg:'#D52B1E',fg:'#fff'},
-  'Bolivia': {bg:'#007934',fg:'#fff'}, 'Venezuela': {bg:'#CF142B',fg:'#fff'}, 'Indonesia': {bg:'#FF0000',fg:'#fff'},
-  'Algeria': {bg:'#006233',fg:'#fff'}, 'Nigeria': {bg:'#008751',fg:'#fff'}, 'Mali': {bg:'#14B53A',fg:'#fff'},
-  'Burkina Faso': {bg:'#009E49',fg:'#fff'}, 'DR Congo': {bg:'#007FFF',fg:'#fff'}, 'Guinea': {bg:'#CE1126',fg:'#fff'},
-  'Zambia': {bg:'#198A38',fg:'#fff'}, 'Cape Verde': {bg:'#003893',fg:'#fff'}, 'Gabon': {bg:'#009E60',fg:'#fff'},
-  'Uganda': {bg:'#FCDC04',fg:'#000'}, 'Iceland': {bg:'#003897',fg:'#fff'}, 'Albania': {bg:'#E41E20',fg:'#fff'},
-  'Ireland': {bg:'#169B62',fg:'#fff'}, 'Republic of Ireland': {bg:'#169B62',fg:'#fff'}, 'Bulgaria': {bg:'#00966E',fg:'#fff'}
+  'Arsenal': {bg:'#EF0107',fg:'#fff',id:57}, 'Chelsea': {bg:'#034694',fg:'#fff',id:61}, 'Liverpool': {bg:'#C8102E',fg:'#fff',id:64},
+  'Man City': {bg:'#6CABDD',fg:'#fff',id:65}, 'Manchester City': {bg:'#6CABDD',fg:'#fff',id:65}, 'Tottenham': {bg:'#132257',fg:'#fff',id:73},
+  'Tottenham Hotspur': {bg:'#132257',fg:'#fff',id:73}, 'Newcastle': {bg:'#241F20',fg:'#fff',id:66}, 'Newcastle United': {bg:'#241F20',fg:'#fff',id:66},
+  'Aston Villa': {bg:'#670E36',fg:'#fff',id:58}, 'Brighton': {bg:'#0057B8',fg:'#fff',id:397}, 'Brighton & Hove Albion': {bg:'#0057B8',fg:'#fff',id:397},
+  'West Ham': {bg:'#7A263A',fg:'#fff',id:563}, 'West Ham United': {bg:'#7A263A',fg:'#fff',id:563}, 'Wolves': {bg:'#FDB913',fg:'#000',id:76},
+  'Wolverhampton': {bg:'#FDB913',fg:'#000',id:76}, 'Crystal Palace': {bg:'#1B458F',fg:'#fff',id:354}, 'Brentford': {bg:'#E30613',fg:'#fff',id:402},
+  'Fulham': {bg:'#000000',fg:'#fff',id:63}, 'Bournemouth': {bg:'#DA291C',fg:'#fff',id:1044}, 'Nottingham Forest': {bg:'#DD0000',fg:'#fff',id:351},
+  'Everton': {bg:'#003399',fg:'#fff',id:62}, 'Ipswich': {bg:'#0044AA',fg:'#fff',id:349}, 'Leicester': {bg:'#003090',fg:'#fff',id:338},
+  'Southampton': {bg:'#D71920',fg:'#fff',id:340}, 'Man United': {bg:'#DA291C',fg:'#fff',id:66}, 'Manchester United': {bg:'#DA291C',fg:'#fff',id:66},
+  'Real Madrid': {bg:'#FEBE10',fg:'#000',id:86}, 'Atletico Madrid': {bg:'#CB3524',fg:'#fff',id:78},
+  'Barcelona': {bg:'#A50044',fg:'#fff',id:81}, 'FC Barcelona': {bg:'#A50044',fg:'#fff',id:81}, 'Sevilla': {bg:'#D4001E',fg:'#fff',id:559},
+  'Valencia': {bg:'#EE3524',fg:'#fff',id:95}, 'Bayern Munich': {bg:'#DC052D',fg:'#fff',id:5}, 'Dortmund': {bg:'#FDE100',fg:'#000',id:4},
+  'Borussia Dortmund': {bg:'#FDE100',fg:'#000',id:4}, 'Bayer Leverkusen': {bg:'#E32221',fg:'#fff',id:3}, 'RB Leipzig': {bg:'#DD0741',fg:'#fff',id:721},
+  'PSG': {bg:'#004170',fg:'#fff',id:524}, 'Paris Saint-Germain': {bg:'#004170',fg:'#fff',id:524}, 'Lyon': {bg:'#241948',fg:'#fff',id:523},
+  'Olympique Lyon': {bg:'#241948',fg:'#fff',id:523}, 'Inter Milan': {bg:'#0068A8',fg:'#fff',id:108}, 'Inter': {bg:'#0068A8',fg:'#fff',id:108},
+  'AC Milan': {bg:'#FB090B',fg:'#fff',id:98}, 'Milan': {bg:'#FB090B',fg:'#fff',id:98}, 'Juventus': {bg:'#000000',fg:'#fff',id:109},
+  'Napoli': {bg:'#12A0D7',fg:'#fff',id:113}, 'AS Roma': {bg:'#8E1F2F',fg:'#fff',id:100}, 'Roma': {bg:'#8E1F2F',fg:'#fff',id:100},
+  'Lazio': {bg:'#87D8F7',fg:'#000',id:110},
+  'Australia': {bg:'#FFCD00',fg:'#000',flag:'au'}, 'Turkey': {bg:'#E30A17',fg:'#fff',flag:'tr'}, 'Qatar': {bg:'#8D1B3D',fg:'#fff',flag:'qa'},
+  'Switzerland': {bg:'#D52B1E',fg:'#fff',flag:'ch'}, 'United States': {bg:'#002868',fg:'#fff',flag:'us'}, 'Germany': {bg:'#000000',fg:'#fff',flag:'de'},
+  'Ivory Coast': {bg:'#F77F00',fg:'#000',flag:'ci'}, 'Japan': {bg:'#003087',fg:'#fff',flag:'jp'}, 'Brazil': {bg:'#009739',fg:'#fff',flag:'br'},
+  'Argentina': {bg:'#74ACDF',fg:'#fff',flag:'ar'}, 'France': {bg:'#002395',fg:'#fff',flag:'fr'}, 'England': {bg:'#CF081F',fg:'#fff',flag:'gb-eng'},
+  'Spain': {bg:'#AA151B',fg:'#fff',flag:'es'}, 'Portugal': {bg:'#006600',fg:'#fff',flag:'pt'}, 'Italy': {bg:'#004B87',fg:'#fff',flag:'it'},
+  'Netherlands': {bg:'#FF6600',fg:'#fff',flag:'nl'}, 'Belgium': {bg:'#ED2939',fg:'#fff',flag:'be'}, 'Mexico': {bg:'#006847',fg:'#fff',flag:'mx'},
+  'Canada': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'Morocco': {bg:'#C1272D',fg:'#fff',flag:'ma'}, 'Uruguay': {bg:'#5FC2DA',fg:'#000',flag:'uy'},
+  'Croatia': {bg:'#171796',fg:'#fff',flag:'hr'}, 'Senegal': {bg:'#00853E',fg:'#fff',flag:'sn'}, 'Ecuador': {bg:'#FFD100',fg:'#000',flag:'ec'},
+  'Serbia': {bg:'#C6363C',fg:'#fff',flag:'rs'}, 'Ghana': {bg:'#CE1126',fg:'#fff',flag:'gh'}, 'Cameroon': {bg:'#007A5E',fg:'#fff',flag:'cm'},
+  'Tunisia': {bg:'#E70013',fg:'#fff',flag:'tn'}, 'Iran': {bg:'#239F40',fg:'#fff',flag:'ir'}, 'Saudi Arabia': {bg:'#006C35',fg:'#fff',flag:'sa'},
+  'South Korea': {bg:'#003478',fg:'#fff',flag:'kr'}, 'Wales': {bg:'#00AB39',fg:'#fff',flag:'gb-wls'}, 'Poland': {bg:'#DC143C',fg:'#fff',flag:'pl'},
+  'Peru': {bg:'#D91023',fg:'#fff',flag:'pe'}, 'Greece': {bg:'#0D5EAF',fg:'#fff',flag:'gr'},
+  'Scotland': {bg:'#003078',fg:'#fff',flag:'gb-sct'}, 'Norway': {bg:'#BA0C2F',fg:'#fff',flag:'no'}, 'Sweden': {bg:'#006AA7',fg:'#fff',flag:'se'},
+  'Denmark': {bg:'#C8102E',fg:'#fff',flag:'dk'}, 'Austria': {bg:'#ED2939',fg:'#fff',flag:'at'}, 'Czech Republic': {bg:'#11457E',fg:'#fff',flag:'cz'},
+  'Hungary': {bg:'#477050',fg:'#fff',flag:'hu'}, 'Romania': {bg:'#002B7F',fg:'#fff',flag:'ro'}, 'Ukraine': {bg:'#FFD500',fg:'#000',flag:'ua'},
+  'Colombia': {bg:'#FCD116',fg:'#000',flag:'co'}, 'Chile': {bg:'#D52B1E',fg:'#fff',flag:'cl'}, 'Paraguay': {bg:'#D52B1E',fg:'#fff',flag:'py'},
+  'Bolivia': {bg:'#007934',fg:'#fff',flag:'bo'}, 'Venezuela': {bg:'#CF142B',fg:'#fff',flag:'ve'}, 'Indonesia': {bg:'#FF0000',fg:'#fff',flag:'id'},
+  'Algeria': {bg:'#006233',fg:'#fff',flag:'dz'}, 'Nigeria': {bg:'#008751',fg:'#fff',flag:'ng'}, 'Mali': {bg:'#14B53A',fg:'#fff',flag:'ml'},
+  'Burkina Faso': {bg:'#009E49',fg:'#fff',flag:'bf'}, 'DR Congo': {bg:'#007FFF',fg:'#fff',flag:'cd'}, 'Guinea': {bg:'#CE1126',fg:'#fff',flag:'gn'},
+  'Zambia': {bg:'#198A38',fg:'#fff',flag:'zm'}, 'Cape Verde': {bg:'#003893',fg:'#fff',flag:'cv'}, 'Gabon': {bg:'#009E60',fg:'#fff',flag:'ga'},
+  'Uganda': {bg:'#FCDC04',fg:'#000',flag:'ug'}, 'Iceland': {bg:'#003897',fg:'#fff',flag:'is'}, 'Albania': {bg:'#E41E20',fg:'#fff',flag:'al'},
+  'Ireland': {bg:'#169B62',fg:'#fff',flag:'ie'}, 'Republic of Ireland': {bg:'#169B62',fg:'#fff',flag:'ie'}, 'Bulgaria': {bg:'#00966E',fg:'#fff',flag:'bg'}
 };
 
 function getTeamColor(name) {
@@ -54,20 +55,28 @@ function getTeamColor(name) {
   return {bg:'hsl(' + hue + ',65%,45%)', fg:'#fff'};
 }
 
+function getTeamCrestUrl(name) {
+  var tc = getTeamColor(name);
+  if (tc.id) return 'https://crests.football-data.org/' + tc.id + '.png';
+  if (tc.flag) return 'https://flagcdn.com/w80/' + tc.flag + '.png';
+  return '';
+}
+
 function teamLogo(name, crest, size) {
   size = size || 32;
   var tc = getTeamColor(name);
   var initials = name.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
   var fontSize = Math.round(size * 0.38);
-  var tag = 'background:' + tc.bg + ';color:' + tc.fg + ';font-size:' + fontSize + 'px;font-weight:700;';
+  var url = crest || getTeamCrestUrl(name);
 
-  if (crest) {
+  if (url) {
     var badgeId = 'tb_' + name.replace(/\W/g,'') + '_' + size;
-    return '<div id="' + badgeId + '" class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;flex-shrink:0;background:' + tc.bg + ';">'
-      + '<img src="' + crest + '" alt="' + name + '" style="width:100%;height:100%;object-fit:contain;background:var(--bg-elevated);" onerror="var b=document.getElementById(\'' + badgeId + '\');if(b){b.innerHTML=\'<span style=&quot;display:flex;width:100%;height:100%;align-items:center;justify-content:center;' + tag.replace(/'/g,'') + '&quot;>' + initials + '</span>\';}">'
+    return '<div id="' + badgeId + '" class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;flex-shrink:0;background:' + tc.bg + ';display:flex;align-items:center;justify-content:center;">'
+      + '<img src="' + url + '" alt="' + name + '" style="width:100%;height:100%;object-fit:contain;" loading="lazy" onerror="this.style.display=\'none\';var s=this.nextElementSibling;if(s)s.style.display=\'flex\';">'
+      + '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + ';">' + initials + '</span>'
       + '</div>';
   }
-  return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;' + tag + 'flex-shrink:0;">' + initials + '</div>';
+  return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + ';flex-shrink:0;">' + initials + '</div>';
 }
 
 function renderConfidenceBadge(tier) {
@@ -121,8 +130,6 @@ function renderMatchCard(match, showPred) {
 function renderLiveMatchCard(match) {
   var predictions = Store.getPredictions();
   var pred = match.predId ? predictions.find(function(p){ return p.id === match.predId; }) : null;
-  var tc1 = getTeamColor(match.home);
-  var tc2 = getTeamColor(match.away);
   return '<div class="live-score-card" onclick="openMatchDetail(\'' + match.id + '\')">'
     + '<div class="live-card-header">'
     + '<span class="live-card-league">' + match.league + '</span>'
@@ -139,7 +146,7 @@ function renderLiveMatchCard(match) {
     + teamLogo(match.away, match.awayCrest, 36)
     + '</div>'
     + '</div>'
-    + (pred ? '<div class="live-card-pred">' + renderConfidenceBadge(pred.tier) + ' ' + pred.outcome + '</div>' : '<div class="live-card-pred" style="color:var(--text-muted);font-size:11px;">In progress</div>')
+    + (pred ? '<div class="live-card-pred">' + renderConfidenceBadge(pred.tier) + ' ' + pred.outcome + '</div>' : '<div class="live-card-pred" style="color:rgba(255,255,255,0.4);font-size:11px;">In progress</div>')
     + '</div>';
 }
 

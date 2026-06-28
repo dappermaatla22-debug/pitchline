@@ -21,7 +21,23 @@ function renderHomeScreen() {
   html += '<div style="overflow-y:auto;flex:1;">';
   html += '<div class="chip-row date-selector" id="date-chips">' + dateChips + '</div>';
 
-  html += '<div style="display:flex;gap:8px;padding:0 16px 12px;"><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="openFixtures()">&#128197; Fixtures</button><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="navigate(\'worldcup\')">&#127775; World Cup</button><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="openStats()">&#128200; Stats</button></div>';
+  html += '<div class="quick-access-row">'
+    + '<div class="quick-card" onclick="navigate(\'fixtures\')">'
+    + '<div class="quick-card-icon" style="background:rgba(79,142,247,0.15);color:var(--strong);">' + ICONS.matches + '</div>'
+    + '<div class="quick-card-label">Fixtures</div>'
+    + '<div class="quick-card-sub">' + matches.length + ' matches</div>'
+    + '</div>'
+    + '<div class="quick-card" onclick="navigate(\'worldcup\')">'
+    + '<div class="quick-card-icon" style="background:rgba(255,77,125,0.15);color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20M12 2a14.5 14.5 0 010 20M2 12h20"/></svg></div>'
+    + '<div class="quick-card-label">World Cup</div>'
+    + '<div class="quick-card-sub">2026</div>'
+    + '</div>'
+    + '<div class="quick-card" onclick="navigate(\'stats\')">'
+    + '<div class="quick-card-icon" style="background:rgba(52,200,122,0.15);color:var(--elite);">' + ICONS.predictions + '</div>'
+    + '<div class="quick-card-label">Stats</div>'
+    + '<div class="quick-card-sub">' + predictions.length + ' preds</div>'
+    + '</div>'
+    + '</div>';
 
   if (live.length > 0) {
     html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">Live Now</span><span style="font-size:12px;font-weight:600;color:var(--danger);background:rgba(244,63,94,0.12);padding:2px 8px;border-radius:var(--r-full);">' + live.length + '</span></div><span class="section-link" onclick="navigate(\'competitions\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding:0 var(--sp-4) 4px;scroll-snap-type:x mandatory;scrollbar-width:none;">' + live.map(function(m) { return renderLiveMatchCard(m); }).join('') + '</div></div>';
