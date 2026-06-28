@@ -572,7 +572,13 @@ var API = (function() {
           var status = 'upcoming';
           if (m.status === 'FINISHED' || m.status === 'AWARDED') status = 'finished';
           else if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'HALFTIME') status = 'live';
-          else if (m.status === 'TIMED' || m.status === 'SCHEDULED') status = 'upcoming';
+          else if (m.status === 'TIMED' || m.status === 'SCHEDULED') {
+            var matchTime = new Date(m.utcDate).getTime();
+            var now = Date.now();
+            if (now >= matchTime - 600000 && now <= matchTime + 7200000) {
+              status = 'live';
+            }
+          }
           return {
             id: 'wc_' + m.id,
             home: homeTeam.name,
@@ -617,6 +623,13 @@ var API = (function() {
     var status = 'upcoming';
     if (g.time_elapsed === 'finished') status = 'finished';
     else if (g.time_elapsed === '1H' || g.time_elapsed === '2H' || g.time_elapsed === 'HT' || g.time_elapsed === 'ET') status = 'live';
+    else if (g.finished !== 'TRUE' && g.local_date) {
+      try {
+        var matchTime = new Date(g.local_date).getTime();
+        var now = Date.now();
+        if (now >= matchTime - 600000 && now <= matchTime + 7200000) status = 'live';
+      } catch(e) {}
+    }
     return {
       id: 'wc_' + g.id,
       home: g.home_team_name_en || 'TBD', away: g.away_team_name_en || 'TBD',
