@@ -1,4 +1,4 @@
-var CACHE = 'pitchline-v3';
+var CACHE = 'pitchline-v4';
 var ASSETS = [
   '/','index.html',
   'css/tokens.css','css/reset.css','css/components.css',
