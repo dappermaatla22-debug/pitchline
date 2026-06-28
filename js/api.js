@@ -544,12 +544,54 @@ var API = (function() {
     });
   }
 
-  // ─── World Cup (worldcup26.ir — free, no key) ────────────────────────
+  // ─── World Cup (worldcup26.ir + football-data.org) ────────────────────
   var WC_BASE = 'https://worldcup26.ir';
 
   function fetchWorldCupGames() {
     return fetchExternal(WC_BASE + '/get/games')
-      .then(function(data) { return (data.games || []).map(normalizeWCGame); })
+      .then(function(data) { return (data.games || []).map(normalizeWCGame).filter(function(g) { return g.home && g.away && g.home !== 'TBD' && g.away !== 'TBD' && g.home !== '' && g.away !== ''; }); })
+      .catch(function() { return []; });
+  }
+
+  function fetchWorldCupFromFD() {
+    return fetchProxy('/competitions/WC/matches')
+      .then(function(data) {
+        return (data.matches || []).filter(function(m) {
+          return m.homeTeam && m.homeTeam.name && m.awayTeam && m.awayTeam.name && m.homeTeam.name !== '' && m.awayTeam.name !== '';
+        }).map(function(m) {
+          var homeTeam = m.homeTeam || {};
+          var awayTeam = m.awayTeam || {};
+          var score = null;
+          if (m.score && m.score.fullTime && m.score.fullTime.home != null) {
+            score = m.score.fullTime.home + ' - ' + m.score.fullTime.away;
+          } else if (m.score && m.score.halfTime && m.score.halfTime.home != null) {
+            score = m.score.halfTime.home + ' - ' + m.score.halfTime.away;
+          }
+          var status = 'upcoming';
+          if (m.status === 'FINISHED' || m.status === 'AWARDED') status = 'finished';
+          else if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'HALFTIME') status = 'live';
+          else if (m.status === 'TIMED' || m.status === 'SCHEDULED') status = 'upcoming';
+          return {
+            id: 'wc_' + m.id,
+            home: homeTeam.name,
+            away: awayTeam.name,
+            homeScore: m.score && m.score.fullTime ? m.score.fullTime.home : null,
+            awayScore: m.score && m.score.fullTime ? m.score.fullTime.away : null,
+            score: score,
+            homeScorers: '',
+            awayScorers: '',
+            group: m.group || '',
+            matchday: m.matchday || '',
+            date: m.utcDate || '',
+            status: status,
+            type: m.stage || 'GROUP',
+            stadiumId: '',
+            finished: status === 'finished',
+            homeCrest: homeTeam.crest || '',
+            awayCrest: awayTeam.crest || ''
+          };
+        });
+      })
       .catch(function() { return []; });
   }
   function fetchWorldCupGroups() {
@@ -603,6 +645,7 @@ var API = (function() {
     batchLoadBadges: batchLoadBadges,
     formatDateLabel: formatDateLabel,
     fetchWorldCupGames: fetchWorldCupGames,
+    fetchWorldCupFromFD: fetchWorldCupFromFD,
     fetchWorldCupGroups: fetchWorldCupGroups,
     fetchWorldCupTeams: fetchWorldCupTeams,
     fetchWorldCupStadiums: fetchWorldCupStadiums

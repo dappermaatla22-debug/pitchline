@@ -193,14 +193,16 @@ function renderWorldCupScreen() {
 }
 
 function renderWCMatchCard(game, isLive) {
-  var home = game.home || game.home_team_name_en || 'TBD';
-  var away = game.away || game.away_team_name_en || 'TBD';
+  var home = game.home || 'TBD';
+  var away = game.away || 'TBD';
   var statusColor = isLive ? 'var(--danger)' : game.status === 'finished' ? 'var(--success)' : 'var(--text-muted)';
   var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : game.date || '';
+  var homeCrest = game.homeCrest || null;
+  var awayCrest = game.awayCrest || null;
   return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
-    + teamLogo(home, null, 28)
+    + teamLogo(home, homeCrest, 28)
     + '<span class="team-name">' + home + '</span>'
     + '</div>'
     + '<div style="text-align:center;">'
@@ -209,10 +211,10 @@ function renderWCMatchCard(game, isLive) {
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
     + '<span class="team-name away">' + away + '</span>'
-    + teamLogo(away, null, 28)
+    + teamLogo(away, awayCrest, 28)
     + '</div>'
     + '</div>'
-    + '<div class="match-meta"><span class="match-league">Group ' + (game.group || '?') + ' · Matchday ' + (game.matchday || '?') + '</span></div>'
+    + '<div class="match-meta"><span class="match-league">Group ' + (game.group || '?') + ' &middot; Matchday ' + (game.matchday || '?') + '</span></div>'
     + '</div>';
 }
 

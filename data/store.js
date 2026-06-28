@@ -164,13 +164,23 @@ var Store = (function() {
 
   function fetchWorldCupData() {
     return Promise.all([
-      API.fetchWorldCupGames(),
-      API.fetchWorldCupGroups(),
-      API.fetchWorldCupTeams()
+      API.fetchWorldCupFromFD().catch(function() { return []; }),
+      API.fetchWorldCupGames().catch(function() { return []; }),
+      API.fetchWorldCupGroups().catch(function() { return []; }),
+      API.fetchWorldCupTeams().catch(function() { return []; })
     ]).then(function(results) {
-      state.worldCup.games = results[0];
-      state.worldCup.groups = results[1];
-      state.worldCup.teams = results[2];
+      var fdGames = results[0] || [];
+      var wcGames = results[1] || [];
+      var groups = results[2] || [];
+      var teams = results[3] || [];
+
+      if (fdGames.length > 0) {
+        state.worldCup.games = fdGames;
+      } else {
+        state.worldCup.games = wcGames;
+      }
+      state.worldCup.groups = groups;
+      state.worldCup.teams = teams;
       notify();
       return state.worldCup;
     }).catch(function(e) {
