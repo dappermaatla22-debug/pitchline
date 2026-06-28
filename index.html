@@ -177,8 +177,13 @@
     document.getElementById('bottom-nav').style.display = 'flex';
     navigate('home');
 
+    var initialLoadDone = false;
     Store.subscribe(function() {
-      renderScreen(currentScreen);
+      // First load: render screen. Background refresh: never re-render.
+      if (!initialLoadDone) {
+        initialLoadDone = true;
+        renderScreen(currentScreen);
+      }
     });
 
     document.querySelectorAll('.nav-item').forEach(function(el) {
@@ -195,14 +200,32 @@
     Store.fetchWorldCupData();
     startLiveClock();
 
+    // Silent background refresh — update DOM in-place, never re-render the screen
     setInterval(function() {
       Store.refreshMatches().then(function() {
-        // Check for score changes before re-rendering
         var matches = Store.getMatches();
         matches.forEach(function(m) {
-          if (m.status === 'live' && m.score) checkScoreChange(m.id, m.score);
+          if (m.status !== 'live') return;
+          // Update score in-place if changed
+          var scoreEl = document.querySelector('[data-score="' + m.id + '"]');
+          if (scoreEl && m.score && scoreEl.textContent.trim() !== m.score) {
+            scoreEl.textContent = m.score;
+            scoreEl.classList.add('score-bump','score-glow');
+            var card = document.querySelector('[data-live-card="' + m.id + '"]');
+            if (card) card.classList.add('live-card-updated');
+            setTimeout(function(){ scoreEl.classList.remove('score-bump','score-glow'); }, 1200);
+            setTimeout(function(){ if(card) card.classList.remove('live-card-updated'); }, 800);
+            playGoalSound();
+            sendNotification('Goal!', m.home + ' ' + m.score + ' ' + m.away);
+            showGoalFlash(m.id, m.score);
+          }
+          // Update prediction badge in-place
+          var pred = Store.getPredictions().find(function(p){ return p.predId === m.id || (m.predId && p.id === m.predId); });
+          if (pred) {
+            var predEl = document.querySelector('[data-pred-badge="' + m.id + '"]');
+            if (predEl) predEl.innerHTML = renderConfidenceBadge(pred.tier) + ' ' + pred.outcome;
+          }
         });
-        if (currentScreen === 'home' || currentScreen === 'fixtures') renderScreen(currentScreen);
       });
     }, 30000);
 
