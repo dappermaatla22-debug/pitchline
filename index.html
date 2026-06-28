@@ -224,6 +224,25 @@
         });
       });
       checkWCScoreChange(Store.getWorldCup().games || []);
+      // Also update WC scores in-place
+      var wcGames = Store.getWorldCup().games || [];
+      wcGames.forEach(function(g) {
+        if (g.status !== 'live') return;
+        var wcId = 'wc_' + g.id;
+        var scoreStr = (g.homeScore || 0) + ' - ' + (g.awayScore || 0);
+        var scoreEl = document.querySelector('[data-score="' + wcId + '"]');
+        if (scoreEl && scoreStr && scoreEl.textContent.trim() !== scoreStr) {
+          scoreEl.textContent = scoreStr;
+          scoreEl.classList.add('score-bump','score-glow');
+          var card = document.querySelector('[data-live-card="' + wcId + '"]');
+          if (card) card.classList.add('live-card-updated');
+          setTimeout(function(){ scoreEl.classList.remove('score-bump','score-glow'); }, 1200);
+          setTimeout(function(){ if(card) card.classList.remove('live-card-updated'); }, 800);
+          playGoalSound();
+          sendNotification('Goal!', g.home + ' ' + scoreStr + ' ' + g.away);
+          showGoalFlash(wcId, scoreStr);
+        }
+      });
     }, 30000);
 
     setTimeout(function() { requestNotificationPermission(); }, 3000);

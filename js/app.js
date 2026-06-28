@@ -173,20 +173,39 @@ function startLiveClock() {
       }
       liveMatchMinutes[m.id]++;
       if (liveMatchMinutes[m.id] > 90) liveMatchMinutes[m.id] = 90;
-      // Update minute display
       var el = document.querySelector('[data-minute="' + m.id + '"]');
       if (el) {
         el.textContent = liveMatchMinutes[m.id] + "'";
         el.classList.add('live-minute-tick');
         setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
       }
-      // Update progress bar
       var bar = document.querySelector('[data-progress="' + m.id + '"]');
       if (bar) {
         bar.style.width = Math.min((liveMatchMinutes[m.id] / 90) * 100, 100) + '%';
       }
     });
-  }, 8000); // tick every 8 seconds for realistic feel
+    // Also tick WC live matches
+    var wc = Store.getWorldCup();
+    var wcLive = (wc.games || []).filter(function(g){ return g.status === 'live'; });
+    wcLive.forEach(function(g) {
+      var wcId = 'wc_' + g.id;
+      if (!liveMatchMinutes[wcId]) {
+        liveMatchMinutes[wcId] = parseInt((g.minute || '0').replace("'","")) || 45;
+      }
+      liveMatchMinutes[wcId]++;
+      if (liveMatchMinutes[wcId] > 90) liveMatchMinutes[wcId] = 90;
+      var el = document.querySelector('[data-minute="' + wcId + '"]');
+      if (el) {
+        el.textContent = liveMatchMinutes[wcId] + "'";
+        el.classList.add('live-minute-tick');
+        setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
+      }
+      var bar = document.querySelector('[data-progress="' + wcId + '"]');
+      if (bar) {
+        bar.style.width = Math.min((liveMatchMinutes[wcId] / 90) * 100, 100) + '%';
+      }
+    });
+  }, 8000);
 }
 function stopLiveClock() {
   if (liveClockInterval) { clearInterval(liveClockInterval); liveClockInterval = null; }

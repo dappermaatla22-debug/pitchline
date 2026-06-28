@@ -905,6 +905,9 @@ function renderWCTabContent(gameId, tab) {
 }
 
 function renderWCSummary(game, pred) {
+  var isFinished = game.status === 'finished';
+  var isLive = game.status === 'live';
+
   var formattedDate = '';
   try {
     var d = new Date(game.date);

@@ -149,14 +149,11 @@ function renderWorldCupScreen() {
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigate(\'home\')">' + ICONS.chevronLeft + '</button><div class="header-title" style="display:flex;align-items:center;gap:8px;justify-content:center;"><span style="font-size:20px;flex-shrink:0;">&#127942;</span> <span>World Cup 2026</span></div><div style="width:40px;flex-shrink:0;"></div></div>';
 
   var todayGames = games.filter(function(g) {
-    if (g.status === 'live' || g.status === 'finished') {
-      try {
-        var gd = new Date(g.date || g.rawDate || '');
-        var now = new Date();
-        return gd.toDateString() === now.toDateString();
-      } catch(e) { return false; }
-    }
-    return false;
+    try {
+      var gd = new Date(g.date || g.rawDate || '');
+      var now = new Date();
+      return gd.toDateString() === now.toDateString();
+    } catch(e) { return false; }
   });
   if (todayGames.length === 0) {
     todayGames = games.filter(function(g) {
