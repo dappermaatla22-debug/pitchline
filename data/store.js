@@ -88,8 +88,8 @@ var Store = (function() {
   }
 
   function fetchAllData() {
-    setLoading(true);
-    setError(null);
+    loadDemoData();
+    notify();
 
     API.fetchAllMatches()
       .then(function(allMatches) {
@@ -109,18 +109,12 @@ var Store = (function() {
           API.batchLoadBadges(teamNames);
 
           generateNotifications(allMatches);
-        } else {
-          loadDemoData();
+          state.lastFetch = Date.now();
+          notify();
         }
-        state.lastFetch = Date.now();
-        setLoading(false);
-        notify();
       })
       .catch(function(e) {
         console.warn('API fetch failed, using demo data:', e);
-        loadDemoData();
-        setLoading(false);
-        notify();
       });
   }
 

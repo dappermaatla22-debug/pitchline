@@ -22,14 +22,23 @@ var API = (function() {
     var cached = getCached(cacheKey(url));
     if (cached) return Promise.resolve(cached);
 
-    return fetch(url)
+    var controller = new AbortController();
+    var timeout = setTimeout(function() { controller.abort(); }, 5000);
+
+    return fetch(url, { signal: controller.signal })
       .then(function(res) {
+        clearTimeout(timeout);
         if (!res.ok) throw new Error('Proxy error: ' + res.status);
         return res.json();
       })
       .then(function(data) {
+        clearTimeout(timeout);
         setCache(cacheKey(url), data);
         return data;
+      })
+      .catch(function(e) {
+        clearTimeout(timeout);
+        throw e;
       });
   }
 

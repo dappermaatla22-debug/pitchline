@@ -162,6 +162,10 @@
     document.getElementById('bottom-nav').style.display = 'flex';
     navigate('home');
 
+    Store.subscribe(function() {
+      renderScreen(currentScreen);
+    });
+
     document.querySelectorAll('.nav-item').forEach(function(el) {
       el.addEventListener('click', function() { navigate(el.dataset.tab); });
     });
@@ -173,6 +177,7 @@
     });
 
     Store.fetchAllData();
+    Store.fetchWorldCupData();
 
     setInterval(function() {
       Store.refreshMatches();
