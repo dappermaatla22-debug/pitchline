@@ -250,7 +250,10 @@ var Store = (function() {
 
   function getSavedPredictions() {
     var savedIds = state.user.savedPredictions || [];
-    return state.predictions.filter(function(p) { return savedIds.indexOf(p.id) > -1; });
+    var regular = state.predictions.filter(function(p) { return savedIds.indexOf(p.id) > -1; });
+    var wcPreds = state.worldCup.predictions || [];
+    var wc = wcPreds.filter(function(p) { return savedIds.indexOf(p.id) > -1; });
+    return regular.concat(wc);
   }
 
   function getUnreadCount() {
@@ -312,6 +315,7 @@ var Store = (function() {
 
   return {
     subscribe: subscribe,
+    notify: notify,
     fetchAllData: fetchAllData,
     refreshMatches: refreshMatches,
     fetchCompetition: fetchCompetition,

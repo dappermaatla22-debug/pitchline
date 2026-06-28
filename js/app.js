@@ -354,8 +354,12 @@ function sharePred(predId) {
 function shareMatch(matchId) {
   var matches = Store.getMatches();
   var match = matches.find(function(m){ return m.id === matchId; });
+  if (!match) {
+    var wcGames = Store.getWorldCup().games || [];
+    match = wcGames.find(function(g){ return g.id === matchId; });
+  }
   if (!match) { showToast('Nothing to share'); return; }
-  var text = match.home + ' vs ' + match.away + ' \u2014 ' + (match.score || match.time) + ' | ' + match.league;
+  var text = match.home + ' vs ' + match.away + ' \u2014 ' + (match.score || match.time || '') + ' | ' + (match.league || 'World Cup 2026');
   if (navigator.share) {
     navigator.share({ title:'Pitchline', text:text });
   } else {
@@ -786,12 +790,11 @@ function handleSearch(val) {
     html += '</div>';
   }
   if (!results.length && !predResults.length && !wcResults.length && !newsResults.length) {
-    html = '<div style="padding:40px 16px;text-align:center;color:var(--text-muted);">No results for "' + val + '"</div>';
+    var safeVal = val.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    html = '<div style="padding:40px 16px;text-align:center;color:var(--text-muted);">No results for "' + safeVal + '"</div>';
   }
   res.innerHTML = html;
 }
-
-function openSearchResult(name) { showToast('Opening ' + name); }
 
 function markRead(id) {
   Store.markNotificationRead(id);
@@ -834,7 +837,7 @@ function filterStandings(type, el) {
   renderScreen('standings');
 }
 function signOut() { openConfirmModal('Sign out?','You will be returned to the welcome screen.',function(){ showToast('Signed out'); setTimeout(showOnboarding,400); }); }
-function openAddTeamModal() { openModal('team-select-modal'); }
+function openTeamSelectModal() { openModal('team-select-modal'); }
 
 var toastTimer = null;
 function showToast(msg) {

@@ -164,12 +164,7 @@
 
   function initApp() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
-      });
-      caches.keys().then(function(ks) {
-        ks.forEach(function(k) { caches.delete(k); });
-      });
+      navigator.serviceWorker.register('/sw.js').catch(function() {});
     }
 
     applyTheme(localStorage.getItem('pitchline-theme') || 'dark');
@@ -233,10 +228,6 @@
 
     if (!localStorage.getItem('pitchline-onboarded')) {
       setTimeout(showOnboarding, 1200);
-    }
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(function() {});
     }
   }
 </script>

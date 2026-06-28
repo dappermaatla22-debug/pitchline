@@ -144,7 +144,7 @@ function renderMatchCard(match, showPred) {
     + teamLogo(match.home, match.homeCrest, 28)
     + '<span class="team-name" onclick="event.stopPropagation();openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + match.home + '</span>'
     + '</div>'
-    + '<span class="vs-badge">' + (isLive ? match.score : 'VS') + '</span>'
+    + '<span class="vs-badge">' + (isLive ? match.score : (match.status === 'finished' && match.score ? match.score : 'VS')) + '</span>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
     + '<span class="team-name away" onclick="event.stopPropagation();openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + match.away + '</span>'
     + teamLogo(match.away, match.awayCrest, 28)

@@ -1,3 +1,13 @@
 {
-  "rewrites": []
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "s-maxage=60, stale-while-revalidate=300" }
+      ]
+    }
+  ]
 }

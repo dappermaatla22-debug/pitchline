@@ -120,89 +120,12 @@ function renderMatchTimeline(match) {
 }
 
 function renderMatchInjuries(match) {
-  var homePlayers = ['Saliba','Gabriel','Odegaard','Saka','Rice'];
-  var awayPlayers = ['James','Fernandez','Palmer','Jackson','Madueke'];
-  var injuries = [
-    {team:match.home,player:homePlayers[Math.abs(match.home.charCodeAt(0)) % homePlayers.length],pos:'DF',status:'Doubtful'},
-    {team:match.away,player:awayPlayers[Math.abs(match.away.charCodeAt(0)) % awayPlayers.length],pos:'MF',status:'Questionable'}
-  ];
-  var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Injury Report</div><div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
-  injuries.forEach(function(inj) {
-    html += '<div class="list-row" style="cursor:default;"><div><div style="font-size:13px;font-weight:600;">' + inj.player + ' <span style="color:var(--text-muted);font-weight:400;">(' + inj.pos + ')</span></div><div style="font-size:12px;color:var(--text-muted);">' + inj.team + '</div></div><span class="confidence-badge ' + (inj.status === 'Out' ? 'badge-risky' : 'badge-moderate') + '">' + inj.status + '</span></div>';
-  });
-  html += '</div></div>';
-  return html;
+  return '';
 }
 
 // ─── Lineups Tab ──────────────────────────────────────────────────────────────
 function renderMatchLineups(match) {
-  var homeFormation = [
-    {num:'1',name:'Raya',pos:'GK',x:50,y:92},
-    {num:'2',name:'White',pos:'RB',x:18,y:78},
-    {num:'6',name:'Gabriel',pos:'CB',x:38,y:80},
-    {num:'2',name:'Saliba',pos:'CB',x:62,y:80},
-    {num:'35',name:'Zinchenko',pos:'LB',x:82,y:78},
-    {num:'5',name:'Partey',pos:'CDM',x:50,y:65},
-    {num:'8',name:'Odegaard',pos:'CM',x:35,y:58},
-    {num:'29',name:'Havertz',pos:'CM',x:65,y:58},
-    {num:'7',name:'Saka',pos:'RW',x:15,y:45},
-    {num:'14',name:'Nketiah',pos:'ST',x:50,y:40},
-    {num:'11',name:'Martinelli',pos:'LW',x:85,y:45}
-  ];
-  var awayFormation = [
-    {num:'1',name:'Sanchez',pos:'GK',x:50,y:8},
-    {num:'24',name:'James',pos:'RB',x:82,y:22},
-    {num:'6',name:'Thiago Silva',pos:'CB',x:62,y:20},
-    {num:'4',name:'Colwill',pos:'CB',x:38,y:20},
-    {num:'21',name:'Cucurella',pos:'LB',x:18,y:22},
-    {num:'25',name:'Caicedo',pos:'CDM',x:50,y:35},
-    {num:'8',name:'Fernandez',pos:'CM',x:35,y:42},
-    {num:'23',name:'Gallagher',pos:'CM',x:65,y:42},
-    {num:'11',name:'Madueke',pos:'RW',x:85,y:55},
-    {num:'15',name:'Jackson',pos:'ST',x:50,y:60},
-    {num:'10',name:'Palmer',pos:'LW',x:15,y:55}
-  ];
-
-  var tc_home = getTeamColor(match.home);
-  var tc_away = getTeamColor(match.away);
-
-  var html = '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;">' + match.home + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">4-3-3</span></div>';
-  html += '<div class="pitch-container">';
-
-  html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:100%;background:rgba(255,255,255,0.2);position:absolute;"></div></div>';
-  html += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);"></div>';
-  html += '<div style="position:absolute;top:50%;left:50%;width:20%;aspect-ratio:1;border:2px solid rgba(255,255,255,0.2);border-radius:50%;transform:translate(-50%,-50%);"></div>';
-  html += '<div style="position:absolute;top:0;left:30%;right:30%;height:18%;border-bottom:2px solid rgba(255,255,255,0.2);"></div>';
-  html += '<div style="position:absolute;bottom:0;left:30%;right:30%;height:18%;border-top:2px solid rgba(255,255,255,0.2);"></div>';
-
-  homeFormation.forEach(function(p) {
-    html += '<div class="pitch-player" style="left:' + p.x + '%;top:' + p.y + '%;"><div class="pitch-player-num" style="background:' + tc_home.bg + ';">' + p.num + '</div><div class="pitch-player-name">' + p.name + '</div></div>';
-  });
-  html += '</div></div>';
-
-  html += '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;">' + match.away + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">4-2-3-1</span></div>';
-  html += '<div class="pitch-container" style="transform:scaleY(-1);">';
-
-  html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:100%;background:rgba(255,255,255,0.2);position:absolute;"></div></div>';
-  html += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);"></div>';
-  html += '<div style="position:absolute;top:50%;left:50%;width:20%;aspect-ratio:1;border:2px solid rgba(255,255,255,0.2);border-radius:50%;transform:translate(-50%,-50%);"></div>';
-  html += '<div style="position:absolute;top:0;left:30%;right:30%;height:18%;border-bottom:2px solid rgba(255,255,255,0.2);"></div>';
-  html += '<div style="position:absolute;bottom:0;left:30%;right:30%;height:18%;border-top:2px solid rgba(255,255,255,0.2);"></div>';
-
-  awayFormation.forEach(function(p) {
-    html += '<div class="pitch-player" style="left:' + p.x + '%;top:' + p.y + '%;"><div class="pitch-player-num" style="background:' + tc_away.bg + ';">' + p.num + '</div><div class="pitch-player-name">' + p.name + '</div></div>';
-  });
-  html += '</div></div>';
-
-  html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Bench</div>';
-  var homeBench = ['Ramsdale','Tierney','Jorginho','Smith Rowe','Trossard','Vieira','Nelson'];
-  var awayBench = ['Petrovic','Disasi','Chilwell','Ugochukwu','Casadei','Mudryk','Broja'];
-  html += '<div style="display:flex;gap:12px;">';
-  html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + match.home + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' + homeBench.join(', ') + '</div></div>';
-  html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + match.away + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' + awayBench.join(', ') + '</div></div>';
-  html += '</div></div>';
-
-  return html;
+  return '<div class="card" style="margin-bottom:14px;text-align:center;padding:24px;"><div style="font-size:14px;color:var(--text-muted);margin-bottom:8px;">Lineups</div><div style="font-size:13px;color:var(--text-secondary);">Lineup data will be available closer to kickoff.</div></div>';
 }
 
 // ─── Stats Tab ────────────────────────────────────────────────────────────────
@@ -533,22 +456,66 @@ function renderTeamProfileScreen(teamName) {
 // ─── Comparison Screen ────────────────────────────────────────────────────────
 function renderComparisonScreen(teamA, teamB) {
   teamA = teamA || 'Arsenal'; teamB = teamB || 'Chelsea';
+
+  function getTeamStats(name) {
+    var matches = Store.getMatches();
+    var teamMatches = matches.filter(function(m){ return m.home === name || m.away === name; });
+    var wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
+    var homeWins = 0, homeMatches = 0, awayWins = 0, awayMatches = 0;
+    var form = [];
+    teamMatches.forEach(function(m) {
+      var isHome = m.home === name;
+      var myScore = 0, theirScore = 0;
+      if (m.score) {
+        var parts = m.score.split('-');
+        myScore = parseInt(isHome ? parts[0].trim() : parts[1].trim()) || 0;
+        theirScore = parseInt(isHome ? parts[1].trim() : parts[0].trim()) || 0;
+      }
+      goalsFor += myScore;
+      goalsAgainst += theirScore;
+      if (m.status === 'finished' || m.status === 'live') {
+        if (myScore > theirScore) { wins++; form.push('W'); if (isHome) homeWins++; else awayWins++; }
+        else if (myScore === theirScore) { draws++; form.push('D'); }
+        else { losses++; form.push('L'); }
+        if (isHome) homeMatches++; else awayMatches++;
+      }
+    });
+    var played = wins + draws + losses;
+    var recentForm = form.slice(-5);
+    while (recentForm.length < 5) recentForm.unshift('D');
+    var homePct = homeMatches > 0 ? Math.round((homeWins / homeMatches) * 100) : 0;
+    var awayPct = awayMatches > 0 ? Math.round((awayWins / awayMatches) * 100) : 0;
+    var avgGoalsFor = played > 0 ? (goalsFor / played).toFixed(1) : '0.0';
+    var avgGoalsAgainst = played > 0 ? (goalsAgainst / played).toFixed(1) : '0.0';
+    var strength = 50 + wins * 5 + draws * 2 - losses * 3;
+    strength = Math.max(40, Math.min(95, strength));
+    return { played: played, wins: wins, draws: draws, losses: losses, form: recentForm, homePct: homePct, awayPct: awayPct, avgGF: avgGoalsFor, avgGA: avgGoalsAgainst, strength: strength };
+  }
+
+  var statsA = getTeamStats(teamA);
+  var statsB = getTeamStats(teamB);
+
+  var formA = statsA.form.join(' ');
+  var formB = statsB.form.join(' ');
+
   var metrics = [
-    {label:'Form (last 5)',a:'4W 1D',b:'3W 1D 1L'},
-    {label:'Goals Scored',a:'2.4/g',b:'1.9/g'},
-    {label:'Goals Conceded',a:'0.8/g',b:'1.1/g'},
-    {label:'Home Performance',a:'87%',b:'72%'},
-    {label:'Away Performance',a:'64%',b:'58%'},
-    {label:'Predicted Strength',a:'84',b:'76'},
-    {label:'xG For',a:'2.7',b:'2.1'},
-    {label:'xG Against',a:'0.9',b:'1.3'}
+    {label:'Record (W-D-L)',a:statsA.wins + '-' + statsA.draws + '-' + statsA.losses,b:statsB.wins + '-' + statsB.draws + '-' + statsB.losses},
+    {label:'Goals Scored',a:statsA.avgGF + '/g',b:statsB.avgGF + '/g'},
+    {label:'Goals Conceded',a:statsA.avgGA + '/g',b:statsB.avgGA + '/g'},
+    {label:'Home Win %',a:statsA.homePct + '%',b:statsB.homePct + '%'},
+    {label:'Away Win %',a:statsA.awayPct + '%',b:statsB.awayPct + '%'},
+    {label:'Strength Rating',a:String(statsA.strength),b:String(statsB.strength)},
+    {label:'Recent Form',a:formA,b:formB}
   ];
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Team Comparison</div><button class="btn-icon" onclick="swapTeams()">' + ICONS.swap + '</button></div>';
+  var verdict = statsA.strength > statsB.strength ? teamA : statsB.strength > statsA.strength ? teamB : 'Even';
+  var verdictText = verdict === 'Even' ? 'Teams are evenly matched' : verdict + ' rated higher based on current form and results';
+
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Team Comparison</div></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
-  html += '<div style="display:flex;gap:10px;padding:16px 0;"><div style="flex:1;background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--r-md);padding:12px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Team A</div><div style="font-size:16px;font-weight:700;">' + teamA + '</div></div><div style="display:flex;align-items:center;"><button class="btn-icon" onclick="swapTeams()">' + ICONS.swap + '</button></div><div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Team B</div><div style="font-size:16px;font-weight:700;">' + teamB + '</div></div></div>';
+  html += '<div style="display:flex;gap:10px;padding:16px 0;"><div style="flex:1;background:var(--bg-card);border:1px solid var(--accent);border-radius:var(--r-md);padding:12px;text-align:center;cursor:pointer;" onclick="openTeamProfile(\'' + teamA.replace(/'/g, "\\'") + '\')"><div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Team A</div><div style="font-size:16px;font-weight:700;">' + teamA + '</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + statsA.played + ' matches</div></div><div style="display:flex;align-items:center;">' + ICONS.swap + '</div><div style="flex:1;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;text-align:center;cursor:pointer;" onclick="openTeamProfile(\'' + teamB.replace(/'/g, "\\'") + '\')"><div style="font-size:13px;color:var(--text-muted);margin-bottom:4px;">Team B</div><div style="font-size:16px;font-weight:700;">' + teamB + '</div><div style="font-size:12px;color:var(--text-muted);margin-top:4px;">' + statsB.played + ' matches</div></div></div>';
 
   html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;padding:0 16px;">';
   metrics.forEach(function(m) {
@@ -556,9 +523,7 @@ function renderComparisonScreen(teamA, teamB) {
   });
   html += '</div>';
 
-  html += '<div class="card card-accent-left" style="margin-top:16px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Model Verdict</div><div style="font-size:15px;font-weight:600;margin-bottom:4px;">' + teamA + ' rated higher</div><div style="font-size:13px;color:var(--text-secondary);">Based on current form, xG and home/away records, ' + teamA + ' holds a significant advantage.</div></div>';
-
-  html += '<div style="display:flex;gap:10px;margin-top:16px;margin-bottom:20px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'competitions\')">View Predictions</button><button class="btn btn-secondary" onclick="saveComparison()">Save</button></div>';
+  html += '<div class="card card-accent-left" style="margin-top:16px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Model Verdict</div><div style="font-size:15px;font-weight:600;margin-bottom:4px;">' + verdictText + '</div><div style="font-size:13px;color:var(--text-secondary);">Based on current form, goals scored/conceded, and home/away records.</div></div>';
 
   html += '<div style="height:20px;"></div></div>';
   return html;
@@ -831,8 +796,10 @@ function renderStandingsScreen(leagueCode) {
       }
     }).catch(function() {
       _standingsLoading = false;
-      var el = document.getElementById('standings-content');
-      if (el) el.innerHTML = renderDefaultStandings(code);
+      if (currentScreen === 'standings') {
+        var el = document.getElementById('standings-content');
+        if (el) el.innerHTML = renderDefaultStandings(code);
+      }
     });
   }
 
