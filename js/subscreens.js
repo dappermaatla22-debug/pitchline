@@ -718,13 +718,23 @@ function renderWCTabContent(gameId, tab) {
   switch (tab) {
     case 'summary': return renderWCSummary(game, pred);
     case 'lineups': return renderWCLineups(game);
-    case 'stats':   return renderWCStats(game);
+    case 'stats':   return renderWCMatchStats(game);
     case 'h2h':     return renderWCH2H(game);
     default:        return renderWCSummary(game, pred);
   }
 }
 
 function renderWCSummary(game, pred) {
+  var formattedDate = '';
+  try {
+    var d = new Date(game.date);
+    if (!isNaN(d.getTime())) {
+      var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      formattedDate = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+  } catch(e) {}
+
   var predHtml = pred
     ? '<div class="card card-accent-left" style="margin-bottom:14px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">AI Prediction</div><div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div></div>'
     : '<div class="card" style="margin-bottom:14px;text-align:center;padding:20px;"><div style="color:var(--text-muted);font-size:14px;">No prediction available</div></div>';
@@ -808,7 +818,7 @@ function renderWCLineups(game) {
   return html;
 }
 
-function renderWCStats(game) {
+function renderWCMatchStats(game) {
   var homeGoals = game.homeScore ? parseInt(game.homeScore) : 0;
   var awayGoals = game.awayScore ? parseInt(game.awayScore) : 0;
   var totalGoals = homeGoals + awayGoals;

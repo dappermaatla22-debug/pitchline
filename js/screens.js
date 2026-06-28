@@ -72,7 +72,7 @@ function renderHomeScreen() {
     if (risky.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);"></div><span class="section-title">' + (typeof t === 'function' ? t('avoidList') : 'Avoid List') + '</span></div></div><div class="card" style="background:var(--risky-dim);border-color:rgba(244,63,94,0.2);">' + risky.slice(0,4).map(function(p){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(244,63,94,0.12);cursor:pointer;" onclick="openPredDetail(\'' + p.id + '\')"><span style="font-size:13px;color:var(--text-secondary);">' + p.home + ' vs ' + p.away + '</span><span style="font-size:13px;font-weight:600;color:var(--risky);">' + p.confidence + '%</span></div>'; }).join('') + '</div></div>';
   }
 
-  html += '<div class="section"><div class="section-header"><span class="section-title">' + (typeof t === 'function' ? t('allMatches') : 'All Matches') + '</span><span class="section-link" onclick="navigate(\'fixtures\')">Browse</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + matches.slice(0,6).map(renderMatchCard).join('') + '</div></div>';
+  html += '<div class="section"><div class="section-header"><span class="section-title">' + (typeof t === 'function' ? t('allMatches') : 'All Matches') + '</span><span class="section-link" onclick="navigate(\'fixtures\')">Browse</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + matches.slice(0,6).map(function(m){ return renderMatchCard(m); }).join('') + '</div></div>';
   html += '<div style="height:20px;"></div></div>';
   return html;
 }
@@ -84,17 +84,43 @@ function renderCompetitionsScreen() {
     var leagueName = leagueMap[COMP_FILTER];
     if (leagueName) matches = matches.filter(function(m){ return m.league === leagueName || m.league === COMP_FILTER; });
   }
+
+  var df = typeof COMP_DATE_FILTER !== 'undefined' ? COMP_DATE_FILTER : 'all';
+  if (df === 'today') {
+    matches = matches.filter(function(m){ return m.date === 'Today' || m.status === 'live'; });
+  } else if (df === 'tomorrow') {
+    matches = matches.filter(function(m){ return m.date === 'Tomorrow'; });
+  } else if (df === 'live') {
+    matches = matches.filter(function(m){ return m.status === 'live'; });
+  }
+
   var live = matches.filter(function(m){ return m.status === 'live'; });
   var upcoming = matches.filter(function(m){ return m.status === 'upcoming'; });
-  var tomorrow = matches.filter(function(m){ return m.status === 'tomorrow'; });
 
   var html = '<div class="app-header"><div class="header-title">Competitions</div><div class="header-actions"><button class="btn-icon" onclick="openFilterDrawer()">' + ICONS.filter + '</button><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
-  html += '<div class="chip-row" id="match-date-chips"><div class="chip active" onclick="filterMatchDate(\'all\',this)">All</div><div class="chip" onclick="filterMatchDate(\'today\',this)">Today</div><div class="chip" onclick="filterMatchDate(\'tomorrow\',this)">Tomorrow</div><div class="chip" onclick="filterMatchDate(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live (' + live.length + ')</div></div>';
-  html += '<div class="chip-row" style="padding-top:0;"><div class="chip active">All Leagues</div><div class="chip" onclick="openStandings(\'PL\')">&#127467;&#127471; PL</div><div class="chip" onclick="openStandings(\'PD\')">&#127466;&#127480; La Liga</div><div class="chip" onclick="openStandings(\'BL1\')">&#127465;&#127466; Bundesliga</div><div class="chip" onclick="openStandings(\'SA\')">&#127470;&#127481; Serie A</div><div class="chip" onclick="openStandings(\'FL1\')">&#127467;&#127479; Ligue 1</div></div>';
+  html += '<div class="chip-row" id="match-date-chips"><div class="chip' + (df==='all'?' active':'') + '" onclick="filterMatchDate(\'all\',this)">All</div><div class="chip' + (df==='today'?' active':'') + '" onclick="filterMatchDate(\'today\',this)">Today</div><div class="chip' + (df==='tomorrow'?' active':'') + '" onclick="filterMatchDate(\'tomorrow\',this)">Tomorrow</div><div class="chip' + (df==='live'?' active':'') + '" onclick="filterMatchDate(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live (' + live.length + ')</div></div>';
+  html += '<div class="chip-row" style="padding-top:0;"><div class="chip' + (typeof COMP_FILTER === 'undefined' || COMP_FILTER === 'all' ? ' active' : '') + '" onclick="filterCompetition(\'all\',this)">All Leagues</div><div class="chip' + (COMP_FILTER==='PL'?' active':'') + '" onclick="filterCompetition(\'PL\',this)">&#127467;&#127471; PL</div><div class="chip' + (COMP_FILTER==='PD'?' active':'') + '" onclick="filterCompetition(\'PD\',this)">&#127466;&#127480; La Liga</div><div class="chip' + (COMP_FILTER==='BL1'?' active':'') + '" onclick="filterCompetition(\'BL1\',this)">&#127465;&#127466; Bundesliga</div><div class="chip' + (COMP_FILTER==='SA'?' active':'') + '" onclick="filterCompetition(\'SA\',this)">&#127470;&#127481; Serie A</div><div class="chip' + (COMP_FILTER==='FL1'?' active':'') + '" onclick="filterCompetition(\'FL1\',this)">&#127467;&#127479; Ligue 1</div></div>';
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
-  if (live.length) html += '<div style="font-size:12px;font-weight:600;color:var(--danger);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 10px;">&#9679; Live Now</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">' + live.map(renderMatchCard).join('') + '</div>';
-  html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;">Today</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">' + upcoming.map(renderMatchCard).join('') + '</div>';
-  if (tomorrow.length) html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;">Tomorrow</div><div style="display:flex;flex-direction:column;gap:10px;">' + tomorrow.map(renderMatchCard).join('') + '</div>';
+
+  if (matches.length === 0) {
+    html += renderEmptyState('matches','No matches','No matches found for this filter.','Go Home',"navigate('home')");
+  } else {
+    if (live.length) html += '<div style="font-size:12px;font-weight:600;color:var(--danger);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 10px;">&#9679; Live Now</div><div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">' + live.map(function(m){ return renderMatchCard(m); }).join('') + '</div>';
+
+    var grouped = {};
+    upcoming.forEach(function(m) {
+      var key = m.date || 'Other';
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(m);
+    });
+    Object.keys(grouped).forEach(function(date) {
+      html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 10px;">' + date + '</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">';
+      grouped[date].forEach(function(m) { html += renderMatchCard(m); });
+      html += '</div>';
+    });
+  }
+
   html += '<div style="height:20px;"></div></div>';
   return html;
 }
@@ -321,26 +347,92 @@ function filterPreds(tier, el) {
   }
 }
 
+var FIXTURE_DATE_FILTER = 'all';
+var FIXTURE_LEAGUE_FILTER = 'all';
+
+function filterFixturesDate(val, el) {
+  FIXTURE_DATE_FILTER = val;
+  document.querySelectorAll('#fixture-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderFixturesScreen();
+}
+
+function filterFixturesLeague(val, el) {
+  FIXTURE_LEAGUE_FILTER = val;
+  document.querySelectorAll('#fixture-league-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderFixturesScreen();
+}
+
 function renderFixturesScreen() {
   var matches = Store.getMatches();
+
+  var df = FIXTURE_DATE_FILTER;
+  if (df === 'live') {
+    matches = matches.filter(function(m){ return m.status === 'live'; });
+  } else if (df === 'upcoming') {
+    matches = matches.filter(function(m){ return m.status === 'upcoming'; });
+  } else if (df === 'finished') {
+    matches = matches.filter(function(m){ return m.status === 'finished'; });
+  }
+
+  var lf = FIXTURE_LEAGUE_FILTER;
+  if (lf !== 'all') {
+    matches = matches.filter(function(m){ return m.leagueCode === lf || m.league === lf; });
+  }
+
+  var live = matches.filter(function(m){ return m.status === 'live'; });
+  var upcoming = matches.filter(function(m){ return m.status === 'upcoming'; });
+  var finished = matches.filter(function(m){ return m.status === 'finished'; });
+
   var html = '<div class="app-header"><div class="header-title">Fixtures</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
-  html += '<div class="chip-row" id="fixture-filter-chips"><div class="chip active" onclick="filterFixtures(\'all\',this)">All</div><div class="chip" onclick="filterFixtures(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live</div><div class="chip" onclick="filterFixtures(\'upcoming\',this)">Upcoming</div><div class="chip" onclick="filterFixtures(\'finished\',this)">Results</div></div>';
+
+  html += '<div class="chip-row" id="fixture-filter-chips">';
+  html += '<div class="chip' + (df==='all'?' active':'') + '" onclick="filterFixturesDate(\'all\',this)">All</div>';
+  html += '<div class="chip' + (df==='live'?' active':'') + '" onclick="filterFixturesDate(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live (' + live.length + ')</div>';
+  html += '<div class="chip' + (df==='upcoming'?' active':'') + '" onclick="filterFixturesDate(\'upcoming\',this)">Upcoming (' + upcoming.length + ')</div>';
+  html += '<div class="chip' + (df==='finished'?' active':'') + '" onclick="filterFixturesDate(\'finished\',this)">Results (' + finished.length + ')</div>';
+  html += '</div>';
+
+  html += '<div class="chip-row" id="fixture-league-chips">';
+  html += '<div class="chip' + (lf==='all'?' active':'') + '" onclick="filterFixturesLeague(\'all\',this)">All Leagues</div>';
+  html += '<div class="chip' + (lf==='PL'?' active':'') + '" onclick="filterFixturesLeague(\'PL\',this)">&#127467;&#127471; PL</div>';
+  html += '<div class="chip' + (lf==='PD'?' active':'') + '" onclick="filterFixturesLeague(\'PD\',this)">&#127466;&#127480; La Liga</div>';
+  html += '<div class="chip' + (lf==='BL1'?' active':'') + '" onclick="filterFixturesLeague(\'BL1\',this)">&#127465;&#127466; Bundesliga</div>';
+  html += '<div class="chip' + (lf==='SA'?' active':'') + '" onclick="filterFixturesLeague(\'SA\',this)">&#127470;&#127481; Serie A</div>';
+  html += '<div class="chip' + (lf==='FL1'?' active':'') + '" onclick="filterFixturesLeague(\'FL1\',this)">&#127467;&#127479; Ligue 1</div>';
+  html += '</div>';
+
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;" id="fixture-list">';
   if (matches.length === 0) {
-    html += renderEmptyState('matches','No fixtures','No upcoming matches found.','Go Home',"navigate('home')");
+    html += renderEmptyState('matches','No fixtures','No matches found for this filter.','Go Home',"navigate('home')");
   } else {
+    if (live.length > 0) {
+      html += '<div style="font-size:12px;font-weight:600;color:var(--danger);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">&#9679; Live Now (' + live.length + ')</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
+      live.forEach(function(m) { html += renderMatchCard(m); });
+      html += '</div>';
+    }
+
     var grouped = {};
-    matches.forEach(function(m) {
-      var key = m.date || 'Other';
+    upcoming.forEach(function(m) {
+      var key = m.date || 'Upcoming';
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(m);
     });
     Object.keys(grouped).forEach(function(date) {
-      html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">' + date + '</div>';
+      html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">' + date + ' (' + grouped[date].length + ')</div>';
       html += '<div style="display:flex;flex-direction:column;gap:8px;">';
       grouped[date].forEach(function(m) { html += renderMatchCard(m); });
       html += '</div>';
     });
+
+    if (finished.length > 0) {
+      html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">Results (' + finished.length + ')</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      finished.forEach(function(m) { html += renderMatchCard(m); });
+      html += '</div>';
+    }
   }
   html += '<div style="height:20px;"></div></div>';
   return html;

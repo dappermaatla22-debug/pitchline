@@ -726,9 +726,12 @@ function getFilteredHomeMatches(matches, predictions) {
   }
 }
 
+var COMP_DATE_FILTER = 'all';
 function filterMatchDate(val, el) {
+  COMP_DATE_FILTER = val;
   document.querySelectorAll('#match-date-chips .chip').forEach(function(c){ c.classList.remove('active'); });
   if (el) el.classList.add('active');
+  renderScreen('competitions');
 }
 
 function handleSearch(val) {
