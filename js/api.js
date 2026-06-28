@@ -574,7 +574,12 @@ var API = (function() {
           if (m.status === 'FINISHED' || m.status === 'AWARDED') status = 'finished';
           else if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'HALFTIME') {
             status = 'live';
-            if (m.minute) estimatedMinute = m.minute;
+            estimatedMinute = m.minute || null;
+            if (!estimatedMinute && m.utcDate) {
+              var matchTime = new Date(m.utcDate).getTime();
+              var now = Date.now();
+              estimatedMinute = Math.min(Math.max(Math.floor((now - matchTime) / 60000), 1), 90);
+            }
           }
           else if (m.status === 'TIMED' || m.status === 'SCHEDULED') {
             var matchTime = new Date(m.utcDate).getTime();
