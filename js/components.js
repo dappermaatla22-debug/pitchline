@@ -59,13 +59,15 @@ function teamLogo(name, crest, size) {
   var tc = getTeamColor(name);
   var initials = name.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
   var fontSize = Math.round(size * 0.38);
+  var tag = 'background:' + tc.bg + ';color:' + tc.fg + ';font-size:' + fontSize + 'px;font-weight:700;';
 
   if (crest) {
-    return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;flex-shrink:0;background:' + tc.bg + ';">'
-      + '<img src="' + crest + '" alt="' + name + '" style="width:100%;height:100%;object-fit:contain;background:var(--bg-elevated);" onerror="this.parentElement.innerHTML=\'<span style=\\'display:flex;width:100%;height:100%;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + '\\'>\\' + \'' + initials + '\' + \'</span>\'">'
+    var badgeId = 'tb_' + name.replace(/\W/g,'') + '_' + size;
+    return '<div id="' + badgeId + '" class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;flex-shrink:0;background:' + tc.bg + ';">'
+      + '<img src="' + crest + '" alt="' + name + '" style="width:100%;height:100%;object-fit:contain;background:var(--bg-elevated);" onerror="var b=document.getElementById(\'' + badgeId + '\');if(b){b.innerHTML=\'<span style=&quot;display:flex;width:100%;height:100%;align-items:center;justify-content:center;' + tag.replace(/'/g,'') + '&quot;>' + initials + '</span>\';}">'
       + '</div>';
   }
-  return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + ';flex-shrink:0;">' + initials + '</div>';
+  return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;' + tag + 'flex-shrink:0;">' + initials + '</div>';
 }
 
 function renderConfidenceBadge(tier) {
