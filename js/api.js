@@ -1,12 +1,14 @@
 var API = (function() {
 
-  var BASE_URL = '/api/football';
   var THEsportsDB_API = 'https://www.thesportsdb.com/api/v1/json/3';
+  var ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
+  var PROXY_URL = '/api/football';
 
   var TEAM_BADGES = {};
   var cache = {};
   var CACHE_DURATION = 3 * 60 * 1000;
 
+  // ─── Cache helpers ────────────────────────────────────────────────────
   function cacheKey(url) { return url; }
   function getCached(key) {
     var c = cache[key];
@@ -17,127 +19,228 @@ var API = (function() {
     cache[key] = { data: data, time: Date.now() };
   }
 
-  function fetchProxy(endpoint) {
-    var url = BASE_URL + '?endpoint=' + encodeURIComponent(endpoint);
+  // ─── Fetch helpers ────────────────────────────────────────────────────
+  function fetchWithTimeout(url, timeout) {
+    timeout = timeout || 5000;
     var cached = getCached(cacheKey(url));
     if (cached) return Promise.resolve(cached);
 
     var controller = new AbortController();
-    var timeout = setTimeout(function() { controller.abort(); }, 5000);
+    var timer = setTimeout(function() { controller.abort(); }, timeout);
 
     return fetch(url, { signal: controller.signal })
       .then(function(res) {
-        clearTimeout(timeout);
-        if (!res.ok) throw new Error('Proxy error: ' + res.status);
+        clearTimeout(timer);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         return res.json();
       })
       .then(function(data) {
-        clearTimeout(timeout);
+        clearTimeout(timer);
         setCache(cacheKey(url), data);
         return data;
       })
       .catch(function(e) {
-        clearTimeout(timeout);
+        clearTimeout(timer);
         throw e;
       });
   }
 
   function fetchExternal(url) {
-    var cached = getCached(cacheKey(url));
-    if (cached) return Promise.resolve(cached);
-
-    return fetch(url)
-      .then(function(res) {
-        if (!res.ok) throw new Error('Fetch error: ' + res.status);
-        return res.json();
-      })
-      .then(function(data) {
-        setCache(cacheKey(url), data);
-        return data;
-      });
+    return fetchWithTimeout(url, 5000);
   }
 
+  // ─── Multi-source fetch with fallback chain ───────────────────────────
+  function fetchWithFallback(sources) {
+    // sources is an array of {name, fetchFn} — try each in order
+    var idx = 0;
+    function tryNext() {
+      if (idx >= sources.length) return Promise.reject(new Error('All sources failed'));
+      var source = sources[idx++];
+      return source.fetchFn().catch(function(e) {
+        console.warn('[API] ' + source.name + ' failed:', e.message || e);
+        return tryNext();
+      });
+    }
+    return tryNext();
+  }
+
+  // ─── Date helpers ─────────────────────────────────────────────────────
   function getToday() {
     return new Date().toISOString().split('T')[0];
   }
-
   function getTomorrow() {
     var d = new Date();
     d.setDate(d.getDate() + 1);
     return d.toISOString().split('T')[0];
   }
-
-  function fetchLiveMatches() {
-    return fetchProxy('/matches?status=LIVE,IN_PLAY,PAUSED,HALFTIME')
-      .then(function(data) { return (data.matches || []).map(normalizeMatch); })
-      .catch(function(e) { console.warn('Live matches fetch failed:', e); return []; });
+  function getWeekEnd() {
+    var d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d.toISOString().split('T')[0];
   }
 
-  function fetchTodayMatches() {
-    var today = getToday();
-    return fetchProxy('/matches?dateFrom=' + today + '&dateTo=' + today)
-      .then(function(data) { return (data.matches || []).map(normalizeMatch); })
-      .catch(function(e) { console.warn('Today matches fetch failed:', e); return []; });
+  // ─── ESPN API (FREE, no key) ──────────────────────────────────────────
+  var ESPN_LEAGUES = {
+    'eng.1': { code: 'PL', name: 'Premier League' },
+    'esp.1': { code: 'PD', name: 'La Liga' },
+    'ger.1': { code: 'BL1', name: 'Bundesliga' },
+    'ita.1': { code: 'SA', name: 'Serie A' },
+    'fra.1': { code: 'FL1', name: 'Ligue 1' },
+    'uefa.champions': { code: 'CL', name: 'Champions League' },
+    'eng.2': { code: 'ELC', name: 'Championship' },
+    'ned.1': { code: 'DED', name: 'Eredivisie' },
+    'por.1': { code: 'PPL', name: 'Liga Portugal' },
+    'usa.1': { code: 'MLS', name: 'MLS' }
+  };
+
+  function espnFetch(endpoint) {
+    return fetchExternal(ESPN_BASE + '/' + endpoint);
   }
 
-  function fetchTomorrowMatches() {
-    var tomorrow = getTomorrow();
-    return fetchProxy('/matches?dateFrom=' + tomorrow + '&dateTo=' + tomorrow)
-      .then(function(data) { return (data.matches || []).map(normalizeMatch); })
-      .catch(function(e) { console.warn('Tomorrow matches fetch failed:', e); return []; });
+  function espnFetchLeague(espnLeague) {
+    return espnFetch(espnLeague + '/scoreboard?dates=' + getToday());
   }
 
-  function fetchWeekMatches() {
-    var today = getToday();
-    var end = new Date();
-    end.setDate(end.getDate() + 7);
-    var endDate = end.toISOString().split('T')[0];
-    return fetchProxy('/matches?dateFrom=' + today + '&dateTo=' + endDate)
-      .then(function(data) { return (data.matches || []).map(normalizeMatch); })
-      .catch(function(e) { console.warn('Week matches fetch failed:', e); return []; });
-  }
+  function espnNormalizeEvent(ev, leagueInfo) {
+    var competitions = ev.competitions || [];
+    var comp = competitions[0] || {};
+    var teams = comp.competitors || [];
+    var home = teams.find(function(t){ return t.homeAway === 'home'; }) || {};
+    var away = teams.find(function(t){ return t.homeAway === 'away'; }) || {};
+    var homeTeam = home.team || {};
+    var awayTeam = away.team || {};
 
-  function fetchCompetitionMatches(competitionCode) {
-    return fetchProxy('/competitions/' + competitionCode + '/matches?status=SCHEDULED,TIMED,LIVE,IN_PLAY,PAUSED,HALFTIME,FINISHED')
-      .then(function(data) { return (data.matches || []).map(normalizeMatch); })
-      .catch(function(e) { console.warn('Competition matches fetch failed:', e); return []; });
-  }
+    var statusType = (comp.status || {}).type || {};
+    var status = 'upcoming';
+    if (statusType.state === 'in') status = 'live';
+    else if (statusType.state === 'post') status = 'finished';
 
-  function fetchStandings(competitionCode) {
-    return fetchProxy('/competitions/' + competitionCode + '/standings')
-      .then(function(data) { return data.standings || []; })
-      .catch(function(e) { console.warn('Standings fetch failed:', e); return []; });
-  }
+    var homeScore = home.score || '';
+    var awayScore = away.score || '';
+    var score = (homeScore && awayScore) ? homeScore + ' - ' + awayScore : null;
 
-  function fetchTeam(teamId) {
-    return fetchProxy('/teams/' + teamId)
-      .then(function(data) { return data; })
-      .catch(function(e) { console.warn('Team fetch failed:', e); return null; });
-  }
-
-  function fetchMatchDetail(matchId) {
-    return fetchProxy('/matches/' + matchId)
-      .then(function(data) { return normalizeMatchDetail(data); })
-      .catch(function(e) { console.warn('Match detail fetch failed:', e); return null; });
-  }
-
-  function fetchAllMatches() {
-    return fetchProxy('/matches?status=SCHEDULED,TIMED,LIVE,IN_PLAY,PAUSED,HALFTIME')
-      .then(function(data) { return (data.matches || []).map(normalizeMatch); })
-      .catch(function(e) {
-        console.warn('All matches fetch failed:', e);
-        return [];
-      });
-  }
-
-  function normalizeMatch(m) {
-    var homeTeam = m.homeTeam || {};
-    var awayTeam = m.awayTeam || {};
-    var status = normalizeStatus(m.status);
-    var comp = m.competition || {};
+    var displayClock = comp.status ? comp.status.displayClock : '';
+    var period = comp.status ? comp.status.period : 0;
+    var minute = null;
+    if (status === 'live' && displayClock) {
+      minute = displayClock;
+    }
 
     return {
-      id: 'fm_' + m.id,
+      id: 'espn_' + ev.id,
+      apiId: ev.id,
+      home: homeTeam.displayName || homeTeam.shortDisplayName || 'TBD',
+      homeId: homeTeam.id,
+      homeCrest: homeTeam.logos && homeTeam.logos[0] ? homeTeam.logos[0].href : '',
+      away: awayTeam.displayName || awayTeam.shortDisplayName || 'TBD',
+      awayId: awayTeam.id,
+      awayCrest: awayTeam.logos && awayTeam.logos[0] ? awayTeam.logos[0].href : '',
+      league: (leagueInfo || {}).name || ev.season || 'Unknown',
+      leagueCode: (leagueInfo || {}).code || '',
+      leagueFlag: getLeagueFlag((leagueInfo || {}).code || ''),
+      time: ev.date ? formatTime(ev.date) : '',
+      date: ev.date ? formatDateLabel(ev.date) : '',
+      status: status,
+      score: score,
+      halfTime: null,
+      minute: minute,
+      matchday: ev.week ? ev.week.number : null,
+      stage: null,
+      group: null
+    };
+  }
+
+  function fetchESPNAll() {
+    var leagueKeys = Object.keys(ESPN_LEAGUES);
+    var promises = leagueKeys.map(function(key) {
+      return espnFetchLeague(key).then(function(data) {
+        var events = data.events || [];
+        return events.map(function(ev) {
+          return espnNormalizeEvent(ev, ESPN_LEAGUES[key]);
+        });
+      }).catch(function() { return []; });
+    });
+    return Promise.all(promises).then(function(results) {
+      var all = [];
+      results.forEach(function(r) { all = all.concat(r); });
+      return all;
+    });
+  }
+
+  function fetchESPNLive() {
+    var leagueKeys = Object.keys(ESPN_LEAGUES);
+    var promises = leagueKeys.map(function(key) {
+      return espnFetch(key + '/scoreboard').then(function(data) {
+        var events = (data.events || []).filter(function(ev) {
+          var state = ((ev.competitions || [{}])[0] || {}).status || {};
+          return (state.type || {}).state === 'in';
+        });
+        return events.map(function(ev) {
+          return espnNormalizeEvent(ev, ESPN_LEAGUES[key]);
+        });
+      }).catch(function() { return []; });
+    });
+    return Promise.all(promises).then(function(results) {
+      var all = [];
+      results.forEach(function(r) { all = all.concat(r); });
+      return all;
+    });
+  }
+
+  function fetchESPNStandings(espnLeague) {
+    return espnFetch(espnLeague + '/standings').then(function(data) {
+      var children = ((data.children || [{}])[0] || {}).standings || [];
+      return children.map(function(row, i) {
+        var team = row.team || {};
+        return {
+          position: i + 1,
+          team: team.displayName || team.shortDisplayName || '',
+          played: row.stats ? (row.stats.find(function(s){ return s.name === 'gamesPlayed'; }) || {}).value || 0 : 0,
+          won: row.stats ? (row.stats.find(function(s){ return s.name === 'wins'; }) || {}).value || 0 : 0,
+          drawn: row.stats ? (row.stats.find(function(s){ return s.name === 'ties'; }) || {}).value || 0 : 0,
+          lost: row.stats ? (row.stats.find(function(s){ return s.name === 'losses'; }) || {}).value || 0 : 0,
+          gf: row.stats ? (row.stats.find(function(s){ return s.name === 'pointsFor'; }) || {}).value || 0 : 0,
+          ga: row.stats ? (row.stats.find(function(s){ return s.name === 'pointsAgainst'; }) || {}).value || 0 : 0,
+          gd: row.stats ? (row.stats.find(function(s){ return s.name === 'pointDifferential'; }) || {}).value || 0 : 0,
+          pts: row.stats ? (row.stats.find(function(s){ return s.name === 'points'; }) || {}).value || 0 : 0,
+          crest: team.logos && team.logos[0] ? team.logos[0].href : ''
+        };
+      });
+    }).catch(function() { return []; });
+  }
+
+  // ─── football-data.org (via proxy, needs API key) ─────────────────────
+  function fetchProxy(endpoint) {
+    var url = PROXY_URL + '?endpoint=' + encodeURIComponent(endpoint);
+    return fetchWithTimeout(url, 5000);
+  }
+
+  function fdFetchAll() {
+    return fetchProxy('/matches?status=SCHEDULED,TIMED,LIVE,IN_PLAY,PAUSED,HALFTIME')
+      .then(function(data) { return (data.matches || []).map(normalizeFDMatch); });
+  }
+
+  function fdFetchLive() {
+    return fetchProxy('/matches?status=LIVE,IN_PLAY,PAUSED,HALFTIME')
+      .then(function(data) { return (data.matches || []).map(normalizeFDMatch); });
+  }
+
+  function fdFetchStandings(code) {
+    return fetchProxy('/competitions/' + code + '/standings')
+      .then(function(data) { return data.standings || []; });
+  }
+
+  function fdFetchMatchDetail(id) {
+    return fetchProxy('/matches/' + id)
+      .then(function(data) { return normalizeFDMatchDetail(data); });
+  }
+
+  function normalizeFDMatch(m) {
+    var homeTeam = m.homeTeam || {};
+    var awayTeam = m.awayTeam || {};
+    var comp = m.competition || {};
+    return {
+      id: 'fd_' + m.id,
       apiId: m.id,
       home: homeTeam.name || 'TBD',
       homeId: homeTeam.id,
@@ -150,7 +253,7 @@ var API = (function() {
       leagueFlag: getLeagueFlag(comp.code),
       time: formatTime(m.utcDate),
       date: formatDateLabel(m.utcDate),
-      status: status,
+      status: normalizeFDStatus(m.status),
       score: m.score && m.score.fullTime ? ((m.score.fullTime.home != null ? m.score.fullTime.home : 0) + ' - ' + (m.score.fullTime.away != null ? m.score.fullTime.away : 0)) : null,
       halfTime: m.score && m.score.halfTime ? ((m.score.halfTime.home != null ? m.score.halfTime.home : 0) + ' - ' + (m.score.halfTime.away != null ? m.score.halfTime.away : 0)) : null,
       minute: null,
@@ -160,17 +263,15 @@ var API = (function() {
     };
   }
 
-  function normalizeMatchDetail(m) {
-    var match = normalizeMatch(m);
+  function normalizeFDMatchDetail(m) {
+    var match = normalizeFDMatch(m);
     match.homeFormation = m.homeTeamformation || null;
     match.awayFormation = m.awayTeamformation || null;
     match.referees = (m.referees || []).map(function(r) { return r.name; });
-    match.statistics = null;
-    match.lineups = m.odds || null;
     return match;
   }
 
-  function normalizeStatus(s) {
+  function normalizeFDStatus(s) {
     switch(s) {
       case 'SCHEDULED': case 'TIMED': return 'upcoming';
       case 'LIVE': case 'IN_PLAY': return 'live';
@@ -183,6 +284,77 @@ var API = (function() {
     }
   }
 
+  // ─── Multi-source public fetchers ─────────────────────────────────────
+  function fetchAllMatches() {
+    return fetchWithFallback([
+      { name: 'ESPN', fetchFn: fetchESPNAll },
+      { name: 'football-data.org', fetchFn: fdFetchAll }
+    ]).catch(function(e) {
+      console.warn('[API] All sources failed for fetchAllMatches:', e);
+      return [];
+    });
+  }
+
+  function fetchLiveMatches() {
+    return fetchWithFallback([
+      { name: 'ESPN', fetchFn: fetchESPNLive },
+      { name: 'football-data.org', fetchFn: fdFetchLive }
+    ]).catch(function(e) {
+      console.warn('[API] All sources failed for fetchLiveMatches:', e);
+      return [];
+    });
+  }
+
+  function fetchTodayMatches() {
+    return fetchAllMatches();
+  }
+
+  function fetchTomorrowMatches() {
+    return fetchAllMatches();
+  }
+
+  function fetchWeekMatches() {
+    return fetchAllMatches();
+  }
+
+  function fetchCompetitionMatches(code) {
+    // Map our codes to ESPN league keys
+    var espnKey = '';
+    Object.keys(ESPN_LEAGUES).forEach(function(k) {
+      if (ESPN_LEAGUES[k].code === code) espnKey = k;
+    });
+    if (espnKey) {
+      return espnFetch(espnKey + '/scoreboard').then(function(data) {
+        return (data.events || []).map(function(ev) {
+          return espnNormalizeEvent(ev, ESPN_LEAGUES[espnKey]);
+        });
+      }).catch(function() { return []; });
+    }
+    return Promise.resolve([]);
+  }
+
+  function fetchStandings(code) {
+    var espnKey = '';
+    Object.keys(ESPN_LEAGUES).forEach(function(k) {
+      if (ESPN_LEAGUES[k].code === code) espnKey = k;
+    });
+    return fetchWithFallback([
+      espnKey ? { name: 'ESPN', fetchFn: function() { return fetchESPNStandings(espnKey); } } : null,
+      { name: 'football-data.org', fetchFn: function() { return fdFetchStandings(code); } }
+    ].filter(Boolean)).catch(function() { return []; });
+  }
+
+  function fetchMatchDetail(id) {
+    return fetchWithFallback([
+      { name: 'football-data.org', fetchFn: function() { return fdFetchMatchDetail(id.replace('fd_','').replace('espn_','')); } }
+    ]).catch(function() { return null; });
+  }
+
+  function fetchTeam(teamId) {
+    return Promise.resolve(null);
+  }
+
+  // ─── Shared utilities ─────────────────────────────────────────────────
   function formatTime(utcDate) {
     if (!utcDate) return '';
     var d = new Date(utcDate);
@@ -197,10 +369,8 @@ var API = (function() {
     var today = new Date();
     var tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
-
     if (d.toDateString() === today.toDateString()) return 'Today';
     if (d.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
-
     var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
@@ -217,14 +387,14 @@ var API = (function() {
       'ELC': '\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f',
       'PPL': '\ud83c\uddf5\ud83c\uddf9',
       'DED': '\ud83c\uddf3\ud83c\uddf1',
-      'BSA': '\ud83c\udfe7\ud83c\uddf7'
+      'BSA': '\ud83c\udfe7\ud83c\uddf7',
+      'MLS': '\ud83c\uddfa\ud83c\uddf8'
     };
     return flags[code] || '\u26bd';
   }
 
   function getTeamBadge(teamName) {
-    if (TEAM_BADGES[teamName]) return TEAM_BADGES[teamName];
-    return '';
+    return TEAM_BADGES[teamName] || '';
   }
 
   function searchTeamBadge(teamName) {
@@ -244,16 +414,14 @@ var API = (function() {
   function batchLoadBadges(teamNames) {
     var unique = [];
     teamNames.forEach(function(name) {
-      if (!TEAM_BADGES[name] && unique.indexOf(name) === -1) {
-        unique.push(name);
-      }
+      if (!TEAM_BADGES[name] && unique.indexOf(name) === -1) unique.push(name);
     });
-    var limited = unique.slice(0, 10);
-    return Promise.all(limited.map(function(name) {
+    return Promise.all(unique.slice(0, 10).map(function(name) {
       return searchTeamBadge(name);
     }));
   }
 
+  // ─── Prediction engine ────────────────────────────────────────────────
   function predictConfidence(match) {
     var hash = 0;
     var str = match.home + match.away + match.leagueCode;
@@ -261,8 +429,7 @@ var API = (function() {
       hash = ((hash << 5) - hash) + str.charCodeAt(i);
       hash = hash & hash;
     }
-    var base = 55 + Math.abs(hash % 35);
-    return base;
+    return 55 + Math.abs(hash % 35);
   }
 
   function predictTier(confidence) {
@@ -270,63 +437,6 @@ var API = (function() {
     if (confidence >= 65) return 'strong';
     if (confidence >= 50) return 'moderate';
     return 'risky';
-  }
-
-  function generatePredictions(matches) {
-    return matches.filter(function(m) {
-      return m.status === 'upcoming';
-    }).map(function(m) {
-      var conf = predictConfidence(m);
-      var tier = predictTier(conf);
-      var agreement = Math.round(conf * 0.9);
-
-      var outcomes = ['Home Win', 'Draw', 'Away Win', 'Over 2.5 Goals', 'BTTS'];
-      var weights = [40, 25, 20, 10, 5];
-      var outcomeIdx = 0;
-      var rand = (Math.abs(hashCode(m.id)) % 100);
-      var cumulative = 0;
-      for (var i = 0; i < weights.length; i++) {
-        cumulative += weights[i];
-        if (rand < cumulative) { outcomeIdx = i; break; }
-      }
-
-      var factors = [
-        m.home + ' recent form suggests advantage',
-        m.league + ' season statistics support this pick',
-        'Head-to-head record favours ' + (outcomeIdx === 0 ? m.home : outcomeIdx === 2 ? m.away : 'goals'),
-        'Model consensus across statistical analysis'
-      ];
-
-      var risks = [
-        'Unexpected lineup changes possible',
-        'Weather conditions may affect play'
-      ];
-
-      return {
-        id: 'pred_' + m.id,
-        matchId: m.id,
-        home: m.home,
-        away: m.away,
-        league: m.league,
-        leagueFlag: m.leagueFlag,
-        time: m.time,
-        date: m.date,
-        homeCrest: m.homeCrest,
-        awayCrest: m.awayCrest,
-        outcome: outcomes[outcomeIdx],
-        confidence: conf,
-        agreement: agreement,
-        tier: tier,
-        factors: factors,
-        risks: risks,
-        models: {
-          'Statistical': outcomes[Math.floor(Math.abs(hashCode(m.id + 's')) % 3)],
-          'Form': outcomes[Math.floor(Math.abs(hashCode(m.id + 'f')) % 3)],
-          'H2H': outcomes[Math.floor(Math.abs(hashCode(m.id + 'h')) % 3)],
-          'Market': outcomes[Math.floor(Math.abs(hashCode(m.id + 'm')) % 3)]
-        }
-      };
-    });
   }
 
   function hashCode(str) {
@@ -339,62 +449,86 @@ var API = (function() {
     return hash;
   }
 
+  function generatePredictions(matches) {
+    return matches.filter(function(m) { return m.status === 'upcoming'; }).map(function(m) {
+      var conf = predictConfidence(m);
+      var tier = predictTier(conf);
+      var agreement = Math.round(conf * 0.9);
+      var outcomes = ['Home Win', 'Draw', 'Away Win', 'Over 2.5 Goals', 'BTTS'];
+      var weights = [40, 25, 20, 10, 5];
+      var rand = Math.abs(hashCode(m.id)) % 100;
+      var cumulative = 0;
+      var outcomeIdx = 0;
+      for (var i = 0; i < weights.length; i++) {
+        cumulative += weights[i];
+        if (rand < cumulative) { outcomeIdx = i; break; }
+      }
+      return {
+        id: 'pred_' + m.id, matchId: m.id, home: m.home, away: m.away,
+        league: m.league, leagueFlag: m.leagueFlag, time: m.time, date: m.date,
+        homeCrest: m.homeCrest, awayCrest: m.awayCrest,
+        outcome: outcomes[outcomeIdx], confidence: conf, agreement: agreement, tier: tier,
+        factors: [m.home + ' recent form suggests advantage', m.league + ' season statistics support this pick', 'Head-to-head record favours this outcome', 'Model consensus across statistical analysis'],
+        risks: ['Unexpected lineup changes possible', 'Weather conditions may affect play'],
+        models: {
+          'Statistical': outcomes[Math.floor(Math.abs(hashCode(m.id + 's')) % 3)],
+          'Form': outcomes[Math.floor(Math.abs(hashCode(m.id + 'f')) % 3)],
+          'H2H': outcomes[Math.floor(Math.abs(hashCode(m.id + 'h')) % 3)],
+          'Market': outcomes[Math.floor(Math.abs(hashCode(m.id + 'm')) % 3)]
+        }
+      };
+    });
+  }
+
+  // ─── World Cup (worldcup26.ir — free, no key) ────────────────────────
   var WC_BASE = 'https://worldcup26.ir';
 
   function fetchWorldCupGames() {
     return fetchExternal(WC_BASE + '/get/games')
       .then(function(data) { return (data.games || []).map(normalizeWCGame); })
-      .catch(function(e) { console.warn('World Cup games fetch failed:', e); return []; });
+      .catch(function() { return []; });
   }
-
   function fetchWorldCupGroups() {
     return fetchExternal(WC_BASE + '/get/groups')
       .then(function(data) { return data.groups || []; })
-      .catch(function(e) { console.warn('World Cup groups fetch failed:', e); return []; });
+      .catch(function() { return []; });
   }
-
   function fetchWorldCupTeams() {
     return fetchExternal(WC_BASE + '/get/teams')
       .then(function(data) { return data.teams || []; })
-      .catch(function(e) { console.warn('World Cup teams fetch failed:', e); return []; });
+      .catch(function() { return []; });
   }
-
   function fetchWorldCupStadiums() {
     return fetchExternal(WC_BASE + '/get/stadiums')
       .then(function(data) { return data.stadiums || []; })
-      .catch(function(e) { console.warn('World Cup stadiums fetch failed:', e); return []; });
+      .catch(function() { return []; });
   }
 
   function normalizeWCGame(g) {
     var status = 'upcoming';
     if (g.time_elapsed === 'finished') status = 'finished';
     else if (g.time_elapsed === '1H' || g.time_elapsed === '2H' || g.time_elapsed === 'HT' || g.time_elapsed === 'ET') status = 'live';
-
     return {
       id: 'wc_' + g.id,
-      home: g.home_team_name_en || 'TBD',
-      away: g.away_team_name_en || 'TBD',
+      home: g.home_team_name_en || 'TBD', away: g.away_team_name_en || 'TBD',
       homeScore: g.home_score !== 'null' ? g.home_score : null,
       awayScore: g.away_score !== 'null' ? g.away_score : null,
       score: (g.home_score !== 'null' && g.away_score !== 'null') ? g.home_score + ' - ' + g.away_score : null,
       homeScorers: g.home_scorers && g.home_scorers !== 'null' ? g.home_scorers.replace(/[{}"]/g, '') : '',
       awayScorers: g.away_scorers && g.away_scorers !== 'null' ? g.away_scorers.replace(/[{}"]/g, '') : '',
-      group: g.group || '',
-      matchday: g.matchday || '',
-      date: g.local_date || '',
-      status: status,
-      type: g.type || 'group',
-      stadiumId: g.stadium_id || '',
+      group: g.group || '', matchday: g.matchday || '', date: g.local_date || '',
+      status: status, type: g.type || 'group', stadiumId: g.stadium_id || '',
       finished: g.finished === 'TRUE'
     };
   }
 
+  // ─── Public API ───────────────────────────────────────────────────────
   return {
+    fetchAllMatches: fetchAllMatches,
     fetchLiveMatches: fetchLiveMatches,
     fetchTodayMatches: fetchTodayMatches,
     fetchTomorrowMatches: fetchTomorrowMatches,
     fetchWeekMatches: fetchWeekMatches,
-    fetchAllMatches: fetchAllMatches,
     fetchCompetitionMatches: fetchCompetitionMatches,
     fetchStandings: fetchStandings,
     fetchTeam: fetchTeam,
