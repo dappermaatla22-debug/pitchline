@@ -146,7 +146,7 @@ function renderWorldCupScreen() {
     }
   });
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigate(\'home\')">' + ICONS.chevronLeft + '</button><div class="header-title" style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">&#127942;</span> World Cup 2026</div></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigate(\'home\')">' + ICONS.chevronLeft + '</button><div class="header-title" style="display:flex;align-items:center;gap:8px;justify-content:center;"><span style="font-size:20px;flex-shrink:0;">&#127942;</span> <span>World Cup 2026</span></div><div style="width:40px;flex-shrink:0;"></div></div>';
 
   html += '<div class="chip-row" id="wc-filter-chips">';
   html += '<div class="chip' + (filter==='all'?' active':'') + '" onclick="setWCFilter(\'all\',this)">All</div>';
@@ -258,9 +258,9 @@ function renderWCMatchCard(game, isLive) {
     + teamLogo(home, homeCrest, 28)
     + '<span class="team-name" onclick="event.stopPropagation();openTeamProfile(\'' + home.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + home + '</span>'
     + '</div>'
-    + '<div style="text-align:center;">'
+    + '<div style="display:flex;flex-direction:column;align-items:center;min-width:60px;flex-shrink:0;">'
     + '<span class="vs-badge" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
-    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;">' + (statusText || formattedDate) + '</div>'
+    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + (statusText || formattedDate) + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
     + '<span class="team-name away" onclick="event.stopPropagation();openTeamProfile(\'' + away.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + away + '</span>'
@@ -668,7 +668,7 @@ function renderStatsScreen() {
   var avgConf = predCount > 0 ? Math.round(predictions.reduce(function(a,p){ return a+p.confidence; },0)/predCount) : 0;
   var accStats = typeof getAccuracyStats === 'function' ? getAccuracyStats() : {total:0,correct:0};
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Statistics</div></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Statistics</div><div style="width:40px;flex-shrink:0;"></div></div>';
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;margin-bottom:16px;">';
@@ -739,7 +739,7 @@ function renderProfileScreen() {
   var accStats = typeof getAccuracyStats === 'function' ? getAccuracyStats() : {total:0,correct:0};
   var accuracy = accStats.total > 0 ? Math.round((accStats.correct / accStats.total) * 100) : 0;
 
-  var html = '<div class="app-header"><div class="header-title">Profile</div><button class="btn-icon" onclick="navigate(\'settings\')">' + ICONS.settings + '</button></div>';
+  var html = '<div class="app-header"><div class="header-title">Profile</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'settings\')">' + ICONS.settings + '</button></div></div>';
   html += '<div style="overflow-y:auto;flex:1;">';
 
   // Compact header

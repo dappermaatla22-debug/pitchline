@@ -511,7 +511,7 @@ function renderComparisonScreen(teamA, teamB) {
   var verdict = statsA.strength > statsB.strength ? teamA : statsB.strength > statsA.strength ? teamB : 'Even';
   var verdictText = verdict === 'Even' ? 'Teams are evenly matched' : verdict + ' rated higher based on current form and results';
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Team Comparison</div></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Team Comparison</div><div style="width:40px;flex-shrink:0;"></div></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
@@ -542,7 +542,7 @@ function renderSearchScreen() {
 
   var favTeams = Store.getFavTeams();
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Search</div></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Search</div><div style="width:40px;flex-shrink:0;"></div></div>';
 
   html += '<div style="overflow-y:auto;flex:1;">';
 
