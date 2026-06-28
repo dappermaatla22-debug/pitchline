@@ -194,6 +194,7 @@
     Store.fetchAllData();
     Store.fetchWorldCupData();
     startLiveClock();
+    startWCPolling();
 
     // Silent background refresh — update DOM in-place, never re-render the screen
     setInterval(function() {
@@ -222,6 +223,7 @@
           }
         });
       });
+      checkWCScoreChange(Store.getWorldCup().games || []);
     }, 30000);
 
     setTimeout(function() { requestNotificationPermission(); }, 3000);

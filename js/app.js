@@ -139,7 +139,6 @@ function checkScoreChange(matchId, newScore) {
       el.classList.add('score-glow');
       setTimeout(function() { el.classList.remove('score-bump','score-glow'); }, 1500);
     }
-    // Flash the live card
     var card = document.querySelector('[data-live-card="' + matchId + '"]');
     if (card) { card.classList.add('live-card-updated'); setTimeout(function(){ card.classList.remove('live-card-updated'); }, 1000); }
     playGoalSound();
@@ -149,6 +148,15 @@ function checkScoreChange(matchId, newScore) {
   }
   prevScores[matchId] = newScore;
   return false;
+}
+function checkWCScoreChange(wcGames) {
+  if (!wcGames || !wcGames.length) return;
+  wcGames.forEach(function(g) {
+    if (!g || g.status !== 'live') return;
+    var id = 'wc_' + g.id;
+    var score = (g.homeScore || 0) + ' - ' + (g.awayScore || 0);
+    checkScoreChange(id, score);
+  });
 }
 
 // ─── LIVE CLOCK TICKER ──────────────────────────────────────────────────
@@ -184,10 +192,32 @@ function stopLiveClock() {
   if (liveClockInterval) { clearInterval(liveClockInterval); liveClockInterval = null; }
 }
 
+// ─── WC LIVE SCORE POLLING ──────────────────────────────────────────────
+var wcPollInterval = null;
+function startWCPolling() {
+  if (wcPollInterval) return;
+  wcPollInterval = setInterval(function() {
+    Store.fetchWorldCupData().then(function(wc) {
+      checkWCScoreChange(wc.games || []);
+    });
+  }, 30000);
+}
+function stopWCPolling() {
+  if (wcPollInterval) { clearInterval(wcPollInterval); wcPollInterval = null; }
+}
+
 // ─── GOAL FLASH OVERLAY ─────────────────────────────────────────────────
 function showGoalFlash(matchId, score) {
   var matches = Store.getMatches();
   var match = matches.find(function(m){ return m.id === matchId; });
+  if (!match && matchId.indexOf('wc_') === 0) {
+    var wc = Store.getWorldCup();
+    var gid = matchId.replace('wc_', '');
+    var wcGame = (wc.games || []).find(function(g){ return String(g.id) === String(gid); });
+    if (wcGame) {
+      match = { id: matchId, home: wcGame.home, away: wcGame.away, score: score };
+    }
+  }
   if (!match) return;
 
   var overlay = document.createElement('div');
