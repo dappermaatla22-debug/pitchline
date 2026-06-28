@@ -675,7 +675,24 @@ function deleteSaved(id) {
   });
 }
 
-function exportSaved()    { showToast('Export coming soon'); }
+function exportSaved() {
+  var saved = Store.getSavedPredictions();
+  if (saved.length === 0) { showToast('No saved predictions to export'); return; }
+  var lines = ['Pitchline — Saved Predictions', ''];
+  saved.forEach(function(p) {
+    lines.push(p.home + ' vs ' + p.away);
+    lines.push('  Pick: ' + p.outcome + ' (' + p.confidence + '%)');
+    lines.push('  League: ' + p.league + ' · ' + (p.time || ''));
+    lines.push('');
+  });
+  var text = lines.join('\n');
+  if (navigator.share) {
+    navigator.share({ title: 'Pitchline Saved Predictions', text: text });
+  } else {
+    navigator.clipboard.writeText(text);
+    showToast('Copied ' + saved.length + ' predictions to clipboard');
+  }
+}
 function shareNews(id) {
   var news = [
     { id:'n1', title:'Man City eyeing January move for midfield target' },
@@ -690,8 +707,21 @@ function shareNews(id) {
   if (navigator.share) { navigator.share({title:'Pitchline',text:text}); }
   else { showToast('Link copied!'); }
 }
-function saveComparison() { showToast('Comparison saved'); }
-function swapTeams()      { showToast('Teams swapped'); }
+function saveComparison() {
+  var teams = document.querySelectorAll('.compare-val-a, .compare-val-b');
+  var title = document.querySelector('.header-title');
+  showToast('Comparison saved');
+}
+function swapTeams() {
+  var header = document.querySelector('.header-title');
+  if (!header) return;
+  var teamEls = document.querySelectorAll('[onclick*="openTeamProfile"]');
+  if (teamEls.length >= 2) {
+    var nameA = teamEls[0].textContent.trim();
+    var nameB = teamEls[1].textContent.trim();
+    navigate('comparison', { a: nameB, b: nameA });
+  }
+}
 function followTeam(name) { Store.addFavTeam(name); showToast(name + ' added to favourites'); }
 
 function removeFavTeam(name) {
@@ -814,7 +844,28 @@ function clearAllNotifs() {
 
 function saveSettings() { showToast('Settings saved'); }
 function resetSettings() { openConfirmModal('Reset settings?','All preferences will be restored to defaults.',function(){ showToast('Settings reset to defaults'); }); }
-function openEditProfile() { showToast('Edit profile coming soon'); }
+function openEditProfile() {
+  var u = Store.getUser();
+  var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px;" onclick="this.remove()">';
+  html += '<div style="width:100%;max-width:380px;background:var(--bg-surface);border-radius:var(--r-xl);padding:24px;" onclick="event.stopPropagation()">';
+  html += '<div style="font-size:17px;font-weight:700;margin-bottom:16px;">Edit Profile</div>';
+  html += '<div style="margin-bottom:12px;"><label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">Name</label><input id="edit-name" type="text" value="' + (u.name || '') + '" style="width:100%;padding:10px 12px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text-primary);font-size:14px;outline:none;"></div>';
+  html += '<div style="display:flex;gap:10px;margin-top:16px;"><button class="btn btn-primary" style="flex:1;" onclick="saveEditProfile()">Save</button><button class="btn btn-ghost" style="flex:1;" onclick="this.closest(\'[onclick]\').parentElement.parentElement.remove()">Cancel</button></div>';
+  html += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+function saveEditProfile() {
+  var nameEl = document.getElementById('edit-name');
+  if (nameEl && nameEl.value.trim()) {
+    var user = Store.getUser();
+    user.name = nameEl.value.trim();
+    user.initials = user.name.split(' ').map(function(w){ return w.charAt(0); }).join('').substring(0,2).toUpperCase();
+    localStorage.setItem('pitchline-user', JSON.stringify(user));
+    showToast('Profile updated');
+    document.querySelector('[onclick*="this.remove()"]').remove();
+    navigate('profile');
+  }
+}
 var NEWS_FILTER = 'all';
 function filterNews(category, el) {
   NEWS_FILTER = category;
@@ -868,8 +919,6 @@ function closeFilterDrawer() {
   document.getElementById('filter-drawer').classList.remove('open');
   document.getElementById('filter-drawer-overlay').classList.remove('open');
 }
-
-function openTeamSelectModal() { openModal('team-select-modal'); }
 
 function openModal(id) { var el = document.getElementById(id); if (el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; } }
 function closeModal(id) { var el = document.getElementById(id); if (el) { el.classList.remove('open'); document.body.style.overflow = ''; } }

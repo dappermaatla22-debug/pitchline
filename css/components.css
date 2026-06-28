@@ -74,6 +74,7 @@
   border-radius:var(--r-md); transition:all var(--t-fast);
   cursor:pointer; white-space:nowrap; user-select:none;
 }
+.btn svg { width:16px; height:16px; flex-shrink:0; }
 .btn:active { transform:scale(0.97); }
 .btn-primary { background:var(--accent); color:#fff; border:none; box-shadow:0 2px 8px rgba(255,77,125,0.25); }
 .btn-primary:hover { background:var(--accent-hover); box-shadow:0 4px 12px rgba(255,77,125,0.35); }
@@ -89,6 +90,7 @@
 }
 .btn-icon:hover { background:var(--bg-card-hover); color:var(--text-primary); }
 .btn-icon svg { width:18px; height:18px; }
+.icon-wrap svg { width:16px; height:16px; }
 .btn-sm { padding:7px 13px; font-size:13px; }
 .btn-full { width:100%; }
 
@@ -211,11 +213,10 @@
 /* Quick Access — Neon Pill Panel */
 .quick-access-panel {
   margin:0 16px 16px;
-  background:#111115;
-  border:1px solid rgba(233,30,99,0.25);
+  background:var(--bg-card);
+  border:1px solid var(--border);
   border-radius:16px;
   padding:12px;
-  box-shadow:0 0 25px rgba(233,30,99,0.06);
 }
 .quick-pills-row {
   display:flex;
@@ -231,8 +232,8 @@
   display:inline-flex;
   align-items:center;
   gap:10px;
-  background:#191922;
-  border:1px solid #24242d;
+  background:var(--bg-elevated);
+  border:1px solid var(--border);
   border-radius:12px;
   padding:8px 14px;
   cursor:pointer;
@@ -241,17 +242,17 @@
   flex-shrink:0;
 }
 .quick-pill:active { transform:scale(0.95); }
-.quick-pill:hover { background:#1e1e2a; border-color:#333; }
+.quick-pill:hover { background:var(--bg-card-hover); border-color:var(--border-strong); }
 .quick-pill.active {
-  background:#E91E63;
-  border-color:#E91E63;
+  background:var(--accent);
+  border-color:var(--accent);
   box-shadow:0 6px 15px rgba(233,30,99,0.25);
 }
 .quick-pill-icon { font-size:16px; display:inline-block; line-height:1; }
 .quick-pill-icon svg { width:18px; height:18px; }
-.quick-pill-stack { display:flex; flex-direction:column; text-align:left; }
-.quick-pill-title { font-size:13px; font-weight:800; color:#fff; line-height:1.2; }
-.quick-pill-badge { font-size:9px; font-weight:700; color:#646473; text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+.quick-pills-stack { display:flex; flex-direction:column; text-align:left; }
+.quick-pill-title { font-size:13px; font-weight:800; color:var(--text-primary); line-height:1.2; }
+.quick-pill-badge { font-size:9px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
 .quick-pill.active .quick-pill-badge { color:rgba(255,255,255,0.85); }
 
 .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
@@ -447,6 +448,7 @@
 .search-icon svg { width:17px; height:17px; }
 
 .settings-row { display:flex; align-items:center; justify-content:space-between; padding:var(--sp-4); border-bottom:1px solid var(--border); }
+.settings-row svg { width:16px; height:16px; }
 .settings-label { font-size:14px; color:var(--text-primary); font-weight:500; }
 .settings-sub   { font-size:12px; color:var(--text-muted); margin-top:2px; }
 

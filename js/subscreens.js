@@ -626,19 +626,19 @@ function renderSavedScreen() {
 // ─── Favorites Screen ─────────────────────────────────────────────────────────
 function renderFavoritesScreen() {
   var favs = Store.getFavTeams();
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Favourite Teams</div><button class="btn-icon" onclick="openAddTeamModal()">' + ICONS.plus + '</button></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Favourite Teams</div><button class="btn-icon" onclick="openTeamSelectModal()">' + ICONS.plus + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;"><div style="margin-top:16px;">';
 
   if (favs.length === 0) {
-    html += renderEmptyState('heart','No favourite teams','Add teams you follow to get personalised predictions and alerts.','Add Team',"openAddTeamModal()");
+    html += renderEmptyState('heart','No favourite teams','Add teams you follow to get personalised predictions and alerts.','Add Team',"openTeamSelectModal()");
   } else {
     html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
     favs.forEach(function(t) {
       html += '<div class="list-row"><div style="display:flex;align-items:center;gap:12px;">' + teamLogo(t, null, 36) + '<span style="font-size:14px;font-weight:500;">' + t + '</span></div><button onclick="removeFavTeam(\'' + t + '\')" style="background:none;border:none;color:var(--risky);cursor:pointer;">' + ICONS.close + '</button></div>';
     });
     html += '</div>';
-    html += '<button class="btn btn-secondary btn-full" style="margin-top:12px;" onclick="openAddTeamModal()">' + ICONS.plus + ' Add Team</button>';
+    html += '<button class="btn btn-secondary btn-full" style="margin-top:12px;" onclick="openTeamSelectModal()">' + ICONS.plus + ' Add Team</button>';
   }
 
   html += '</div><div style="height:20px;"></div></div>';

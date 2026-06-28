@@ -242,7 +242,6 @@ var Store = (function() {
   function getPredictions() { return state.predictions; }
   function getNotifications() { return state.notifications; }
   function getUser() { return state.user; }
-  function getTeamDetail() { return state.teamDetail; }
   function getWorldCup() { return state.worldCup; }
   function getWCPredictions() { return state.worldCup.predictions || []; }
   function isLoading() { return state.loading; }
@@ -330,7 +329,6 @@ var Store = (function() {
     getPredictions: getPredictions,
     getNotifications: getNotifications,
     getUser: getUser,
-    getTeamDetail: getTeamDetail,
     getWorldCup: getWorldCup,
     getWCPredictions: getWCPredictions,
     getSavedPredictions: getSavedPredictions,

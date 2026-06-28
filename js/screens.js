@@ -658,34 +658,6 @@ function renderFixturesScreen() {
   return html;
 }
 
-function filterFixtures(status, el) {
-  document.querySelectorAll('#fixture-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
-  el.classList.add('active');
-  var matches = Store.getMatches();
-  var filtered = status === 'all' ? matches : matches.filter(function(m){ return m.status === status; });
-  var list = document.getElementById('fixture-list');
-  if (list) {
-    if (filtered.length === 0) {
-      list.innerHTML = renderEmptyState('matches','No matches','No ' + status + ' matches found.','','');
-    } else {
-      var grouped = {};
-      filtered.forEach(function(m) {
-        var key = m.date || 'Other';
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(m);
-      });
-      var h = '';
-      Object.keys(grouped).forEach(function(date) {
-        h += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">' + date + '</div>';
-        h += '<div style="display:flex;flex-direction:column;gap:8px;">';
-        grouped[date].forEach(function(m) { h += renderMatchCard(m); });
-        h += '</div>';
-      });
-      list.innerHTML = h + '<div style="height:20px;"></div>';
-    }
-  }
-}
-
 function renderStatsScreen() {
   var matches = Store.getMatches();
   var predictions = Store.getPredictions();
@@ -741,16 +713,9 @@ function renderNewsScreen() {
   html += '<div class="chip-row" id="news-chips"><div class="chip active" onclick="filterNews(\'all\',this)">All</div><div class="chip" onclick="filterNews(\'Transfer\',this)">Transfers</div><div class="chip" onclick="filterNews(\'Analysis\',this)">Analysis</div><div class="chip" onclick="filterNews(\'Injury\',this)">Injuries</div><div class="chip" onclick="filterNews(\'Tactics\',this)">Tactics</div></div>';
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
-  var NEWS_DATA = [
-    { id:'n1', category:'Transfer', catColor:'var(--accent)', title:'Man City eyeing January move for midfield target', summary:'Manchester City are reportedly monitoring a key midfield target ahead of the January transfer window.', time:'15 min ago' },
-    { id:'n2', category:'Analysis', catColor:'var(--success)', title:'Champions League predictions updated after draw', summary:'Following the latest Champions League group stage draw, our prediction models have been recalibrated.', time:'1 hr ago' },
-    { id:'n3', category:'Injury', catColor:'var(--warning)', title:'Key striker doubts for weekend showdown', summary:'A crucial striker is facing a race to be fit for this weekend\'s important fixture.', time:'3 hrs ago' },
-    { id:'n4', category:'Tactics', catColor:'var(--strong)', title:'How Arsenal\'s new formation could change the title race', summary:'Arsenal\'s tactical shift to a 3-4-3 formation has been producing impressive results.', time:'5 hrs ago' },
-    { id:'n5', category:'Transfer', catColor:'var(--accent)', title:'Barcelona targeting Premier League defender', summary:'Barcelona have reportedly identified a Premier League defender as their top transfer target.', time:'8 hrs ago' },
-    { id:'n6', category:'Analysis', catColor:'var(--success)', title:'xG breakdown: Which teams are overperforming?', summary:'Our latest expected goals analysis reveals some surprising overperformers across Europe.', time:'12 hrs ago' }
-  ];
+  var newsData = typeof NEWS_DATA !== 'undefined' ? NEWS_DATA : [];
 
-  var filteredNews = NEWS_FILTER === 'all' ? NEWS_DATA : NEWS_DATA.filter(function(a){ return a.category === NEWS_FILTER; });
+  var filteredNews = NEWS_FILTER === 'all' ? newsData : newsData.filter(function(a){ return a.category === NEWS_FILTER; });
 
   filteredNews.forEach(function(article) {
     html += '<div class="news-card" style="margin-bottom:12px;" onclick="openNewsDetail(\'' + article.id + '\')">';
