@@ -390,3 +390,53 @@ function renderStandingsScreen(leagueCode) {
   html += '<div style="height:20px;"></div></div>';
   return html;
 }
+
+function renderWCMatchDetailScreen(wcGameId) {
+  var wc = Store.getWorldCup();
+  var game = (wc.games || []).find(function(g){ return g.id === wcGameId; });
+  if (!game) return renderEmptyState('matches','Match not found','','Go Back',"navigateBack()");
+
+  var isLive = game.status === 'live';
+  var isFinished = game.status === 'finished';
+
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + game.home + ' vs ' + game.away + '</div><button class="btn-icon" onclick="shareMatch(\'' + wcGameId + '\')">' + ICONS.share + '</button></div>';
+
+  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
+
+  html += '<div style="padding:24px 0 20px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
+  html += '<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Group ' + game.group + ' \u00b7 Matchday ' + game.matchday + '</div>';
+  html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
+  html += '<div style="text-align:center;flex:1;"><div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:32px;font-weight:800;letter-spacing:-2px;">' + (game.score || ' - ') + '</div>';
+  if (isLive) {
+    html += '<div style="font-size:13px;color:var(--danger);margin-top:4px;font-weight:600;">LIVE</div>';
+  } else if (isFinished) {
+    html += '<div style="font-size:13px;color:var(--success);margin-top:4px;font-weight:600;">Full Time</div>';
+  } else {
+    html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px;">' + game.date + '</div>';
+  }
+  html += '</div>';
+  html += '<div style="text-align:center;flex:1;"><div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
+  html += '</div>';
+
+  if (game.homeScorers && game.homeScorers !== 'null') {
+    html += '<div style="margin-top:12px;text-align:left;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">' + game.home + ' Scorers</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.homeScorers.replace(/\{/g,'').replace(/\}/g,'').replace(/"/g,'') + '</div></div>';
+  }
+  if (game.awayScorers && game.awayScorers !== 'null') {
+    html += '<div style="margin-top:8px;text-align:left;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:4px;">' + game.away + ' Scorers</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.awayScorers.replace(/\{/g,'').replace(/\}/g,'').replace(/"/g,'') + '</div></div>';
+  }
+  html += '</div>';
+
+  html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px;">';
+  html += '<div style="padding:12px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Match Info</div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Competition</span><span style="font-size:13px;font-weight:600;">FIFA World Cup 2026</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Group</span><span style="font-size:13px;font-weight:600;">' + game.group + '</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">Matchday</span><span style="font-size:13px;font-weight:600;">' + game.matchday + '</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:10px 14px;"><span style="font-size:13px;color:var(--text-secondary);">Type</span><span style="font-size:13px;font-weight:600;">' + (game.type || 'Group Stage') + '</span></div>';
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:10px;margin-bottom:16px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'worldcup\')">Back to World Cup</button></div>';
+
+  html += '<div style="height:20px;"></div></div>';
+  return html;
+}

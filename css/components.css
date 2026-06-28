@@ -158,8 +158,8 @@
   cursor:pointer; transition:all var(--t-fast);
 }
 .match-card:hover { border-color:var(--border-strong); background:var(--bg-card-hover); }
-.match-teams { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); margin-bottom:var(--sp-2); }
-.team-name { font-size:14px; font-weight:600; color:var(--text-primary); flex:1; }
+.match-teams { display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-bottom:var(--sp-2); overflow:hidden; }
+.team-name { font-size:14px; font-weight:600; color:var(--text-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .team-name.away { text-align:right; }
 .vs-badge {
   font-size:12px; font-weight:700; color:var(--text-primary);
@@ -173,7 +173,8 @@
 .live-match-card {
   background:var(--bg-card); border:1px solid var(--border);
   border-radius:var(--r-lg); padding:var(--sp-4);
-  min-width:160px; cursor:pointer; transition:all var(--t-fast);
+  min-width:160px; max-width:220px; cursor:pointer; transition:all var(--t-fast);
+  overflow:hidden;
 }
 .live-match-card:hover { border-color:var(--border-strong); background:var(--bg-card-hover); }
 

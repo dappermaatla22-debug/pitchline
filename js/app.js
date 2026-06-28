@@ -32,6 +32,8 @@ function renderScreen(screenId, data) {
     case 'worldcup':            html = renderWorldCupScreen(); break;
     case 'news':                 html = renderNewsScreen(); break;
     case 'profile':              html = renderProfileScreen(); break;
+    case 'fixtures':             html = renderFixturesScreen(); break;
+    case 'stats':                html = renderStatsScreen(); break;
     case 'match-detail':         html = renderMatchDetailScreen(data); break;
     case 'pred-detail':          html = renderPredDetailScreen(data); break;
     case 'team-profile':         html = renderTeamProfileScreen(data); break;
@@ -43,6 +45,7 @@ function renderScreen(screenId, data) {
     case 'settings':             html = renderSettingsScreen(); break;
     case 'news-detail':          html = renderNewsDetailScreen(data); break;
     case 'standings':            html = renderStandingsScreen(data); break;
+    case 'wc-match-detail':      html = renderWCMatchDetailScreen(data); break;
     default:                     html = renderHomeScreen(); break;
   }
   main.innerHTML = '<div class="screen active">' + html + '</div>';
@@ -63,6 +66,16 @@ function openTeamProfile(name){ navigate('team-profile', name); }
 function openComparison(a, b) { navigate('comparison', { a: a, b: b }); }
 function openNewsDetail(id)   { navigate('news-detail', id); }
 function openStandings(code)  { navigate('standings', code); }
+function openWCMatchDetail(id){ navigate('wc-match-detail', id); }
+function openFixtures()       { navigate('fixtures'); }
+function openStats()          { navigate('stats'); }
+
+function setWCFilter(val, el) {
+  WC_FILTER = val;
+  document.querySelectorAll('#wc-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderScreen('worldcup');
+}
 
 function refreshHome() {
   showToast('Refreshing matches...');
@@ -104,18 +117,8 @@ function filterDate(val, el) {
   if (el) el.classList.add('active');
 }
 
-function filterConf(val, el) {
-  document.querySelectorAll('#conf-chips .chip').forEach(function(c){ c.classList.remove('active'); });
-  if (el) el.classList.add('active');
-}
-
 function filterMatchDate(val, el) {
   document.querySelectorAll('#match-date-chips .chip').forEach(function(c){ c.classList.remove('active'); });
-  if (el) el.classList.add('active');
-}
-
-function filterWCStatus(val, el) {
-  document.querySelectorAll('.chip-row .chip').forEach(function(c){ c.classList.remove('active'); });
   if (el) el.classList.add('active');
 }
 
@@ -125,21 +128,31 @@ function handleSearch(val) {
   if (!val.trim()) { res.innerHTML = ''; return; }
   var q = val.toLowerCase();
   var matches = Store.getMatches();
+  var predictions = Store.getPredictions();
   var results = matches.filter(function(m){
     return m.home.toLowerCase().indexOf(q) > -1 || m.away.toLowerCase().indexOf(q) > -1 || m.league.toLowerCase().indexOf(q) > -1;
   });
+  var predResults = predictions.filter(function(p){
+    return p.home.toLowerCase().indexOf(q) > -1 || p.away.toLowerCase().indexOf(q) > -1;
+  });
+  var html = '';
   if (results.length) {
-    res.innerHTML = '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Results</div>'
-      + results.slice(0,10).map(function(m){ return '<div class="list-row" onclick="openMatchDetail(\'' + m.id + '\')"><div><div style="font-size:14px;font-weight:500;">' + m.home + ' vs ' + m.away + '</div><div style="font-size:12px;color:var(--text-muted);">' + m.league + '</div></div>' + ICONS.chevronRight + '</div>'; }).join('')
-      + '</div>';
-  } else {
-    res.innerHTML = '<div style="padding:40px 16px;text-align:center;color:var(--text-muted);">No results for "' + val + '"</div>';
+    html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Matches</div>';
+    html += results.slice(0,5).map(function(m){ return '<div class="list-row" onclick="openMatchDetail(\'' + m.id + '\')"><div><div style="font-size:14px;font-weight:500;">' + m.home + ' vs ' + m.away + '</div><div style="font-size:12px;color:var(--text-muted);">' + m.league + '</div></div>' + ICONS.chevronRight + '</div>'; }).join('');
+    html += '</div>';
   }
+  if (predResults.length) {
+    html += '<div style="padding:8px 16px;"><div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Predictions</div>';
+    html += predResults.slice(0,5).map(function(p){ return '<div class="list-row" onclick="openPredDetail(\'' + p.id + '\')"><div><div style="font-size:14px;font-weight:500;">' + p.home + ' vs ' + p.away + '</div><div style="font-size:12px;color:var(--text-muted);">' + p.league + ' \u00b7 ' + p.confidence + '%</div></div>' + ICONS.chevronRight + '</div>'; }).join('');
+    html += '</div>';
+  }
+  if (!results.length && !predResults.length) {
+    html = '<div style="padding:40px 16px;text-align:center;color:var(--text-muted);">No results for "' + val + '"</div>';
+  }
+  res.innerHTML = html;
 }
 
-function openSearchResult(name) {
-  showToast('Opening ' + name);
-}
+function openSearchResult(name) { showToast('Opening ' + name); }
 
 function markRead(id) {
   Store.markNotificationRead(id);
@@ -199,9 +212,9 @@ function setTodayDate() {
 }
 
 function renderLoadingState() {
-  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;"><div style="width:40px;height:40px;border:3px solid var(--bg-elevated);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px;"></div><div style="font-size:14px;color:var(--text-muted);">Loading matches...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;"><div style="width:40px;height:40px;border:3px solid var(--bg-elevated);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px;"></div><div style="font-size:14px;color:var(--text-muted);">Loading...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
 }
 
 function renderErrorState(msg) {
-  return '<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-title">Something went wrong</div><div class="empty-desc">' + (msg || 'Failed to load data. Please try again.') + '</div><button class="btn btn-primary" onclick="Store.fetchAllData();navigate(\'home\')">Retry</button></div>';
+  return '<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-title">Something went wrong</div><div class="empty-desc">' + (msg || 'Failed to load data.') + '</div><button class="btn btn-primary" onclick="Store.fetchAllData();navigate(\'home\')">Retry</button></div>';
 }
