@@ -293,6 +293,15 @@ function renderWCMatchCard(game, isLive) {
   var stage = game.group ? 'Group ' + game.group : (game.type === 'knockout' || (!game.group && game.matchday)) ? 'Knockout' : '';
   var matchday = game.matchday ? ' \u00b7 MD ' + game.matchday : '';
   var wcId = 'wc_' + game.id;
+  var liveMinuteText = '';
+  if (isLive && game.date) {
+    var now = Date.now();
+    var kickoff = new Date(game.date).getTime();
+    var elapsed = Math.max(0, Math.floor((now - kickoff) / 1000));
+    var mins = Math.min(Math.floor(elapsed / 60), 90);
+    var secs = elapsed % 60;
+    liveMinuteText = mins + ':' + String(secs).padStart(2,'0');
+  }
   return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
@@ -301,7 +310,7 @@ function renderWCMatchCard(game, isLive) {
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:center;min-width:60px;flex-shrink:0;">'
     + '<span class="vs-badge" data-score="' + wcId + '" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
-    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + (statusText ? (liveMinute ? statusText + ' ' + liveMinute + "'" : statusText) : formattedDate) + '</div>'
+    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + (statusText ? (liveMinuteText ? statusText + ' ' + liveMinuteText : statusText) : formattedDate) + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
     + '<span class="team-name away" onclick="event.stopPropagation();openTeamProfile(\'' + away.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + away + '</span>'

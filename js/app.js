@@ -165,48 +165,43 @@ var liveMatchMinutes = {};
 function startLiveClock() {
   if (liveClockInterval) return;
   liveClockInterval = setInterval(function() {
+    // Regular matches
     var matches = Store.getMatches();
     var live = matches.filter(function(m){ return m.status === 'live'; });
     live.forEach(function(m) {
-      if (!liveMatchMinutes[m.id]) {
-        liveMatchMinutes[m.id] = parseInt((m.minute || '0').replace("'","")) || 45;
-      }
-      liveMatchMinutes[m.id]++;
-      if (liveMatchMinutes[m.id] > 90) liveMatchMinutes[m.id] = 90;
       var el = document.querySelector('[data-minute="' + m.id + '"]');
       if (el) {
-        el.textContent = liveMatchMinutes[m.id] + "'";
+        var now = new Date();
+        var display = now.getMinutes() + ":" + String(now.getSeconds()).padStart(2,'0');
+        el.textContent = display;
         el.classList.add('live-minute-tick');
         setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
       }
-      var bar = document.querySelector('[data-progress="' + m.id + '"]');
-      if (bar) {
-        bar.style.width = Math.min((liveMatchMinutes[m.id] / 90) * 100, 100) + '%';
-      }
     });
-    // Also tick WC live matches
+    // WC live matches — calculate real time from kickoff
     var wc = Store.getWorldCup();
     var wcLive = (wc.games || []).filter(function(g){ return g.status === 'live'; });
     wcLive.forEach(function(g) {
       var wcId = 'wc_' + g.id;
-      if (!liveMatchMinutes[wcId]) {
-        liveMatchMinutes[wcId] = g.minute || 1;
-      } else {
-        liveMatchMinutes[wcId]++;
-      }
-      if (liveMatchMinutes[wcId] > 90) liveMatchMinutes[wcId] = 90;
       var el = document.querySelector('[data-minute="' + wcId + '"]');
-      if (el) {
-        el.textContent = liveMatchMinutes[wcId] + "'";
+      if (el && g.date) {
+        var now = Date.now();
+        var kickoff = new Date(g.date).getTime();
+        var elapsed = Math.max(0, Math.floor((now - kickoff) / 1000));
+        var mins = Math.min(Math.floor(elapsed / 60), 90);
+        var secs = elapsed % 60;
+        var display = mins + ":" + String(secs).padStart(2,'0');
+        el.textContent = display;
         el.classList.add('live-minute-tick');
         setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
-      }
-      var bar = document.querySelector('[data-progress="' + wcId + '"]');
-      if (bar) {
-        bar.style.width = Math.min((liveMatchMinutes[wcId] / 90) * 100, 100) + '%';
+        liveMatchMinutes[wcId] = mins;
+        var bar = document.querySelector('[data-progress="' + wcId + '"]');
+        if (bar) {
+          bar.style.width = Math.min((mins / 90) * 100, 100) + '%';
+        }
       }
     });
-  }, 8000);
+  }, 1000);
 }
 function stopLiveClock() {
   if (liveClockInterval) { clearInterval(liveClockInterval); liveClockInterval = null; }
