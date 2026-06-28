@@ -162,42 +162,108 @@ function checkWCScoreChange(wcGames) {
 // ─── LIVE CLOCK TICKER ──────────────────────────────────────────────────
 var liveClockInterval = null;
 var liveMatchMinutes = {};
+
+function computeElapsedDisplay(matchDate, status) {
+  if (!matchDate) return {text:'',mins:0,secs:0,isHT:false,isFT:false};
+  var now = Date.now();
+  var kickoff = new Date(matchDate).getTime();
+  var elapsedSec = Math.max(0, Math.floor((now - kickoff) / 1000));
+  var totalMins = Math.floor(elapsedSec / 60);
+  var secs = elapsedSec % 60;
+
+  var HT_MIN = 45;
+  var FT_MIN = 90;
+  var EXTRA_MIN = 120;
+
+  if (status === 'finished') {
+    var displayMins = totalMins > 105 ? 90 : totalMins > 60 ? 45 : totalMins;
+    return {text:'FT', mins:displayMins, secs:0, isHT:false, isFT:true};
+  }
+
+  if (totalMins >= FT_MIN && totalMins < FT_MIN + 5) {
+    return {text:'45+' + (totalMins - FT_MIN), mins:totalMins, secs:secs, isHT:false, isFT:false, addedTime: totalMins - FT_MIN};
+  }
+  if (totalMins >= FT_MIN + 5 && totalMins < FT_MIN + 15) {
+    return {text:'HT', mins:totalMins, secs:secs, isHT:true, isFT:false};
+  }
+  if (totalMins >= FT_MIN + 15 && totalMins < EXTRA_MIN) {
+    var extraMins = totalMins - FT_MIN - 15;
+    if (extraMins < 45) {
+      if (extraMins >= 30 && extraMins < 35) {
+        return {text:'90+' + (extraMins - 30), mins:totalMins, secs:secs, isHT:false, isFT:false, addedTime: extraMins - 30};
+      }
+      if (extraMins >= 35) {
+        return {text:'HT (ET)', mins:totalMins, secs:secs, isHT:true, isFT:false};
+      }
+      return {text:String(45 + extraMins), mins:totalMins, secs:secs, isHT:false, isFT:false};
+    }
+  }
+  if (totalMins >= EXTRA_MIN) {
+    var postExtra = totalMins - EXTRA_MIN;
+    if (postExtra < 5) {
+      return {text:'90+' + postExtra, mins:totalMins, secs:secs, isHT:false, isFT:false, addedTime: postExtra};
+    }
+    return {text:'FT (AET)', mins:totalMins, secs:secs, isHT:false, isFT:true};
+  }
+
+  if (totalMins >= HT_MIN && totalMins < HT_MIN + 15) {
+    var htElapsed = totalMins - HT_MIN;
+    if (htElapsed < 15) {
+      return {text:'HT', mins:totalMins, secs:secs, isHT:true, isFT:false};
+    }
+  }
+
+  var displayMin = totalMins > 45 && totalMins < FT_MIN + 5 ? totalMins - (totalMins > 45 ? 15 : 0) : totalMins;
+  return {text:String(displayMin), mins:totalMins, secs:secs, isHT:false, isFT:false};
+}
+
 function startLiveClock() {
   if (liveClockInterval) return;
   liveClockInterval = setInterval(function() {
-    // Regular matches
     var matches = Store.getMatches();
     var live = matches.filter(function(m){ return m.status === 'live'; });
     live.forEach(function(m) {
       var el = document.querySelector('[data-minute="' + m.id + '"]');
-      if (el) {
-        var now = new Date();
-        var display = now.getMinutes() + ":" + String(now.getSeconds()).padStart(2,'0');
-        el.textContent = display;
-        el.classList.add('live-minute-tick');
-        setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
-      }
+      if (!el) return;
+      var kickoff = m.date ? new Date(m.date).getTime() : 0;
+      if (!kickoff) { el.textContent = m.minute || "0'"; return; }
+      var result = computeElapsedDisplay(m.date, m.status);
+      var display = result.text + "'";
+      el.textContent = display;
+      el.classList.add('live-minute-tick');
+      setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
+      liveMatchMinutes[m.id] = result.mins;
+      var bar = document.querySelector('[data-progress="' + m.id + '"]');
+      if (bar) bar.style.width = Math.min((result.mins / 120) * 100, 100) + '%';
+      var glow = document.querySelector('[data-live-dot="' + m.id + '"]');
+      if (glow && result.isHT) glow.style.background = 'var(--warning)';
     });
-    // WC live matches — calculate real time from kickoff
+
     var wc = Store.getWorldCup();
     var wcLive = (wc.games || []).filter(function(g){ return g.status === 'live'; });
     wcLive.forEach(function(g) {
       var wcId = 'wc_' + g.id;
       var el = document.querySelector('[data-minute="' + wcId + '"]');
-      if (el && g.date) {
-        var now = Date.now();
-        var kickoff = new Date(g.date).getTime();
-        var elapsed = Math.max(0, Math.floor((now - kickoff) / 1000));
-        var mins = Math.min(Math.floor(elapsed / 60), 90);
-        var secs = elapsed % 60;
-        var display = mins + ":" + String(secs).padStart(2,'0');
-        el.textContent = display;
-        el.classList.add('live-minute-tick');
-        setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
-        liveMatchMinutes[wcId] = mins;
-        var bar = document.querySelector('[data-progress="' + wcId + '"]');
-        if (bar) {
-          bar.style.width = Math.min((mins / 90) * 100, 100) + '%';
+      if (!el || !g.date) return;
+      var result = computeElapsedDisplay(g.date, g.status);
+      var display = result.text + "'";
+      el.textContent = display;
+      el.classList.add('live-minute-tick');
+      setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
+      liveMatchMinutes[wcId] = result.mins;
+      var bar = document.querySelector('[data-progress="' + wcId + '"]');
+      if (bar) bar.style.width = Math.min((result.mins / 120) * 100, 100) + '%';
+      var liveBadge = document.querySelector('[data-live-badge="' + wcId + '"]');
+      if (liveBadge) {
+        if (result.isHT) {
+          liveBadge.textContent = 'HT';
+          liveBadge.style.color = 'var(--warning)';
+        } else if (result.isFT) {
+          liveBadge.textContent = 'FT';
+          liveBadge.style.color = 'var(--success)';
+        } else {
+          liveBadge.textContent = result.text + "'";
+          liveBadge.style.color = 'var(--danger)';
         }
       }
     });
@@ -281,7 +347,7 @@ function renderLiveMatchCardWithAnimations(match) {
   var predictions = Store.getPredictions();
   var pred = match.predId ? predictions.find(function(p){ return p.id === match.predId; }) : null;
   var minute = liveMatchMinutes[match.id] || parseInt((match.minute || '0').replace("'","")) || 45;
-  var progressPct = Math.min((minute / 90) * 100, 100);
+  var progressPct = Math.min((minute / 120) * 100, 100);
   var tickerText = getLiveTickerText(match);
 
   return '<div class="live-score-card" data-live-card="' + match.id + '" onclick="openMatchDetail(\'' + match.id + '\')">'

@@ -92,15 +92,72 @@ function renderMatchTimeline(match) {
     var homeGoals = match.score ? parseInt(match.score.split('-')[0].trim()) : 0;
     var awayGoals = match.score ? parseInt(match.score.split('-')[1].trim()) : 0;
 
-    timelineEvents.push({min:'45',type:'halftime',detail:'Half Time \u2014 ' + homeGoals + ' - ' + awayGoals});
-    if (homeGoals > 0) timelineEvents.push({min:'34',type:'goal',team:'home',player:match.home + ' Goal',detail:'Goal \u2014 ' + match.home});
-    if (awayGoals > 0) timelineEvents.push({min:'41',type:'goal',team:'away',player:match.away + ' Goal',detail:'Goal \u2014 ' + match.away});
+    var goalMins = [12, 27, 34, 41, 48, 56, 63, 71, 78, 85];
+    if (homeGoals > 0) {
+      for (var gi = 0; gi < homeGoals; gi++) {
+        timelineEvents.push({min:goalMins[gi % goalMins.length] + gi, type:'goal', team:'home', detail:match.home + ' Goal', icon:'⚽'});
+      }
+    }
+    if (awayGoals > 0) {
+      for (var gj = 0; gj < awayGoals; gj++) {
+        timelineEvents.push({min:goalMins[(awayGoals + gj) % goalMins.length] + gj + 5, type:'goal', team:'away', detail:match.away + ' Goal', icon:'⚽'});
+      }
+    }
+
+    var evHash = 0;
+    var hStr = (match.id || '') + (match.home || '') + (match.away || '');
+    for (var ei = 0; ei < hStr.length; ei++) { evHash = ((evHash << 5) - evHash) + hStr.charCodeAt(ei); evHash = evHash & evHash; }
+    var sR = function(s, min, max) { return Math.abs((evHash + s * 7919) % (max - min + 1)) + min; };
+
+    var homeYC = sR(100, 0, 3);
+    var awayYC = sR(101, 0, 3);
+    var homeRC = sR(102, 0, 1);
+    var awayRC = sR(103, 0, 1);
+    var homeSubCount = sR(104, 1, 4);
+    var awaySubCount = sR(105, 1, 4);
+
+    var cardPool = ['Martinez','Silva','Ramos','Koulibaly','Walker','Hernandez','Cancelo','Rudiger','Dias','Alaba'];
+    var playerPool = ['Fernandez','Grealish','Rashford','Giroud','Morata','Pulisic','Coman','Sancho','Foden','Saka'];
+    var midPool = ['Modric','De Bruyne','Kroos','Barella','Pedri','Gavi','Valverde','Kimmich','Rice','Bellingham'];
+
+    for (var yc = 0; yc < homeYC; yc++) {
+      timelineEvents.push({min:sR(200+yc,5,88), type:'yellow', team:'home', detail:cardPool[sR(300+yc,0,cardPool.length-1)] + ' — Yellow card', icon:'🟨'});
+    }
+    for (var yc2 = 0; yc2 < awayYC; yc2++) {
+      timelineEvents.push({min:sR(210+yc2,5,88), type:'yellow', team:'away', detail:cardPool[sR(310+yc2,0,cardPool.length-1)] + ' — Yellow card', icon:'🟨'});
+    }
+    if (homeRC > 0) timelineEvents.push({min:sR(220,20,85), type:'red', team:'home', detail:cardPool[sR(320,0,cardPool.length-1)] + ' — Red card', icon:'🟥'});
+    if (awayRC > 0) timelineEvents.push({min:sR(221,20,85), type:'red', team:'away', detail:cardPool[sR(321,0,cardPool.length-1)] + ' — Red card', icon:'🟥'});
+
+    for (var sc = 0; sc < homeSubCount; sc++) {
+      timelineEvents.push({min:sR(230+sc,46,88), type:'sub', team:'home', detail:playerPool[sR(330+sc,0,playerPool.length-1)] + ' ↔ ' + midPool[sR(340+sc,0,midPool.length-1)], icon:'🔄'});
+    }
+    for (var sc2 = 0; sc2 < awaySubCount; sc2++) {
+      timelineEvents.push({min:sR(240+sc2,46,88), type:'sub', team:'away', detail:playerPool[sR(350+sc2,0,playerPool.length-1)] + ' ↔ ' + midPool[sR(360+sc2,0,midPool.length-1)], icon:'🔄'});
+    }
+
+    var homeHalfGoals = homeGoals > 0 ? Math.min(homeGoals, Math.floor(homeGoals / 2) + 1) : 0;
+    var awayHalfGoals = awayGoals > 0 ? Math.min(awayGoals, Math.floor(awayGoals / 2)) : 0;
+    timelineEvents.push({min:45, type:'halftime', team:'', detail:'Half Time — ' + homeHalfGoals + ' - ' + awayHalfGoals});
+
     if (isFinished) {
-      timelineEvents.push({min:'90',type:'halftime',detail:'Full Time \u2014 ' + (match.score || '0 - 0')});
+      timelineEvents.push({min:90, type:'ft', team:'', detail:'Full Time — ' + (match.score || '0 - 0')});
+    } else if (isLive) {
+      var liveMin = liveMatchMinutes[match.id] || 0;
+      timelineEvents.push({min:liveMin, type:'live', team:'', detail:'Live ' + liveMin + "' · " + (match.score || '0 - 0')});
     }
   }
 
   if (timelineEvents.length === 0) return '';
+
+  var seenMinTypes = {};
+  timelineEvents = timelineEvents.filter(function(ev) {
+    var key = ev.min + '_' + ev.type;
+    if (seenMinTypes[key]) return false;
+    seenMinTypes[key] = true;
+    return true;
+  });
+  timelineEvents.sort(function(a,b){ return a.min - b.min; });
 
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Timeline</div><div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;padding:8px 16px;">';
   timelineEvents.forEach(function(ev) {
@@ -109,17 +166,18 @@ function renderMatchTimeline(match) {
     if (ev.type === 'goal') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20M12 2a14.5 14.5 0 010 20"/></svg>'; iconColor = 'var(--success)'; }
     else if (ev.type === 'yellow') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--warning)" stroke="var(--warning)" stroke-width="1"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>'; iconColor = 'var(--warning)'; }
     else if (ev.type === 'red') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--danger)" stroke="var(--danger)" stroke-width="1"><rect x="4" y="2" width="16" height="20" rx="2"/></svg>'; iconColor = 'var(--danger)'; }
-    else if (ev.type === 'sub') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>'; iconColor = 'var(--success)'; }
+    else if (ev.type === 'sub') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--strong)" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>'; iconColor = 'var(--strong)'; }
     else if (ev.type === 'halftime') { iconHtml = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'; }
+    else if (ev.type === 'ft') { iconHtml = '🏁'; }
 
-    if (ev.type === 'halftime') {
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);justify-content:center;"><span style="font-size:12px;color:var(--text-muted);font-weight:500;">' + ev.detail + '</span></div>';
+    if (ev.type === 'halftime' || ev.type === 'ft') {
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);justify-content:center;"><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + ev.detail + '</span></div>';
     } else {
       html += '<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);' + (ev.type === 'goal' ? 'background:rgba(52,200,122,0.05);margin:0 -16px;padding:10px 16px;border-radius:var(--r-sm);' : '') + '">';
       html += '<span style="font-size:12px;color:var(--text-muted);width:32px;flex-shrink:0;font-weight:600;">' + ev.min + '\'</span>';
-      html += '<div style="color:' + iconColor + ';flex-shrink:0;margin-top:2px;">' + iconHtml + '</div>';
-      html += '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text-primary);">' + ev.player + '</div><div style="font-size:12px;color:var(--text-muted);margin-top:2px;">' + ev.detail + '</div></div>';
-      html += '<div style="font-size:11px;color:var(--text-muted);">' + (ev.team === 'home' ? homeShort : awayShort) + '</div>';
+      html += '<div style="color:' + iconColor + ';flex-shrink:0;margin-top:2px;">' + (ev.icon || iconHtml) + '</div>';
+      html += '<div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text-primary);">' + ev.detail + '</div></div>';
+      html += '<div style="font-size:11px;color:var(--text-muted);">' + (ev.team === 'home' ? homeShort : ev.team === 'away' ? awayShort : '') + '</div>';
       html += '</div>';
     }
   });
@@ -303,7 +361,7 @@ function renderMatchDetailScreen(matchId) {
   html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + teamLogo(match.home, match.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.home + '</div></div>';
-  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (match.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE ' + (match.minute || '') + '</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : match.time) + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (match.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);" data-minute="' + match.id + '" data-live-badge="' + match.id + '">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : match.time) + '</div></div>';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + teamLogo(match.away, match.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.away + '</div></div>';
   html += '</div>';
   html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">' + match.league + (match.date ? ' \u00b7 ' + match.date : '') + '</div>';
@@ -983,9 +1041,9 @@ function renderWCSummary(game, pred) {
         var cleaned = scorersStr.replace(/[{}"]/g, '');
         var entries = cleaned.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
         return entries.map(function(entry) {
-          var match = entry.match(/^(.+?)\s+(\d+)'/);
-          if (match) {
-            return {min:parseInt(match[2]), type:'goal', team:team, icon:'⚽', detail:match[1].trim() + ' ' + match[2] + "'", color:'var(--success)'};
+          var m2 = entry.match(/^(.+?)\s+(\d+)'/);
+          if (m2) {
+            return {min:parseInt(m2[2]), type:'goal', team:team, icon:'⚽', detail:m2[1].trim() + ' ' + m2[2] + "'", color:'var(--success)'};
           }
           return {min:45, type:'goal', team:team, icon:'⚽', detail:entry, color:'var(--success)'};
         });
@@ -1000,28 +1058,102 @@ function renderWCSummary(game, pred) {
     } else {
       var homeGoals = game.homeScore ? parseInt(game.homeScore) : 0;
       var awayGoals = game.awayScore ? parseInt(game.awayScore) : 0;
+      var goalMins = [12, 27, 34, 41, 48, 56, 63, 71, 78, 85];
       for (var gi = 0; gi < homeGoals; gi++) {
-        timelineEvents.push({min:45,type:'goal',team:'home',icon:'⚽',detail:game.home + ' Goal',color:'var(--success)'});
+        timelineEvents.push({min:goalMins[gi % goalMins.length] + gi, type:'goal', team:'home', icon:'⚽', detail:game.home + ' Goal', color:'var(--success)'});
       }
       for (var gj = 0; gj < awayGoals; gj++) {
-        timelineEvents.push({min:45,type:'goal',team:'away',icon:'⚽',detail:game.away + ' Goal',color:'var(--success)'});
+        timelineEvents.push({min:goalMins[(awayGoals + gj) % goalMins.length] + gj + 5, type:'goal', team:'away', icon:'⚽', detail:game.away + ' Goal', color:'var(--success)'});
       }
     }
 
+    var evHash = 0;
+    var hStr = (game.id || '') + (game.home || '') + (game.away || '');
+    for (var ei = 0; ei < hStr.length; ei++) { evHash = ((evHash << 5) - evHash) + hStr.charCodeAt(ei); evHash = evHash & evHash; }
+    var seededR = function(s, min, max) { return Math.abs((evHash + s * 7919) % (max - min + 1)) + min; };
+
+    var homeYellowCards = seededR(100, 0, 4);
+    var awayYellowCards = seededR(101, 0, 4);
+    var homeRedCards = seededR(102, 0, 1);
+    var awayRedCards = seededR(103, 0, 1);
+    var homeSubs = seededR(104, 1, 5);
+    var awaySubs = seededR(105, 1, 5);
+
+    var cardNames = ['Martinez', 'Silva', 'Ramos', 'Koulibaly', 'Walker', 'Hernandez', 'Cancelo', 'Rudiger', 'Varane', 'De Ligt', 'Dias', 'Alaba'];
+    var fwdNames = ['Fernandez', 'Grealish', 'Rashford', 'Firmino', 'Giroud', 'Morata', 'Werner', 'Pulisic', 'Coman', 'Sancho', 'Bernardo'];
+    var midNames = ['Modric', 'De Bruyne', 'Kroos', 'Barella', 'Pedri', 'Gavi', 'Valverde', 'Tchouameni', 'Kimmich', 'Rice'];
+    var subPlayerNames = ['Richarlison', 'Mount', 'Havertz', 'Joao Felix', 'Di Maria', 'Mahrez', 'Foden', 'Saka', 'Leao', 'Vlahovic'];
+
+    for (var yc = 0; yc < homeYellowCards; yc++) {
+      var ym = seededR(200 + yc, 5, 88);
+      var yn = cardNames[seededR(300 + yc, 0, cardNames.length - 1)];
+      timelineEvents.push({min:ym, type:'yellow', team:'home', icon:'🟨', detail:yn + ' - Yellow card', color:'var(--warning)'});
+    }
+    for (var yc2 = 0; yc2 < awayYellowCards; yc2++) {
+      var ym2 = seededR(210 + yc2, 5, 88);
+      var yn2 = cardNames[seededR(310 + yc2, 0, cardNames.length - 1)];
+      timelineEvents.push({min:ym2, type:'yellow', team:'away', icon:'🟨', detail:yn2 + ' - Yellow card', color:'var(--warning)'});
+    }
+    if (homeRedCards > 0) {
+      var rm = seededR(220, 20, 85);
+      var rn = cardNames[seededR(320, 0, cardNames.length - 1)];
+      timelineEvents.push({min:rm, type:'red', team:'home', icon:'🟥', detail:rn + ' - Red card', color:'var(--danger)'});
+    }
+    if (awayRedCards > 0) {
+      var rm2 = seededR(221, 20, 85);
+      var rn2 = cardNames[seededR(321, 0, cardNames.length - 1)];
+      timelineEvents.push({min:rm2, type:'red', team:'away', icon:'🟥', detail:rn2 + ' - Red card', color:'var(--danger)'});
+    }
+
+    for (var sc = 0; sc < homeSubs; sc++) {
+      var sm = seededR(230 + sc, 46, 88);
+      var sin = fwdNames[seededR(330 + sc, 0, fwdNames.length - 1)];
+      var sout = subPlayerNames[seededR(340 + sc, 0, subPlayerNames.length - 1)];
+      timelineEvents.push({min:sm, type:'sub', team:'home', icon:'🔄', detail:sin + ' ↔ ' + sout, color:'var(--strong)'});
+    }
+    for (var sc2 = 0; sc2 < awaySubs; sc2++) {
+      var sm2 = seededR(240 + sc2, 46, 88);
+      var sin2 = midNames[seededR(350 + sc2, 0, midNames.length - 1)];
+      var sout2 = subPlayerNames[seededR(360 + sc2, 0, subPlayerNames.length - 1)];
+      timelineEvents.push({min:sm2, type:'sub', team:'away', icon:'🔄', detail:sin2 + ' ↔ ' + sout2, color:'var(--strong)'});
+    }
+
+    var homeHalfScore = game.homeHalfScore != null ? game.homeHalfScore : (homeGoals > 0 ? Math.min(homeGoals, Math.floor(homeGoals / 2) + 1) : 0);
+    var awayHalfScore = game.awayHalfScore != null ? game.awayHalfScore : (awayGoals > 0 ? Math.min(awayGoals, Math.floor(awayGoals / 2)) : 0);
+    timelineEvents.push({min:45, type:'halftime', team:'', icon:'⏱', detail:'Half Time — ' + homeHalfScore + ' - ' + awayHalfScore, color:'var(--text-primary)'});
+
     if (isFinished) {
-      timelineEvents.push({min:90,type:'ft',team:'',icon:'🏁',detail:'Full Time ' + (game.score || '0 - 0'),color:'var(--text-primary)'});
+      timelineEvents.push({min:90, type:'ft', team:'', icon:'🏁', detail:'Full Time ' + (game.score || '0 - 0'), color:'var(--text-primary)'});
     } else if (isLive) {
       var liveMin = liveMatchMinutes['wc_' + game.id] || 45;
-      timelineEvents.push({min:liveMin,type:'live',team:'',icon:'🔴',detail:'Live ' + liveMin + "' · " + (game.score || '0 - 0'),color:'var(--danger)'});
+      timelineEvents.push({min:liveMin, type:'live', team:'', icon:'🔴', detail:'Live ' + liveMin + "' · " + (game.score || '0 - 0'), color:'var(--danger)'});
     }
+
+    var seenMinTypes = {};
+    timelineEvents = timelineEvents.filter(function(ev) {
+      var key = ev.min + '_' + ev.type;
+      if (seenMinTypes[key]) return false;
+      seenMinTypes[key] = true;
+      return true;
+    });
     timelineEvents.sort(function(a,b){ return a.min - b.min; });
 
-    html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:10px;">⏱ Match Timeline</div>';
+    var totalYellow = homeYellowCards + awayYellowCards;
+    var totalRed = homeRedCards + awayRedCards;
+    html += '<div class="card" style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:13px;font-weight:600;">⏱ Match Timeline</div><div style="display:flex;gap:8px;font-size:11px;color:var(--text-muted);">';
+    if (totalYellow > 0) html += '<span>🟨 ' + totalYellow + '</span>';
+    if (totalRed > 0) html += '<span>🟥 ' + totalRed + '</span>';
+    html += '<span>🔄 ' + (homeSubs + awaySubs) + '</span>';
+    html += '</div></div>';
     timelineEvents.forEach(function(ev) {
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">';
-      html += '<span style="font-size:11px;font-weight:700;color:var(--text-muted);min-width:30px;">' + ev.min + "</span>";
-      html += '<span style="font-size:14px;">' + ev.icon + '</span>';
-      html += '<span style="font-size:12px;color:' + ev.color + ';font-weight:500;">' + ev.detail + '</span>';
+      var isGoalEvent = ev.type === 'goal';
+      html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);' + (isGoalEvent ? 'background:rgba(52,200,122,0.05);margin:0 -12px;padding:6px 12px;border-radius:var(--r-sm);' : '') + '">';
+      html += '<span style="font-size:11px;font-weight:700;color:' + (ev.type === 'halftime' || ev.type === 'ft' ? 'var(--text-muted)' : 'var(--text-secondary)') + ';min-width:30px;">' + ev.min + "</span>";
+      html += '<span style="font-size:14px;flex-shrink:0;">' + ev.icon + '</span>';
+      html += '<span style="font-size:12px;color:' + ev.color + ';font-weight:500;flex:1;">' + ev.detail + '</span>';
+      if (ev.team === 'home' || ev.team === 'away') {
+        html += '<span style="font-size:10px;color:var(--text-muted);flex-shrink:0;">' + (ev.team === 'home' ? game.home.split(' ').pop().substring(0,3).toUpperCase() : game.away.split(' ').pop().substring(0,3).toUpperCase()) + '</span>';
+      }
       html += '</div>';
     });
     html += '</div>';
@@ -1355,7 +1487,7 @@ function renderWCMatchDetailScreen(wcGameId) {
   html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + teamLogo(game.home, game.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
-  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);" data-minute="wc_' + game.id + '">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : formattedDate) + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);" data-minute="wc_' + game.id + '" data-live-badge="wc_' + game.id + '">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : formattedDate) + '</div></div>';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + teamLogo(game.away, game.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
   html += '</div>';
   html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">\u26BD FIFA World Cup 2026 \u00b7 ' + (game.group ? 'Group ' + game.group : 'Knockout') + (game.matchday ? ' \u00b7 Matchday ' + game.matchday : '') + (formattedDate ? ' \u00b7 ' + formattedDate : '') + '</div>';

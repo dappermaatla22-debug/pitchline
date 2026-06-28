@@ -578,7 +578,7 @@ var API = (function() {
             if (!estimatedMinute && m.utcDate) {
               var matchTime = new Date(m.utcDate).getTime();
               var now = Date.now();
-              estimatedMinute = Math.min(Math.max(Math.floor((now - matchTime) / 60000), 1), 90);
+              estimatedMinute = Math.max(Math.floor((now - matchTime) / 60000), 1);
             }
           }
           else if (m.status === 'TIMED' || m.status === 'SCHEDULED') {
@@ -586,15 +586,19 @@ var API = (function() {
             var now = Date.now();
             if (now >= matchTime - 600000 && now <= matchTime + 7200000) {
               status = 'live';
-              estimatedMinute = Math.min(Math.max(Math.floor((now - matchTime) / 60000), 0), 90);
+              estimatedMinute = Math.max(Math.floor((now - matchTime) / 60000), 0);
             }
           }
+          var homeHalf = m.score && m.score.halfTime ? m.score.halfTime.home : null;
+          var awayHalf = m.score && m.score.halfTime ? m.score.halfTime.away : null;
           return {
             id: 'wc_' + m.id,
             home: homeTeam.name,
             away: awayTeam.name,
             homeScore: m.score && m.score.fullTime ? m.score.fullTime.home : null,
             awayScore: m.score && m.score.fullTime ? m.score.fullTime.away : null,
+            homeHalfScore: homeHalf,
+            awayHalfScore: awayHalf,
             score: score,
             homeScorers: '',
             awayScorers: '',
