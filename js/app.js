@@ -190,9 +190,10 @@ function startLiveClock() {
     wcLive.forEach(function(g) {
       var wcId = 'wc_' + g.id;
       if (!liveMatchMinutes[wcId]) {
-        liveMatchMinutes[wcId] = parseInt((g.minute || '0').replace("'","")) || 45;
+        liveMatchMinutes[wcId] = g.minute || 1;
+      } else {
+        liveMatchMinutes[wcId]++;
       }
-      liveMatchMinutes[wcId]++;
       if (liveMatchMinutes[wcId] > 90) liveMatchMinutes[wcId] = 90;
       var el = document.querySelector('[data-minute="' + wcId + '"]');
       if (el) {

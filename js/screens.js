@@ -276,6 +276,7 @@ function renderWCMatchCard(game, isLive) {
   var away = game.away || 'TBD';
   var statusColor = isLive ? 'var(--danger)' : game.status === 'finished' ? 'var(--success)' : 'var(--text-muted)';
   var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : '';
+  var liveMinute = isLive && game.minute ? game.minute : '';
   var homeCrest = game.homeCrest || null;
   var awayCrest = game.awayCrest || null;
   var formattedDate = '';
@@ -291,6 +292,7 @@ function renderWCMatchCard(game, isLive) {
   }
   var stage = game.group ? 'Group ' + game.group : (game.type === 'knockout' || (!game.group && game.matchday)) ? 'Knockout' : '';
   var matchday = game.matchday ? ' \u00b7 MD ' + game.matchday : '';
+  var wcId = 'wc_' + game.id;
   return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
@@ -298,8 +300,8 @@ function renderWCMatchCard(game, isLive) {
     + '<span class="team-name" onclick="event.stopPropagation();openTeamProfile(\'' + home.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + home + '</span>'
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:center;min-width:60px;flex-shrink:0;">'
-    + '<span class="vs-badge" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
-    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + (statusText || formattedDate) + '</div>'
+    + '<span class="vs-badge" data-score="' + wcId + '" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
+    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">' + (statusText ? (liveMinute ? statusText + ' ' + liveMinute + "'" : statusText) : formattedDate) + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
     + '<span class="team-name away" onclick="event.stopPropagation();openTeamProfile(\'' + away.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + away + '</span>'

@@ -570,13 +570,18 @@ var API = (function() {
             score = m.score.halfTime.home + ' - ' + m.score.halfTime.away;
           }
           var status = 'upcoming';
+          var estimatedMinute = null;
           if (m.status === 'FINISHED' || m.status === 'AWARDED') status = 'finished';
-          else if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'HALFTIME') status = 'live';
+          else if (m.status === 'IN_PLAY' || m.status === 'PAUSED' || m.status === 'HALFTIME') {
+            status = 'live';
+            if (m.minute) estimatedMinute = m.minute;
+          }
           else if (m.status === 'TIMED' || m.status === 'SCHEDULED') {
             var matchTime = new Date(m.utcDate).getTime();
             var now = Date.now();
             if (now >= matchTime - 600000 && now <= matchTime + 7200000) {
               status = 'live';
+              estimatedMinute = Math.min(Math.max(Math.floor((now - matchTime) / 60000), 0), 90);
             }
           }
           return {
@@ -593,6 +598,7 @@ var API = (function() {
             date: m.utcDate || '',
             rawDate: m.utcDate || '',
             status: status,
+            minute: estimatedMinute,
             type: m.stage || 'GROUP',
             stadiumId: '',
             finished: status === 'finished',

@@ -976,34 +976,50 @@ function renderWCSummary(game, pred) {
 
   if (isFinished || isLive) {
     var timelineEvents = [];
-    var homeGoals = game.homeScore ? parseInt(game.homeScore) : 0;
-    var awayGoals = game.awayScore ? parseInt(game.awayScore) : 0;
-    if (homeGoals > 0 || awayGoals > 0) {
+
+    function parseScorers(scorersStr, team, teamName) {
+      if (!scorersStr || scorersStr === 'null' || scorersStr === '') return [];
+      try {
+        var cleaned = scorersStr.replace(/[{}"]/g, '');
+        var entries = cleaned.split(',').map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+        return entries.map(function(entry) {
+          var match = entry.match(/^(.+?)\s+(\d+)'/);
+          if (match) {
+            return {min:parseInt(match[2]), type:'goal', team:team, icon:'⚽', detail:match[1].trim() + ' ' + match[2] + "'", color:'var(--success)'};
+          }
+          return {min:45, type:'goal', team:team, icon:'⚽', detail:entry, color:'var(--success)'};
+        });
+      } catch(e) { return []; }
+    }
+
+    var realHomeScorers = parseScorers(game.homeScorers, 'home', game.home);
+    var realAwayScorers = parseScorers(game.awayScorers, 'away', game.away);
+
+    if (realHomeScorers.length > 0 || realAwayScorers.length > 0) {
+      timelineEvents = timelineEvents.concat(realHomeScorers).concat(realAwayScorers);
+    } else {
+      var homeGoals = game.homeScore ? parseInt(game.homeScore) : 0;
+      var awayGoals = game.awayScore ? parseInt(game.awayScore) : 0;
       for (var gi = 0; gi < homeGoals; gi++) {
-        var gMin = Math.floor(Math.random() * 80) + 10;
-        timelineEvents.push({min:gMin,type:'goal',team:'home',icon:'⚽',detail:game.home + ' Goal',color:'var(--success)'});
+        timelineEvents.push({min:45,type:'goal',team:'home',icon:'⚽',detail:game.home + ' Goal',color:'var(--success)'});
       }
       for (var gj = 0; gj < awayGoals; gj++) {
-        var gMin2 = Math.floor(Math.random() * 80) + 10;
-        timelineEvents.push({min:gMin2,type:'goal',team:'away',icon:'⚽',detail:game.away + ' Goal',color:'var(--success)'});
+        timelineEvents.push({min:45,type:'goal',team:'away',icon:'⚽',detail:game.away + ' Goal',color:'var(--success)'});
       }
     }
-    timelineEvents.push({min:45,type:'ht',team:'',icon:'⏱',detail:'Half Time ' + (game.score || '0 - 0'),color:'var(--text-muted)'});
+
     if (isFinished) {
       timelineEvents.push({min:90,type:'ft',team:'',icon:'🏁',detail:'Full Time ' + (game.score || '0 - 0'),color:'var(--text-primary)'});
-    }
-    var yellowMins = [12, 28, 34, 55, 67, 78];
-    for (var yi = 0; yi < 2; yi++) {
-      var yTeam = yi === 0 ? game.home : game.away;
-      timelineEvents.push({min:yellowMins[yi + (yi === 0 ? 0 : 1)],type:'yellow',team:yi===0?'home':'away',icon:'🟨',detail:yTeam + ' — Yellow Card',color:'var(--warning)'});
+    } else if (isLive) {
+      var liveMin = liveMatchMinutes['wc_' + game.id] || 45;
+      timelineEvents.push({min:liveMin,type:'live',team:'',icon:'🔴',detail:'Live ' + liveMin + "' · " + (game.score || '0 - 0'),color:'var(--danger)'});
     }
     timelineEvents.sort(function(a,b){ return a.min - b.min; });
 
     html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:10px;">⏱ Match Timeline</div>';
     timelineEvents.forEach(function(ev) {
-      var side = ev.team === 'home' ? 'flex-start' : ev.team === 'away' ? 'flex-end' : 'center';
       html += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">';
-      html += '<span style="font-size:11px;font-weight:700;color:var(--text-muted);min-width:30px;">' + ev.min + "'</span>";
+      html += '<span style="font-size:11px;font-weight:700;color:var(--text-muted);min-width:30px;">' + ev.min + "</span>";
       html += '<span style="font-size:14px;">' + ev.icon + '</span>';
       html += '<span style="font-size:12px;color:' + ev.color + ';font-weight:500;">' + ev.detail + '</span>';
       html += '</div>';
@@ -1266,6 +1282,7 @@ function renderWCMatchStats(game) {
   });
 
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Match Statistics</div>';
+  html += '<div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;padding:6px 10px;background:var(--bg-elevated);border-radius:var(--r-sm);">⚠ Estimated — live stats not available on free API tier</div>';
   html += '<div style="display:flex;justify-content:space-between;padding:8px 12px;margin-bottom:8px;"><span style="font-size:12px;font-weight:700;color:var(--text-primary);">' + game.home + '</span><span style="font-size:12px;font-weight:700;color:var(--text-primary);">' + game.away + '</span></div>';
 
   stats.forEach(function(s) {
@@ -1338,7 +1355,7 @@ function renderWCMatchDetailScreen(wcGameId) {
   html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + teamLogo(game.home, game.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
-  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : formattedDate) + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);" data-minute="wc_' + game.id + '">\u25cf LIVE ' + (game.minute || '') + "'</span>" : isFinished ? '<span style="color:var(--success);">FT</span>' : formattedDate) + '</div></div>';
   html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + teamLogo(game.away, game.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
   html += '</div>';
   html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">\u26BD FIFA World Cup 2026 \u00b7 ' + (game.group ? 'Group ' + game.group : 'Knockout') + (game.matchday ? ' \u00b7 Matchday ' + game.matchday : '') + (formattedDate ? ' \u00b7 ' + formattedDate : '') + '</div>';
