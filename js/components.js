@@ -152,7 +152,7 @@ function renderLiveMatchCard(match) {
 
 function renderPredCard(pred) {
   var agreeColor = pred.tier === 'elite' ? 'var(--elite)' : pred.tier === 'strong' ? 'var(--strong)' : pred.tier === 'moderate' ? 'var(--moderate)' : 'var(--risky)';
-  return '<div class="pred-card" onclick="openPredDetail(\'' + pred.id + '\')">'
+  return '<div class="pred-card tier-' + pred.tier + '" onclick="openPredDetail(\'' + pred.id + '\')">'
     + '<div class="pred-card-top">'
     + '<div style="flex:1;margin-right:12px;min-width:0;">'
     + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + pred.league + ' \u00b7 ' + pred.time + '</div>'

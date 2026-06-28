@@ -508,8 +508,7 @@ function renderScreen(screenId, data) {
   attachScreenListeners();
 
   if (screenId === 'home') {
-    var scrollContainer = main.querySelector('.screen');
-    if (scrollContainer) initPullToRefresh(scrollContainer);
+    // Silent auto-refresh only — no pull-to-refresh
   }
 }
 
@@ -538,12 +537,8 @@ function setWCFilter(val, el) {
 }
 
 function refreshHome() {
-  showToast(t('refreshing'));
   Store.refreshMatches().then(function() {
-    if (currentScreen === 'home') navigate('home');
-    showToast('Matches updated');
-  }).catch(function() {
-    showToast('Refresh failed');
+    if (currentScreen === 'home') renderScreen('home');
   });
 }
 

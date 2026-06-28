@@ -20,25 +20,32 @@ function renderHomeScreen() {
   var html = '<div class="app-header"><div class="header-logo">PITCH<span>LINE</span></div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button><button class="btn-icon" onclick="navigate(\'notifications-screen\')" style="position:relative;">' + ICONS.bell + (Store.getUnreadCount() > 0 ? '<span class="notif-badge">' + Store.getUnreadCount() + '</span>' : '') + '</button></div></div>';
   html += '<div style="overflow-y:auto;flex:1;position:relative;">';
 
-  html += '<div id="pull-indicator" class="pull-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg></div>';
-
   html += '<div class="chip-row date-selector" id="date-chips">' + dateChips + '</div>';
 
+  // Hero banner
+  html += '<div class="hero-banner" onclick="navigate(\'fixtures\')">'
+    + '<div class="hero-title">World Cup 2026</div>'
+    + '<div class="hero-sub">48 teams. 16 cities. One champion.</div>'
+    + '<button class="hero-cta">' + ICONS.trophy + ' Explore Fixtures</button>'
+    + '</div>';
+
+  // Quick access grid
   html += '<div class="quick-access-row">'
-    + '<div class="quick-card" onclick="navigate(\'fixtures\')">'
-    + '<div class="quick-card-icon" style="background:rgba(79,142,247,0.15);color:var(--strong);">' + ICONS.matches + '</div>'
-    + '<div class="quick-card-label">' + (typeof t === 'function' ? t('fixtures') : 'Fixtures') + '</div>'
-    + '<div class="quick-card-sub">' + matches.length + ' matches</div>'
+    + '<div class="quick-card quick-card--fixtures" onclick="navigate(\'fixtures\')">'
+    + '<div class="quick-card-banner"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>'
+    + '<div class="quick-card-body"><div class="quick-card-label">' + (typeof t === 'function' ? t('fixtures') : 'Fixtures') + '</div><div class="quick-card-sub">' + matches.length + ' matches this week</div></div>'
     + '</div>'
-    + '<div class="quick-card" onclick="navigate(\'worldcup\')">'
-    + '<div class="quick-card-icon" style="background:rgba(255,77,125,0.15);color:var(--accent);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20M12 2a14.5 14.5 0 010 20M2 12h20"/></svg></div>'
-    + '<div class="quick-card-label">World Cup</div>'
-    + '<div class="quick-card-sub">2026</div>'
+    + '<div class="quick-card quick-card--worldcup" onclick="navigate(\'worldcup\')">'
+    + '<div class="quick-card-banner"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20M12 2a14.5 14.5 0 010 20M2 12h20"/></svg></div>'
+    + '<div class="quick-card-body"><div class="quick-card-label">World Cup 2026</div><div class="quick-card-sub">Groups, standings, stats</div></div>'
     + '</div>'
-    + '<div class="quick-card" onclick="navigate(\'stats\')">'
-    + '<div class="quick-card-icon" style="background:rgba(52,200,122,0.15);color:var(--elite);">' + ICONS.predictions + '</div>'
-    + '<div class="quick-card-label">' + (typeof t === 'function' ? t('predict') : 'Stats') + '</div>'
-    + '<div class="quick-card-sub">' + predictions.length + ' preds</div>'
+    + '<div class="quick-card quick-card--predict" onclick="navigate(\'predictions\')">'
+    + '<div class="quick-card-banner"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>'
+    + '<div class="quick-card-body"><div class="quick-card-label">' + (typeof t === 'function' ? t('predict') : 'Predict') + '</div><div class="quick-card-sub">' + predictions.length + ' predictions</div></div>'
+    + '</div>'
+    + '<div class="quick-card quick-card--stats" onclick="navigate(\'stats\')">'
+    + '<div class="quick-card-banner"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>'
+    + '<div class="quick-card-body"><div class="quick-card-label">Stats</div><div class="quick-card-sub">Accuracy & trends</div></div>'
     + '</div>'
     + '</div>';
 
@@ -424,19 +431,25 @@ function renderProfileScreen() {
 
   var html = '<div class="app-header"><div class="header-title">Profile</div><button class="btn-icon" onclick="navigate(\'settings\')">' + ICONS.settings + '</button></div>';
   html += '<div style="overflow-y:auto;flex:1;">';
-  html += '<div style="padding:24px 16px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);"><div style="width:64px;height:64px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);">' + (u.initials || u.name.substring(0,2).toUpperCase()) + '</div><div style="flex:1;"><div style="font-size:18px;font-weight:700;">' + u.name + '</div><div style="font-size:13px;color:var(--text-muted);margin-top:2px;">' + u.plan + ' Plan</div></div><button class="btn btn-sm btn-secondary" onclick="openEditProfile()">Edit</button></div>';
-  html += '<div style="padding:20px 16px 0;"><div class="stat-grid"><div class="stat-card"><div class="stat-label">Tracked</div><div class="stat-value">' + u.stats.tracked + '</div></div><div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" style="color:var(--success);">' + accuracy + '%</div></div><div class="stat-card"><div class="stat-label">Elite Hit</div><div class="stat-value" style="color:var(--elite);">' + u.stats.eliteHitPct + '%</div></div><div class="stat-card"><div class="stat-label">Streak</div><div class="stat-value" style="color:var(--warning);">' + u.stats.streak + '</div><div class="stat-sub">correct</div></div></div></div>';
 
-  html += '<div style="margin:20px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
-  html += '<div class="list-row" onclick="navigate(\'worldcup\')"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:18px;">&#127775;</span><div><div style="font-size:14px;font-weight:500;">World Cup 2026</div><div style="font-size:12px;color:var(--text-muted);">Matches, standings, stats</div></div></div>' + ICONS.chevronRight + '</div>';
-  html += '<div class="list-row" onclick="navigate(\'competitions\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.trophy + '<div><div style="font-size:14px;font-weight:500;">Competitions</div><div style="font-size:12px;color:var(--text-muted);">All leagues &amp; matches</div></div></div>' + ICONS.chevronRight + '</div>';
-  html += '<div class="list-row" onclick="showBetSlip()"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.download + '<div><div style="font-size:14px;font-weight:500;">Bet Slip</div><div style="font-size:12px;color:var(--text-muted);">Generate from saved picks</div></div></div>' + ICONS.chevronRight + '</div>';
-  html += '<div class="list-row" onclick="navigate(\'saved\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.bookmark + '<div><div style="font-size:14px;font-weight:500;">Saved Predictions</div><div style="font-size:12px;color:var(--text-muted);">' + savedCount + ' saved</div></div></div>' + ICONS.chevronRight + '</div>';
-  html += '<div class="list-row" onclick="navigate(\'favorites\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.heart + '<div><div style="font-size:14px;font-weight:500;">Favourite Teams</div><div style="font-size:12px;color:var(--text-muted);">' + favTeams.join(', ') + '</div></div></div>' + ICONS.chevronRight + '</div>';
-  html += '<div class="list-row" onclick="navigate(\'notifications-screen\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.bell + '<div><div style="font-size:14px;font-weight:500;">Notifications</div><div style="font-size:12px;color:var(--text-muted);">' + unreadCount + ' unread</div></div></div>' + ICONS.chevronRight + '</div>';
-  html += '<div class="list-row" onclick="navigate(\'settings\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.settings + '<div><div style="font-size:14px;font-weight:500;">Settings</div><div style="font-size:12px;color:var(--text-muted);">Theme, preferences</div></div></div>' + ICONS.chevronRight + '</div>';
+  // Compact header
+  html += '<div class="profile-header"><div class="profile-avatar">' + (u.initials || u.name.substring(0,2).toUpperCase()) + '</div><div style="flex:1;"><div class="profile-name">' + u.name + '</div><div class="profile-plan">' + u.plan + ' Plan</div></div><button class="btn btn-sm btn-secondary" onclick="openEditProfile()">Edit</button></div>';
+
+  // Stats row - compact 4-column
+  html += '<div style="padding:12px 16px 0;"><div class="stat-grid"><div class="stat-card"><div class="stat-label">Tracked</div><div class="stat-value">' + u.stats.tracked + '</div></div><div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" style="color:var(--success);">' + accuracy + '%</div></div><div class="stat-card"><div class="stat-label">Elite</div><div class="stat-value" style="color:var(--elite);">' + u.stats.eliteHitPct + '%</div></div><div class="stat-card"><div class="stat-label">Streak</div><div class="stat-value" style="color:var(--warning);">' + u.stats.streak + '</div></div></div></div>';
+
+  // Menu items with colored icons
+  html += '<div class="profile-section">';
+  html += '<div class="profile-list-row" onclick="navigate(\'worldcup\')"><div class="profile-list-icon" style="background:rgba(255,77,125,0.12);color:#ff4d7d;">' + ICONS.trophy + '</div><div class="profile-list-text"><div class="profile-list-title">World Cup 2026</div><div class="profile-list-sub">Matches, standings, stats</div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="profile-list-row" onclick="navigate(\'competitions\')"><div class="profile-list-icon" style="background:rgba(79,142,247,0.12);color:#4f8ef7;">' + ICONS.matches + '</div><div class="profile-list-text"><div class="profile-list-title">Competitions</div><div class="profile-list-sub">All leagues &amp; matches</div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="profile-list-row" onclick="showBetSlip()"><div class="profile-list-icon" style="background:rgba(251,191,36,0.12);color:#fbbf24;">' + ICONS.download + '</div><div class="profile-list-text"><div class="profile-list-title">Bet Slip</div><div class="profile-list-sub">Generate from saved picks</div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="profile-list-row" onclick="navigate(\'saved\')"><div class="profile-list-icon" style="background:rgba(52,200,122,0.12);color:#34c87a;">' + ICONS.bookmark + '</div><div class="profile-list-text"><div class="profile-list-title">Saved</div><div class="profile-list-sub">' + savedCount + ' predictions</div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="profile-list-row" onclick="navigate(\'favorites\')"><div class="profile-list-icon" style="background:rgba(244,63,94,0.12);color:#f43f5e;">' + ICONS.heart + '</div><div class="profile-list-text"><div class="profile-list-title">Favourite Teams</div><div class="profile-list-sub">' + (favTeams.length > 0 ? favTeams.slice(0,3).join(', ') + (favTeams.length > 3 ? '...' : '') : 'None set') + '</div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="profile-list-row" onclick="navigate(\'notifications-screen\')"><div class="profile-list-icon" style="background:rgba(168,85,247,0.12);color:#a855f7;">' + ICONS.bell + '</div><div class="profile-list-text"><div class="profile-list-title">Notifications</div><div class="profile-list-sub">' + unreadCount + ' unread</div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="profile-list-row" onclick="navigate(\'settings\')"><div class="profile-list-icon" style="background:rgba(148,163,184,0.12);color:#94a3b8;">' + ICONS.settings + '</div><div class="profile-list-text"><div class="profile-list-title">Settings</div><div class="profile-list-sub">Theme, preferences</div></div>' + ICONS.chevronRight + '</div>';
   html += '</div>';
-  html += '<div style="padding:0 16px;"><button class="btn btn-ghost btn-full" onclick="signOut()" style="color:var(--risky);border-color:rgba(244,63,94,0.2);">Sign Out</button></div>';
-  html += '<div style="height:20px;"></div></div>';
+
+  html += '<div style="padding:0 16px 20px;"><button class="btn btn-ghost btn-full" onclick="signOut()" style="color:var(--risky);border-color:rgba(244,63,94,0.2);">Sign Out</button></div>';
+  html += '</div>';
   return html;
 }

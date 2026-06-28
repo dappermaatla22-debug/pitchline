@@ -191,8 +191,10 @@
     Store.fetchWorldCupData();
 
     setInterval(function() {
-      Store.refreshMatches();
-    }, 60000);
+      Store.refreshMatches().then(function() {
+        if (currentScreen === 'home' || currentScreen === 'fixtures') renderScreen(currentScreen);
+      });
+    }, 30000);
 
     setTimeout(function() { requestNotificationPermission(); }, 3000);
 
