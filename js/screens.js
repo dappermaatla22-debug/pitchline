@@ -21,23 +21,23 @@ function renderHomeScreen() {
   html += '<div style="overflow-y:auto;flex:1;">';
   html += '<div class="chip-row date-selector" id="date-chips">' + dateChips + '</div>';
 
-  html += '<div style="display:flex;gap:8px;padding:0 16px 12px;"><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="openFixtures()">&#128197; Fixtures</button><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="openStats()">&#128200; Stats</button></div>';
+  html += '<div style="display:flex;gap:8px;padding:0 16px 12px;"><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="openFixtures()">&#128197; Fixtures</button><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="navigate(\'worldcup\')">&#127775; World Cup</button><button class="btn btn-secondary" style="flex:1;font-size:12px;" onclick="openStats()">&#128200; Stats</button></div>';
 
   if (live.length > 0) {
-    html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">Live Now</span></div><span class="section-link" onclick="navigate(\'competitions\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:4px;">' + live.map(function(m) { return renderLiveMatchCard(m); }).join('') + '</div></div>';
+    html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">Live Now</span><span style="font-size:12px;font-weight:600;color:var(--danger);background:rgba(244,63,94,0.12);padding:2px 8px;border-radius:var(--r-full);">' + live.length + '</span></div><span class="section-link" onclick="navigate(\'competitions\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding:0 var(--sp-4) 4px;scroll-snap-type:x mandatory;scrollbar-width:none;">' + live.map(function(m) { return renderLiveMatchCard(m); }).join('') + '</div></div>';
   }
 
   if (predictions.length === 0 && matches.length === 0) {
     html += renderLoadingState();
   } else {
-    if (elite.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--elite);"></div><span class="section-title">Elite Picks</span></div><span class="section-link" onclick="navigate(\'competitions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + elite.slice(0,2).map(renderPredCard).join('') + '</div></div>';
-    if (strong.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--strong);"></div><span class="section-title">Strong Picks</span></div><span class="section-link" onclick="navigate(\'competitions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + strong.slice(0,2).map(renderPredCard).join('') + '</div></div>';
+    if (elite.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--elite);"></div><span class="section-title">Elite Picks</span></div><span class="section-link" onclick="navigate(\'predictions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + elite.slice(0,2).map(renderPredCard).join('') + '</div></div>';
+    if (strong.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--strong);"></div><span class="section-title">Strong Picks</span></div><span class="section-link" onclick="navigate(\'predictions\')">View All</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + strong.slice(0,2).map(renderPredCard).join('') + '</div></div>';
 
     var risky = predictions.filter(function(p){ return p.tier==='moderate'||p.tier==='risky'; });
     if (risky.length > 0) html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);"></div><span class="section-title">Avoid List</span></div></div><div class="card" style="background:var(--risky-dim);border-color:rgba(244,63,94,0.2);">' + risky.slice(0,4).map(function(p){ return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(244,63,94,0.12);cursor:pointer;" onclick="openPredDetail(\'' + p.id + '\')"><span style="font-size:13px;color:var(--text-secondary);">' + p.home + ' vs ' + p.away + '</span><span style="font-size:13px;font-weight:600;color:var(--risky);">' + p.confidence + '%</span></div>'; }).join('') + '</div></div>';
   }
 
-  html += '<div class="section"><div class="section-header"><span class="section-title">All Matches</span><span class="section-link" onclick="navigate(\'competitions\')">Browse</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + matches.slice(0,6).map(renderMatchCard).join('') + '</div></div>';
+  html += '<div class="section"><div class="section-header"><span class="section-title">All Matches</span><span class="section-link" onclick="navigate(\'fixtures\')">Browse</span></div><div style="display:flex;flex-direction:column;gap:10px;">' + matches.slice(0,6).map(renderMatchCard).join('') + '</div></div>';
   html += '<div style="height:20px;"></div></div>';
   return html;
 }
@@ -80,7 +80,7 @@ function renderWorldCupScreen() {
     }
   });
 
-  var html = '<div class="app-header"><div class="header-title" style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">&#127942;</span> World Cup 2026</div></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigate(\'home\')">' + ICONS.chevronLeft + '</button><div class="header-title" style="display:flex;align-items:center;gap:8px;"><span style="font-size:20px;">&#127942;</span> World Cup 2026</div></div>';
 
   html += '<div class="chip-row" id="wc-filter-chips">';
   html += '<div class="chip' + (filter==='all'?' active':'') + '" onclick="setWCFilter(\'all\',this)">All</div>';
@@ -249,11 +249,55 @@ function renderWCStats(games, groups, teams) {
   return html;
 }
 
+function renderPredictionsScreen() {
+  var predictions = Store.getPredictions();
+  var elite = predictions.filter(function(p){ return p.tier === 'elite'; });
+  var strong = predictions.filter(function(p){ return p.tier === 'strong'; });
+  var moderate = predictions.filter(function(p){ return p.tier === 'moderate'; });
+  var risky = predictions.filter(function(p){ return p.tier === 'risky'; });
+
+  var activeFilter = 'all';
+
+  var html = '<div class="app-header"><div class="header-title">Predictions</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
+
+  html += '<div class="chip-row" id="pred-filter-chips">';
+  html += '<div class="chip active" onclick="filterPreds(\'all\',this)">All <span style="opacity:0.6;">(' + predictions.length + ')</span></div>';
+  html += '<div class="chip" onclick="filterPreds(\'elite\',this)"><span style="color:var(--elite);">&#9679;</span> Elite <span style="opacity:0.6;">(' + elite.length + ')</span></div>';
+  html += '<div class="chip" onclick="filterPreds(\'strong\',this)"><span style="color:var(--strong);">&#9679;</span> Strong <span style="opacity:0.6;">(' + strong.length + ')</span></div>';
+  html += '<div class="chip" onclick="filterPreds(\'moderate\',this)"><span style="color:var(--moderate);">&#9679;</span> Moderate <span style="opacity:0.6;">(' + moderate.length + ')</span></div>';
+  html += '<div class="chip" onclick="filterPreds(\'risky\',this)"><span style="color:var(--risky);">&#9679;</span> Risky <span style="opacity:0.6;">(' + risky.length + ')</span></div>';
+  html += '</div>';
+
+  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;" id="pred-list">';
+
+  if (predictions.length === 0) {
+    html += renderEmptyState('predictions','No predictions yet','Check back closer to match time for AI-powered predictions.','Go Home',"navigate('home')");
+  } else {
+    html += '<div style="display:flex;flex-direction:column;gap:10px;">' + predictions.map(renderPredCard).join('') + '</div>';
+  }
+
+  html += '<div style="height:20px;"></div></div>';
+  return html;
+}
+
+function filterPreds(tier, el) {
+  document.querySelectorAll('#pred-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+  var predictions = Store.getPredictions();
+  var filtered = tier === 'all' ? predictions : predictions.filter(function(p){ return p.tier === tier; });
+  var list = document.getElementById('pred-list');
+  if (list) {
+    list.innerHTML = filtered.length === 0
+      ? renderEmptyState('predictions','No ' + tier + ' predictions','Check back later for more predictions.','','')
+      : '<div style="display:flex;flex-direction:column;gap:10px;">' + filtered.map(renderPredCard).join('') + '</div><div style="height:20px;"></div>';
+  }
+}
+
 function renderFixturesScreen() {
   var matches = Store.getMatches();
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Fixtures</div></div>';
-  html += '<div class="chip-row"><div class="chip active">All</div><div class="chip">This Week</div><div class="chip">This Month</div></div>';
-  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
+  var html = '<div class="app-header"><div class="header-title">Fixtures</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
+  html += '<div class="chip-row" id="fixture-filter-chips"><div class="chip active" onclick="filterFixtures(\'all\',this)">All</div><div class="chip" onclick="filterFixtures(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live</div><div class="chip" onclick="filterFixtures(\'upcoming\',this)">Upcoming</div><div class="chip" onclick="filterFixtures(\'finished\',this)">Results</div></div>';
+  html += '<div style="overflow-y:auto;flex:1;padding:0 16px;" id="fixture-list">';
   if (matches.length === 0) {
     html += renderEmptyState('matches','No fixtures','No upcoming matches found.','Go Home',"navigate('home')");
   } else {
@@ -272,6 +316,34 @@ function renderFixturesScreen() {
   }
   html += '<div style="height:20px;"></div></div>';
   return html;
+}
+
+function filterFixtures(status, el) {
+  document.querySelectorAll('#fixture-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+  var matches = Store.getMatches();
+  var filtered = status === 'all' ? matches : matches.filter(function(m){ return m.status === status; });
+  var list = document.getElementById('fixture-list');
+  if (list) {
+    if (filtered.length === 0) {
+      list.innerHTML = renderEmptyState('matches','No matches','No ' + status + ' matches found.','','');
+    } else {
+      var grouped = {};
+      filtered.forEach(function(m) {
+        var key = m.date || 'Other';
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(m);
+      });
+      var h = '';
+      Object.keys(grouped).forEach(function(date) {
+        h += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">' + date + '</div>';
+        h += '<div style="display:flex;flex-direction:column;gap:8px;">';
+        grouped[date].forEach(function(m) { h += renderMatchCard(m); });
+        h += '</div>';
+      });
+      list.innerHTML = h + '<div style="height:20px;"></div>';
+    }
+  }
 }
 
 function renderStatsScreen() {
@@ -349,6 +421,8 @@ function renderProfileScreen() {
   html += '<div style="padding:24px 16px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);"><div style="width:64px;height:64px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--accent);">' + (u.initials || u.name.substring(0,2).toUpperCase()) + '</div><div style="flex:1;"><div style="font-size:18px;font-weight:700;">' + u.name + '</div><div style="font-size:13px;color:var(--text-muted);margin-top:2px;">' + u.plan + ' Plan</div></div><button class="btn btn-sm btn-secondary" onclick="openEditProfile()">Edit</button></div>';
   html += '<div style="padding:20px 16px 0;"><div class="stat-grid"><div class="stat-card"><div class="stat-label">Tracked</div><div class="stat-value">' + u.stats.tracked + '</div></div><div class="stat-card"><div class="stat-label">Accuracy</div><div class="stat-value" style="color:var(--success);">' + u.stats.correctPct + '%</div></div><div class="stat-card"><div class="stat-label">Elite Hit</div><div class="stat-value" style="color:var(--elite);">' + u.stats.eliteHitPct + '%</div></div><div class="stat-card"><div class="stat-label">Streak</div><div class="stat-value" style="color:var(--warning);">' + u.stats.streak + '</div><div class="stat-sub">correct</div></div></div></div>';
   html += '<div style="margin:20px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
+  html += '<div class="list-row" onclick="navigate(\'worldcup\')"><div style="display:flex;align-items:center;gap:12px;"><span style="font-size:18px;">&#127775;</span><div><div style="font-size:14px;font-weight:500;">World Cup 2026</div><div style="font-size:12px;color:var(--text-muted);">Matches, standings, stats</div></div></div>' + ICONS.chevronRight + '</div>';
+  html += '<div class="list-row" onclick="navigate(\'competitions\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.trophy + '<div><div style="font-size:14px;font-weight:500;">Competitions</div><div style="font-size:12px;color:var(--text-muted);">All leagues &amp; matches</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'saved\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.bookmark + '<div><div style="font-size:14px;font-weight:500;">Saved Predictions</div><div style="font-size:12px;color:var(--text-muted);">' + savedCount + ' saved</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'favorites\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.heart + '<div><div style="font-size:14px;font-weight:500;">Favourite Teams</div><div style="font-size:12px;color:var(--text-muted);">' + favTeams.join(', ') + '</div></div></div>' + ICONS.chevronRight + '</div>';
   html += '<div class="list-row" onclick="navigate(\'notifications-screen\')"><div style="display:flex;align-items:center;gap:12px;">' + ICONS.bell + '<div><div style="font-size:14px;font-weight:500;">Notifications</div><div style="font-size:12px;color:var(--text-muted);">' + unreadCount + ' unread</div></div></div>' + ICONS.chevronRight + '</div>';

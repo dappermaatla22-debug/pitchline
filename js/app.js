@@ -30,6 +30,7 @@ function renderScreen(screenId, data) {
     case 'home':                 html = renderHomeScreen(); break;
     case 'competitions':         html = renderCompetitionsScreen(); break;
     case 'worldcup':            html = renderWorldCupScreen(); break;
+    case 'predictions':         html = renderPredictionsScreen(); break;
     case 'news':                 html = renderNewsScreen(); break;
     case 'profile':              html = renderProfileScreen(); break;
     case 'fixtures':             html = renderFixturesScreen(); break;
@@ -212,9 +213,17 @@ function setTodayDate() {
 }
 
 function renderLoadingState() {
-  return '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;"><div style="width:40px;height:40px;border:3px solid var(--bg-elevated);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:16px;"></div><div style="font-size:14px;color:var(--text-muted);">Loading...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+  var skels = '';
+  for (var i = 0; i < 3; i++) {
+    skels += '<div class="skeleton skeleton-card" style="animation-delay:' + (i*80) + 'ms;"></div>';
+  }
+  return '<div style="padding:0 16px;">' +
+    '<div class="skeleton skeleton-live" style="margin-bottom:16px;"></div>' +
+    '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:10px;">Loading matches...</div>' +
+    skels +
+    '</div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
 }
 
 function renderErrorState(msg) {
-  return '<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-title">Something went wrong</div><div class="empty-desc">' + (msg || 'Failed to load data.') + '</div><button class="btn btn-primary" onclick="Store.fetchAllData();navigate(\'home\')">Retry</button></div>';
+  return '<div class="empty-state"><div class="empty-icon" style="background:rgba(244,63,94,0.1);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-title">Something went wrong</div><div class="empty-desc">' + (msg || 'Failed to load data. Check your connection and try again.') + '</div><button class="btn btn-primary" onclick="Store.fetchAllData();navigate(\'home\')">Retry</button></div>';
 }
