@@ -100,7 +100,11 @@ var Store = (function() {
           state.todayMatches = allMatches.filter(function(m) { return m.date === 'Today'; });
           state.tomorrowMatches = allMatches.filter(function(m) { return m.date === 'Tomorrow'; });
           state.weekMatches = allMatches.filter(function(m) { return m.status === 'upcoming'; });
-          state.predictions = API.attachVerdicts(API.generatePredictions(allMatches), allMatches);
+          var existingPreds = state.predictions || [];
+          var newPreds = API.generatePredictions(allMatches);
+          var newIds = newPreds.map(function(p){ return p.id; });
+          var preserved = existingPreds.filter(function(p){ return newIds.indexOf(p.id) === -1; });
+          state.predictions = API.attachVerdicts(preserved.concat(newPreds), allMatches);
           allMatches.forEach(function(m) {
             var pred = state.predictions.find(function(p) { return p.matchId === m.id; });
             if (pred) m.predId = pred.id;
@@ -133,7 +137,11 @@ var Store = (function() {
           state.todayMatches = matches.filter(function(m) { return m.date === 'Today'; });
           state.tomorrowMatches = matches.filter(function(m) { return m.date === 'Tomorrow'; });
           state.weekMatches = matches.filter(function(m) { return m.status === 'upcoming'; });
-          state.predictions = API.attachVerdicts(API.generatePredictions(matches), matches);
+          var existingPreds = state.predictions || [];
+          var newPreds = API.generatePredictions(matches);
+          var newIds = newPreds.map(function(p){ return p.id; });
+          var preserved = existingPreds.filter(function(p){ return newIds.indexOf(p.id) === -1; });
+          state.predictions = API.attachVerdicts(preserved.concat(newPreds), matches);
           matches.forEach(function(m) {
             var pred = state.predictions.find(function(p) { return p.matchId === m.id; });
             if (pred) m.predId = pred.id;

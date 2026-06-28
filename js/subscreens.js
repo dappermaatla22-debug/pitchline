@@ -40,14 +40,22 @@ function renderMatchSummary(match, pred) {
   var isFinished = match.status === 'finished';
 
   var predHtml = pred
-    ? '<div class="card card-accent-left" style="margin-bottom:14px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">AI Prediction</div><div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div></div>'
+    ? '<div class="card card-accent-left" style="margin-bottom:14px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">AI Prediction</div>'
+    + (pred.verdict === 'correct' ? '<div style="background:var(--success);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">✅ CORRECT</div>' : pred.verdict === 'wrong' ? '<div style="background:var(--danger);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">❌ WRONG</div>' : '')
+    + '</div>'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:16px;font-weight:700;">' + pred.outcome + '</div>' + renderConfidenceBadge(pred.tier) + '</div>' + renderScoreRing(pred.confidence, 64) + '</div>'
+    + (pred.verdict ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;"><div><div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;">Actual Result</div><div style="font-size:14px;font-weight:700;">' + (pred.actualScore || '') + ' · ' + (pred.actualResult || '') + '</div></div><button class="btn btn-sm btn-secondary" onclick="shareResult(\'' + pred.id + '\')">' + ICONS.share + ' Share Result</button></div>' : '')
+    + '</div>'
     : '<div class="card" style="margin-bottom:14px;text-align:center;padding:20px;"><div style="color:var(--text-muted);font-size:14px;">No prediction available for this match</div></div>';
 
   var html = predHtml;
 
   html += '<div style="display:flex;gap:10px;margin-bottom:14px;">';
   html += '<button class="btn btn-primary" style="flex:1;" onclick="openPredDetail(\'' + (pred ? pred.id : '') + '\')">' + ICONS.eye + ' View Analysis</button>';
-  html += '<button class="btn btn-secondary" onclick="savePrediction(\'' + (pred ? pred.id : '') + '\')">' + ICONS.bookmark + '</button>';
+  if (!pred || !pred.verdict) {
+    html += '<button class="btn btn-secondary" onclick="savePrediction(\'' + (pred ? pred.id : '') + '\')">' + ICONS.bookmark + '</button>';
+  }
   html += '<button class="btn btn-secondary" onclick="openComparison(\'' + match.home + '\',\'' + match.away + '\')">' + ICONS.compare + '</button>';
   html += '</div>';
 
@@ -286,7 +294,9 @@ function renderMatchDetailScreen(matchId) {
   _matchDetailTab = 'summary';
   _matchDetailId = matchId;
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + match.home + ' vs ' + match.away + '</div><button class="btn-icon" onclick="shareMatch(\'' + matchId + '\')">' + ICONS.share + '</button></div>';
+  var pred = match.predId ? Store.getPredictions().find(function(p){ return p.id === match.predId; }) : null;
+  var headerAction = pred && pred.verdict ? 'shareResult(\'' + pred.id + '\')' : 'shareMatch(\'' + matchId + '\')';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + match.home + ' vs ' + match.away + '</div><button class="btn-icon" onclick="' + headerAction + '">' + ICONS.share + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 

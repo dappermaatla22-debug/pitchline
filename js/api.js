@@ -711,10 +711,19 @@ var API = (function() {
     games.forEach(function(g) { gamesById[g.id] = g; });
     return predictions.map(function(p) {
       var game = gamesById[p.matchId];
-      if (game && game.status === 'finished' && game.homeScore != null) {
-        p.verdict = computeVerdict(p.outcome, game.homeScore, game.awayScore);
-        p.actualScore = game.homeScore + ' - ' + game.awayScore;
-        p.actualResult = parseInt(game.homeScore) > parseInt(game.awayScore) ? 'Home Win' : parseInt(game.homeScore) < parseInt(game.awayScore) ? 'Away Win' : 'Draw';
+      if (game && game.status === 'finished') {
+        var hs = game.homeScore;
+        var as = game.awayScore;
+        if (hs == null && game.score) {
+          var parts = game.score.split('-');
+          hs = parseInt(parts[0].trim());
+          as = parseInt(parts[1].trim());
+        }
+        if (hs != null && as != null && !isNaN(hs) && !isNaN(as)) {
+          p.verdict = computeVerdict(p.outcome, hs, as);
+          p.actualScore = hs + ' - ' + as;
+          p.actualResult = hs > as ? 'Home Win' : hs < as ? 'Away Win' : 'Draw';
+        }
       }
       return p;
     });
