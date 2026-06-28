@@ -5,7 +5,7 @@ var ASSETS = [
   'js/api.js','js/icons.js','js/components.js','js/screens.js',
   'js/subscreens.js','js/onboarding.js','js/app.js',
   'data/mock.js','data/store.js',
-  'icon/pitchline-icon.svg','icon/icon-192.svg'
+  'icon/pitchline-icon.svg','icon/icon-192.svg','icon/icon-192.png','icon/icon-512.png','icon/apple-touch-icon.png'
 ];
 self.addEventListener('install', function(e) {
   e.waitUntil(
