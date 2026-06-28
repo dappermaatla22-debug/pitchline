@@ -665,6 +665,43 @@ var API = (function() {
     });
   }
 
+  // ─── WC Match Detail ───────────────────────────────────────────────────
+  function fetchWCMatchDetail(wcGameId) {
+    var fdId = wcGameId.replace('wc_', '');
+    return fetchProxy('/matches/' + fdId)
+      .then(function(data) {
+        if (!data) return null;
+        var homeTeam = data.homeTeam || {};
+        var awayTeam = data.awayTeam || {};
+        var score = null;
+        if (data.score && data.score.fullTime && data.score.fullTime.home != null) {
+          score = data.score.fullTime.home + ' - ' + data.score.fullTime.away;
+        }
+        var status = 'upcoming';
+        if (data.status === 'FINISHED' || data.status === 'AWARDED') status = 'finished';
+        else if (data.status === 'IN_PLAY' || data.status === 'PAUSED' || data.status === 'HALFTIME') status = 'live';
+        else if (data.status === 'TIMED' || data.status === 'SCHEDULED') status = 'upcoming';
+        return {
+          id: 'wc_' + data.id,
+          home: homeTeam.name || 'TBD',
+          away: awayTeam.name || 'TBD',
+          homeCrest: homeTeam.crest || '',
+          awayCrest: awayTeam.crest || '',
+          score: score,
+          homeScore: data.score && data.score.fullTime ? data.score.fullTime.home : null,
+          awayScore: data.score && data.score.fullTime ? data.score.fullTime.away : null,
+          status: status,
+          homeFormation: data.homeTeamFormation || null,
+          awayFormation: data.awayTeamFormation || null,
+          group: data.group || '',
+          matchday: data.matchday || '',
+          date: data.utcDate || '',
+          referees: (data.referees || []).map(function(r) { return r.name; })
+        };
+      })
+      .catch(function() { return null; });
+  }
+
   // ─── Public API ───────────────────────────────────────────────────────
   return {
     fetchAllMatches: fetchAllMatches,
@@ -676,6 +713,7 @@ var API = (function() {
     fetchStandings: fetchStandings,
     fetchTeam: fetchTeam,
     fetchMatchDetail: fetchMatchDetail,
+    fetchWCMatchDetail: fetchWCMatchDetail,
     generatePredictions: generatePredictions,
     generateWCPredictions: generateWCPredictions,
     getTeamBadge: getTeamBadge,

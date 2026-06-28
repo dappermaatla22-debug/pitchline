@@ -234,17 +234,17 @@ function renderLiveMatchCardWithAnimations(match) {
 
   return '<div class="live-score-card" data-live-card="' + match.id + '" onclick="openMatchDetail(\'' + match.id + '\')">'
     + '<div class="live-card-header">'
-    + '<span class="live-card-league">' + match.league + '</span>'
+    + '<span class="live-card-league">' + (match.leagueFlag || '') + ' ' + match.league + '</span>'
     + '<span class="live-card-time"><span class="live-dot"></span><span data-minute="' + match.id + '">' + minute + "'</span></span>"
     + '</div>'
     + '<div class="live-card-teams">'
     + '<div class="live-card-team">'
     + teamLogo(match.home, match.homeCrest, 32)
-    + '<span class="live-card-name">' + match.home + '</span>'
+    + '<span class="live-card-name" onclick="event.stopPropagation();openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + match.home + '</span>'
     + '</div>'
     + '<div class="live-card-score" data-score="' + match.id + '">' + (match.score || '0 - 0') + '</div>'
     + '<div class="live-card-team live-card-team-right">'
-    + '<span class="live-card-name">' + match.away + '</span>'
+    + '<span class="live-card-name" onclick="event.stopPropagation();openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + match.away + '</span>'
     + teamLogo(match.away, match.awayCrest, 32)
     + '</div>'
     + '</div>'
@@ -692,20 +692,37 @@ function filterDate(val, el) {
   DATE_FILTER = val;
   document.querySelectorAll('#date-chips .date-chip').forEach(function(c){ c.classList.remove('active'); });
   if (el) el.classList.add('active');
-  // Re-render home screen with filtered data
   renderScreen('home');
 }
 
 function getFilteredHomeMatches(matches, predictions) {
   var f = DATE_FILTER;
   if (f === 'today') {
-    return { matches: matches.filter(function(m){ return m.status !== 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date !== 'Tomorrow'; }) };
+    return {
+      matches: matches.filter(function(m){ return m.status !== 'tomorrow'; }),
+      predictions: predictions
+    };
   } else if (f === 'tomorrow') {
-    return { matches: matches.filter(function(m){ return m.status === 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date === 'Tomorrow'; }) };
+    return {
+      matches: matches.filter(function(m){ return m.date === 'Tomorrow'; }),
+      predictions: predictions.filter(function(p){ return p.date === 'Tomorrow'; })
+    };
   } else {
-    var filtered = predictions.filter(function(p){ return p.date && p.date.toLowerCase().indexOf(f) > -1; });
-    var filteredMatches = matches.filter(function(m){ return m.date && m.date.toLowerCase().indexOf(f) > -1; });
-    return { matches: filteredMatches.length ? filteredMatches : matches, predictions: filtered.length ? filtered : predictions };
+    var filtered = predictions.filter(function(p){
+      if (!p.date) return false;
+      var pLower = p.date.toLowerCase();
+      if (pLower.indexOf(f) === 0) return true;
+      if (f.length <= 3 && pLower.indexOf(f) === 0) return true;
+      return false;
+    });
+    var filteredMatches = matches.filter(function(m){
+      if (!m.date) return false;
+      var mLower = m.date.toLowerCase();
+      if (mLower.indexOf(f) === 0) return true;
+      if (f.length <= 3 && mLower.indexOf(f) === 0) return true;
+      return false;
+    });
+    return { matches: filteredMatches.length ? filteredMatches : [], predictions: filtered.length ? filtered : [] };
   }
 }
 

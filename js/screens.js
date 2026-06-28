@@ -19,8 +19,9 @@ function renderHomeScreen() {
   for (var i = 0; i < 7; i++) {
     var d = new Date(todayObj);
     d.setDate(todayObj.getDate() + i - 3);
-    var label = i === 3 ? 'Today' : (i === 4 ? 'Tomorrow' : days[d.getDay()] + ' ' + d.getDate());
-    dateChips += '<div class="date-chip' + (i === 3 ? ' active' : '') + '" onclick="filterDate(\'' + label.toLowerCase() + '\',this)"><div class="date-chip-day">' + days[d.getDay()] + '</div><div class="date-chip-num">' + d.getDate() + '</div><div class="date-chip-month">' + months[d.getMonth()] + '</div></div>';
+    var chipLabel = i === 3 ? 'Today' : (i === 4 ? 'Tomorrow' : days[d.getDay()] + ' ' + d.getDate());
+    var filterVal = i === 3 ? 'today' : (i === 4 ? 'tomorrow' : days[d.getDay()].toLowerCase());
+    dateChips += '<div class="date-chip' + (i === 3 ? ' active' : '') + '" onclick="filterDate(\'' + filterVal + '\',this)"><div class="date-chip-day">' + days[d.getDay()] + '</div><div class="date-chip-num">' + d.getDate() + '</div><div class="date-chip-month">' + months[d.getMonth()] + '</div></div>';
   }
 
   var html = '<div class="app-header"><div class="header-logo">PITCH<span>LINE</span></div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button><button class="btn-icon" onclick="navigate(\'notifications-screen\')" style="position:relative;">' + ICONS.bell + (Store.getUnreadCount() > 0 ? '<span class="notif-badge">' + Store.getUnreadCount() + '</span>' : '') + '</button></div></div>';
@@ -169,12 +170,12 @@ function renderWorldCupScreen() {
 
     if (filter === 'all' && groups.length > 0) {
       html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:16px 0 8px;">Group Standings</div>';
-      groups.slice(0,4).forEach(function(grp) {
+      groups.forEach(function(grp) {
         html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:12px;">';
         html += '<div style="padding:10px 14px;font-size:13px;font-weight:600;border-bottom:1px solid var(--border);">Group ' + (grp.name || '?') + '</div>';
         if (grp.standings) {
           grp.standings.forEach(function(row) {
-            html += '<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);gap:8px;">';
+            html += '<div style="display:flex;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + (row.team || '').replace(/'/g, "\\'") + '\')">';
             html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);width:20px;">' + row.position + '</span>';
             html += '<span style="font-size:13px;font-weight:600;flex:1;">' + row.team + '</span>';
             html += '<span style="font-size:12px;color:var(--text-secondary);">' + (row.played || 0) + '</span>';
@@ -196,25 +197,36 @@ function renderWCMatchCard(game, isLive) {
   var home = game.home || 'TBD';
   var away = game.away || 'TBD';
   var statusColor = isLive ? 'var(--danger)' : game.status === 'finished' ? 'var(--success)' : 'var(--text-muted)';
-  var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : game.date || '';
+  var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : '';
   var homeCrest = game.homeCrest || null;
   var awayCrest = game.awayCrest || null;
+  var formattedDate = '';
+  if (game.date && game.status !== 'finished' && !isLive) {
+    try {
+      var d = new Date(game.date);
+      if (!isNaN(d.getTime())) {
+        var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        formattedDate = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+      }
+    } catch(e) { formattedDate = game.date; }
+  }
   return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
     + teamLogo(home, homeCrest, 28)
-    + '<span class="team-name">' + home + '</span>'
+    + '<span class="team-name" onclick="event.stopPropagation();openTeamProfile(\'' + home.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + home + '</span>'
     + '</div>'
     + '<div style="text-align:center;">'
     + '<span class="vs-badge" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
-    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;">' + statusText + '</div>'
+    + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;">' + (statusText || formattedDate) + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
-    + '<span class="team-name away">' + away + '</span>'
+    + '<span class="team-name away" onclick="event.stopPropagation();openTeamProfile(\'' + away.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + away + '</span>'
     + teamLogo(away, awayCrest, 28)
     + '</div>'
     + '</div>'
-    + '<div class="match-meta"><span class="match-league">Group ' + (game.group || '?') + ' &middot; Matchday ' + (game.matchday || '?') + '</span></div>'
+    + '<div class="match-meta"><span class="match-league">\u26BD World Cup 2026 &middot; Group ' + (game.group || '?') + ' &middot; Matchday ' + (game.matchday || '?') + '</span></div>'
     + '</div>';
 }
 
@@ -250,7 +262,7 @@ function renderWCStats(games, groups, teams) {
     html += '<div style="font-size:14px;font-weight:600;margin-bottom:10px;">Top Scoring Teams</div>';
     html += '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;">';
     sorted.forEach(function(team, i) {
-      html += '<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;">';
+      html += '<div style="display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;cursor:pointer;" onclick="openTeamProfile(\'' + team.replace(/'/g, "\\'") + '\')">';
       html += '<span style="font-size:12px;font-weight:600;color:var(--text-muted);width:20px;">' + (i+1) + '</span>';
       html += teamLogo(team, null, 24);
       html += '<span style="font-size:13px;font-weight:600;flex:1;">' + team + '</span>';

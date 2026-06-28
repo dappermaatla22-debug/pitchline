@@ -107,21 +107,23 @@ function renderMatchCard(match, showPred) {
   var predictions = Store.getPredictions();
   var pred = match.predId ? predictions.find(function(p){ return p.id === match.predId; }) : null;
   var isLive = match.status === 'live';
+  var dateLabel = match.date && match.date !== 'Today' && match.date !== 'Tomorrow' ? match.date : '';
   return '<div class="match-card" onclick="openMatchDetail(\'' + match.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
     + teamLogo(match.home, match.homeCrest, 28)
-    + '<span class="team-name">' + match.home + '</span>'
+    + '<span class="team-name" onclick="event.stopPropagation();openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + match.home + '</span>'
     + '</div>'
     + '<span class="vs-badge">' + (isLive ? match.score : 'VS') + '</span>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
-    + '<span class="team-name away">' + match.away + '</span>'
+    + '<span class="team-name away" onclick="event.stopPropagation();openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')" style="cursor:pointer;">' + match.away + '</span>'
     + teamLogo(match.away, match.awayCrest, 28)
     + '</div>'
     + '</div>'
     + '<div class="match-meta">'
-    + '<span class="match-league">' + match.league + '</span>'
+    + '<span class="match-league" style="cursor:pointer;">' + (match.leagueFlag || '') + ' ' + match.league + '</span>'
     + '<div style="display:flex;align-items:center;gap:8px;">'
+    + (dateLabel ? '<span class="match-time" style="color:var(--text-muted);font-size:11px;">' + dateLabel + '</span>' : '')
     + (isLive ? '<span style="color:var(--danger);font-size:12px;font-weight:600;">\u25cf LIVE ' + (match.minute || '') + '</span>' : '<span class="match-time">' + match.time + '</span>')
     + (pred && showPred ? renderConfidenceBadge(pred.tier) : '')
     + '</div></div></div>';
@@ -132,17 +134,17 @@ function renderLiveMatchCard(match) {
   var pred = match.predId ? predictions.find(function(p){ return p.id === match.predId; }) : null;
   return '<div class="live-score-card" onclick="openMatchDetail(\'' + match.id + '\')">'
     + '<div class="live-card-header">'
-    + '<span class="live-card-league">' + match.league + '</span>'
+    + '<span class="live-card-league">' + (match.leagueFlag || '') + ' ' + match.league + '</span>'
     + '<span class="live-card-time"><span class="live-dot"></span>' + (match.minute || "0'") + '</span>'
     + '</div>'
     + '<div class="live-card-teams">'
     + '<div class="live-card-team">'
     + teamLogo(match.home, match.homeCrest, 36)
-    + '<span class="live-card-name">' + match.home + '</span>'
+    + '<span class="live-card-name" onclick="event.stopPropagation();openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + match.home + '</span>'
     + '</div>'
     + '<div class="live-card-score">' + (match.score || '0 - 0') + '</div>'
     + '<div class="live-card-team live-card-team-right">'
-    + '<span class="live-card-name">' + match.away + '</span>'
+    + '<span class="live-card-name" onclick="event.stopPropagation();openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + match.away + '</span>'
     + teamLogo(match.away, match.awayCrest, 36)
     + '</div>'
     + '</div>'
@@ -152,15 +154,16 @@ function renderLiveMatchCard(match) {
 
 function renderPredCard(pred) {
   var agreeColor = pred.tier === 'elite' ? 'var(--elite)' : pred.tier === 'strong' ? 'var(--strong)' : pred.tier === 'moderate' ? 'var(--moderate)' : 'var(--risky)';
+  var dateLabel = pred.date && pred.date !== 'Today' && pred.date !== 'Tomorrow' ? ' \u00b7 ' + pred.date : '';
   return '<div class="pred-card tier-' + pred.tier + '" onclick="openPredDetail(\'' + pred.id + '\')">'
     + '<div class="pred-card-top">'
     + '<div style="flex:1;margin-right:12px;min-width:0;">'
-    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + pred.league + ' \u00b7 ' + pred.time + '</div>'
+    + '<div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + pred.league + ' \u00b7 ' + pred.time + dateLabel + '</div>'
     + '<div style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:600;">'
     + teamLogo(pred.home, pred.homeCrest, 22)
-    + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + pred.home + '</span>'
+    + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="event.stopPropagation();openTeamProfile(\'' + pred.home.replace(/'/g, "\\'") + '\')">' + pred.home + '</span>'
     + '<span style="color:var(--text-muted);font-weight:400;flex-shrink:0;">vs</span>'
-    + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + pred.away + '</span>'
+    + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;" onclick="event.stopPropagation();openTeamProfile(\'' + pred.away.replace(/'/g, "\\'") + '\')">' + pred.away + '</span>'
     + teamLogo(pred.away, pred.awayCrest, 22)
     + '</div>'
     + '<div class="pred-outcome" style="margin-top:6px;">\u2192 ' + pred.outcome + '</div>'

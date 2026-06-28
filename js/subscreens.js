@@ -48,7 +48,7 @@ function renderMatchSummary(match, pred) {
   html += '<button class="btn btn-secondary" onclick="openComparison(\'' + match.home + '\',\'' + match.away + '\')">' + ICONS.compare + '</button>';
   html += '</div>';
 
-  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + match.home + '</div>' + renderFormGuide((pred && pred.homeForm) ? pred.homeForm : ['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + match.away + '</div>' + renderFormGuide((pred && pred.awayForm) ? pred.awayForm : ['D','W','L','W','W']) + '</div></div></div>';
+  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + match.home + '</div>' + renderFormGuide((pred && pred.homeForm) ? pred.homeForm : ['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + match.away + '</div>' + renderFormGuide((pred && pred.awayForm) ? pred.awayForm : ['D','W','L','W','W']) + '</div></div></div>';
 
   var venue = getVenueInfo(match.id);
   var weather = getWeatherInfo();
@@ -311,11 +311,11 @@ function renderMatchDetailScreen(matchId) {
 
   html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
-  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">' + teamLogo(match.home, match.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.home + '</div></div>';
+  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + match.home.replace(/'/g, "\\'") + '\')">' + teamLogo(match.home, match.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.home + '</div></div>';
   html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (isLive ? match.score : 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE ' + (match.minute || '') + '</span>' : match.time) + '</div></div>';
-  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">' + teamLogo(match.away, match.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.away + '</div></div>';
+  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + match.away.replace(/'/g, "\\'") + '\')">' + teamLogo(match.away, match.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + match.away + '</div></div>';
   html += '</div>';
-  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">' + match.league + '</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">' + match.league + (match.date ? ' \u00b7 ' + match.date : '') + '</div>';
   html += '</div>';
 
   var preview = generateMatchPreview(match.home, match.away, match.league);
@@ -348,7 +348,7 @@ function renderPredDetailScreen(predId) {
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
-  html += '<div style="padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;"><div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">' + pred.league + ' \u00b7 ' + pred.time + '</div><div style="display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px;">' + teamLogo(pred.home, pred.homeCrest, 28) + '<span>' + pred.home + '</span> <span style="color:var(--text-muted);font-weight:400;">vs</span> <span>' + pred.away + '</span>' + teamLogo(pred.away, pred.awayCrest, 28) + '</div>' + renderConfidenceBadge(pred.tier) + '</div>';
+  html += '<div style="padding:20px 0 16px;border-bottom:1px solid var(--border);margin-bottom:16px;"><div style="font-size:13px;color:var(--text-muted);margin-bottom:6px;">' + pred.league + ' \u00b7 ' + pred.time + '</div><div style="display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:-0.5px;margin-bottom:8px;">' + teamLogo(pred.home, pred.homeCrest, 28) + '<span style="cursor:pointer;" onclick="openTeamProfile(\'' + pred.home.replace(/'/g, "\\'") + '\')">' + pred.home + '</span> <span style="color:var(--text-muted);font-weight:400;">vs</span> <span style="cursor:pointer;" onclick="openTeamProfile(\'' + pred.away.replace(/'/g, "\\'") + '\')">' + pred.away + '</span>' + teamLogo(pred.away, pred.awayCrest, 28) + '</div>' + renderConfidenceBadge(pred.tier) + '</div>';
 
   html += '<div class="card" style="margin-bottom:14px;display:flex;align-items:center;gap:20px;">' + renderScoreRing(pred.confidence, 80) + '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Confidence Score</div><div style="font-size:22px;font-weight:700;letter-spacing:-0.5px;">' + pred.outcome + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + confText + '</div></div></div>';
 
@@ -736,12 +736,15 @@ function renderWCSummary(game, pred) {
   html += '<button class="btn btn-secondary" onclick="savePrediction(\'' + (pred ? pred.id : '') + '\')">' + ICONS.bookmark + '</button>';
   html += '</div>';
 
-  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + game.home + '</div>' + renderFormGuide(['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + game.away + '</div>' + renderFormGuide(['D','W','L','W','W']) + '</div></div></div>';
+  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + game.home + '</div>' + renderFormGuide(['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + game.away + '</div>' + renderFormGuide(['D','W','L','W','W']) + '</div></div></div>';
 
   html += '<div class="card" style="margin-bottom:14px;padding:12px 16px;"><div style="font-size:13px;font-weight:600;margin-bottom:10px;">Tournament Info</div><div style="display:flex;gap:16px;flex-wrap:wrap;">';
   html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Competition</div><div style="font-size:13px;font-weight:600;">FIFA World Cup 2026</div></div>';
   html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Group</div><div style="font-size:13px;font-weight:600;">' + (game.group || 'Knockout') + '</div></div>';
   html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Matchday</div><div style="font-size:13px;font-weight:600;">' + (game.matchday || '-') + '</div></div>';
+  if (formattedDate) {
+    html += '<div style="flex:1;min-width:120px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:2px;">Date & Time</div><div style="font-size:13px;font-weight:600;">' + formattedDate + '</div></div>';
+  }
   html += '</div></div>';
 
   var preview = generateMatchPreview(game.home, game.away, 'FIFA World Cup 2026');
@@ -752,9 +755,9 @@ function renderWCSummary(game, pred) {
 }
 
 function renderWCLineups(game) {
-  var formations = ['4-3-3','4-2-3-1','3-5-2','4-4-2','3-4-3','5-3-2'];
-  var homeFormation = formations[Math.abs(hashCode(game.id)) % formations.length];
-  var awayFormation = formations[Math.abs(hashCode(game.id + 'a')) % formations.length];
+  var homeFormation = game.homeFormation || '4-3-3';
+  var awayFormation = game.awayFormation || '4-3-3';
+  var realDetail = game._realDetail || null;
 
   var homePlayers = [
     {num:'1',name:game.home.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:92},
@@ -776,7 +779,7 @@ function renderWCLineups(game) {
   var tc_home = getTeamColor(game.home);
   var tc_away = getTeamColor(game.away);
 
-  var html = '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;">' + game.home + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + homeFormation + '</span></div>';
+  var html = '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + game.home + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + homeFormation + '</span></div>';
   html += '<div class="pitch-container">';
   html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:100%;background:rgba(255,255,255,0.2);position:absolute;"></div></div>';
   html += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);"></div>';
@@ -786,7 +789,7 @@ function renderWCLineups(game) {
   });
   html += '</div></div>';
 
-  html += '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;">' + game.away + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + awayFormation + '</span></div>';
+  html += '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + game.away + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + awayFormation + '</span></div>';
   html += '<div class="pitch-container" style="transform:scaleY(-1);">';
   html += '<div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;"><div style="width:2px;height:100%;background:rgba(255,255,255,0.2);position:absolute;"></div></div>';
   html += '<div style="position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.2);"></div>';
@@ -809,15 +812,18 @@ function renderWCStats(game) {
   var homeGoals = game.homeScore ? parseInt(game.homeScore) : 0;
   var awayGoals = game.awayScore ? parseInt(game.awayScore) : 0;
   var totalGoals = homeGoals + awayGoals;
+  var isFinished = game.status === 'finished';
 
-  var stats = [
-    {label:'Goals Scored',home:String(homeGoals),away:String(awayGoals),homeVal:totalGoals>0?Math.round((homeGoals/totalGoals)*100):50,awayVal:totalGoals>0?Math.round((awayGoals/totalGoals)*100):50},
-    {label:'Possession (est.)',home:'55%',away:'45%',homeVal:55,awayVal:45},
-    {label:'Shots (est.)',home:'12',away:'9',homeVal:57,awayVal:43},
-    {label:'Shots on Target (est.)',home:'5',away:'3',homeVal:63,awayVal:37},
-    {label:'Corners (est.)',home:'6',away:'4',homeVal:60,awayVal:40},
-    {label:'xG (est.)',home:(homeGoals * 0.9 + 0.3).toFixed(2),away:(awayGoals * 0.9 + 0.3).toFixed(2),homeVal:60,awayVal:40}
-  ];
+  var stats;
+  if (isFinished && totalGoals > 0) {
+    stats = [
+      {label:'Goals Scored',home:String(homeGoals),away:String(awayGoals),homeVal:totalGoals>0?Math.round((homeGoals/totalGoals)*100):50,awayVal:totalGoals>0?Math.round((awayGoals/totalGoals)*100):50}
+    ];
+  } else {
+    stats = [
+      {label:'Goals Scored',home:String(homeGoals),away:String(awayGoals),homeVal:totalGoals>0?Math.round((homeGoals/totalGoals)*100):50,awayVal:totalGoals>0?Math.round((awayGoals/totalGoals)*100):50}
+    ];
+  }
 
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Match Statistics</div><div class="card" style="padding:12px 16px;">';
   stats.forEach(function(s) {
@@ -840,6 +846,10 @@ function renderWCStats(game) {
     html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">' + game.away + ' Goals</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + game.awayScorers.replace(/\{|\"|\}/g,'') + '</div></div>';
   }
 
+  if (!isFinished) {
+    html += '<div class="card" style="margin-bottom:14px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);">Detailed statistics will be available during and after the match</div></div>';
+  }
+
   return html;
 }
 
@@ -847,8 +857,8 @@ function renderWCH2H(game) {
   var html = '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Head to Head</div>';
   html += '<div class="card" style="margin-bottom:12px;padding:16px;text-align:center;"><div style="font-size:13px;color:var(--text-muted);line-height:1.6;">Historical head-to-head data between these nations in FIFA World Cup competitions. Previous meetings may include group stage, knockout, and friendly matches.</div></div>';
   html += '<div class="card" style="margin-bottom:12px;padding:16px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Tournament Path</div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);">' + game.home + '</span><span style="font-size:13px;font-weight:600;">Group ' + (game.group || '?') + '</span></div>';
-  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="font-size:13px;color:var(--text-secondary);">' + game.away + '</span><span style="font-size:13px;font-weight:600;">Group ' + (game.group || '?') + '</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);"><span style="font-size:13px;color:var(--text-secondary);cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + game.home + '</span><span style="font-size:13px;font-weight:600;">Group ' + (game.group || '?') + '</span></div>';
+  html += '<div style="display:flex;justify-content:space-between;padding:8px 0;"><span style="font-size:13px;color:var(--text-secondary);cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + game.away + '</span><span style="font-size:13px;font-weight:600;">Group ' + (game.group || '?') + '</span></div>';
   html += '</div></div>';
   html += '<div style="height:16px;"></div>';
   return html;
@@ -866,17 +876,27 @@ function renderWCMatchDetailScreen(wcGameId) {
 
   var pred = (wc.predictions || []).find(function(p){ return p.matchId === wcGameId || p.id === 'wcpred_' + wcGameId; });
 
+  var formattedDate = '';
+  try {
+    var d = new Date(game.date);
+    if (!isNaN(d.getTime())) {
+      var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      formattedDate = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+  } catch(e) { formattedDate = game.date || ''; }
+
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + game.home + ' vs ' + game.away + '</div><button class="btn-icon" onclick="shareMatch(\'' + wcGameId + '\')">' + ICONS.share + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
   html += '<div style="padding:20px 0 16px;text-align:center;border-bottom:1px solid var(--border);margin-bottom:16px;">';
   html += '<div style="display:flex;align-items:center;justify-content:center;gap:20px;">';
-  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">' + teamLogo(game.home, game.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
-  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : (game.date || '')) + '</div></div>';
-  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;">' + teamLogo(game.away, game.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
+  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + teamLogo(game.home, game.homeCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.home + '</div></div>';
+  html += '<div style="text-align:center;"><div style="font-size:28px;font-weight:800;letter-spacing:-2px;color:var(--text-primary);">' + (game.score || 'VS') + '</div><div style="font-size:13px;color:var(--text-secondary);margin-top:4px;">' + (isLive ? '<span style="color:var(--danger);">\u25cf LIVE</span>' : isFinished ? '<span style="color:var(--success);">FT</span>' : formattedDate) + '</div></div>';
+  html += '<div style="text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openTeamProfile(\'' + game.away.replace(/'/g, "\\'") + '\')">' + teamLogo(game.away, game.awayCrest, 48) + '<div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';
   html += '</div>';
-  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">FIFA World Cup 2026 \u00b7 Group ' + (game.group || '?') + ' \u00b7 Matchday ' + (game.matchday || '?') + '</div>';
+  html += '<div style="font-size:13px;color:var(--text-muted);margin-top:8px;">\u26BD FIFA World Cup 2026 \u00b7 ' + (game.group ? 'Group ' + game.group : 'Knockout') + (game.matchday ? ' \u00b7 Matchday ' + game.matchday : '') + (formattedDate ? ' \u00b7 ' + formattedDate : '') + '</div>';
   html += '</div>';
 
   html += '<div style="display:flex;gap:4px;margin-bottom:16px;background:var(--bg-elevated);border-radius:var(--r-md);padding:4px;" id="wc-tabs">';
@@ -891,5 +911,15 @@ function renderWCMatchDetailScreen(wcGameId) {
   html += '</div>';
 
   html += '<div style="height:20px;"></div></div>';
+
+  // Fetch real match detail in background for lineups/stats
+  API.fetchWCMatchDetail(wcGameId).then(function(detail) {
+    if (detail) {
+      game._realDetail = detail;
+      if (detail.homeFormation) game.homeFormation = detail.homeFormation;
+      if (detail.awayFormation) game.awayFormation = detail.awayFormation;
+    }
+  });
+
   return html;
 }
