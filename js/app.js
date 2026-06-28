@@ -203,10 +203,5 @@ function renderLoadingState() {
 }
 
 function renderErrorState(msg) {
-  return '<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-title">Something went wrong</div><div class="empty-desc">' + (msg || 'Failed to load data. Please try again.') + '</div><button class="btn btn-primary" onclick="    Store.fetchAllData();
-    Store.fetchWorldCupData();navigate(\'home\')">Retry</button></div>';
-}
-
-function renderEmptyState(icon, title, desc, btnLabel, btnAction) {
-  return '<div class="empty-state"><div class="empty-icon">' + (ICONS[icon] || '') + '</div><div class="empty-title">' + title + '</div><div class="empty-desc">' + desc + '</div>' + (btnLabel ? '<button class="btn btn-primary" onclick="' + btnAction + '">' + btnLabel + '</button>' : '') + '</div>';
+  return '<div class="empty-state"><div class="empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--risky)" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="empty-title">Something went wrong</div><div class="empty-desc">' + (msg || 'Failed to load data. Please try again.') + '</div><button class="btn btn-primary" onclick="Store.fetchAllData();navigate(\'home\')">Retry</button></div>';
 }
