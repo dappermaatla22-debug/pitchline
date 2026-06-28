@@ -556,6 +556,20 @@ function deleteSaved(id) {
 }
 
 function exportSaved()    { showToast('Export coming soon'); }
+function shareNews(id) {
+  var news = [
+    { id:'n1', title:'Man City eyeing January move for midfield target' },
+    { id:'n2', title:'Champions League predictions updated after draw' },
+    { id:'n3', title:'Key striker doubts for weekend showdown' },
+    { id:'n4', title:'How Arsenal\'s new formation could change the title race' },
+    { id:'n5', title:'Barcelona targeting Premier League defender' },
+    { id:'n6', title:'xG breakdown: Which teams are overperforming?' }
+  ];
+  var article = news.find(function(n){ return n.id === id; });
+  var text = (article ? article.title : 'Pitchline News') + '\n\nCheck out Pitchline for the latest football insights!';
+  if (navigator.share) { navigator.share({title:'Pitchline',text:text}); }
+  else { showToast('Link copied!'); }
+}
 function saveComparison() { showToast('Comparison saved'); }
 function swapTeams()      { showToast('Teams swapped'); }
 function followTeam(name) { Store.addFavTeam(name); showToast(name + ' added to favourites'); }
@@ -621,6 +635,27 @@ function clearAllNotifs() {
 function saveSettings() { showToast('Settings saved'); }
 function resetSettings() { openConfirmModal('Reset settings?','All preferences will be restored to defaults.',function(){ showToast('Settings reset to defaults'); }); }
 function openEditProfile() { showToast('Edit profile coming soon'); }
+var NEWS_FILTER = 'all';
+function filterNews(category, el) {
+  NEWS_FILTER = category;
+  document.querySelectorAll('#news-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderScreen('news');
+}
+var SAVED_FILTER = 'active';
+function filterSaved(type, el) {
+  SAVED_FILTER = type;
+  document.querySelectorAll('#saved-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderScreen('saved');
+}
+var STANDINGS_FILTER = 'overall';
+function filterStandings(type, el) {
+  STANDINGS_FILTER = type;
+  document.querySelectorAll('#standings-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  if (el) el.classList.add('active');
+  renderScreen('standings');
+}
 function signOut() { openConfirmModal('Sign out?','You will be returned to the welcome screen.',function(){ showToast('Signed out'); setTimeout(showOnboarding,400); }); }
 function openAddTeamModal() { openModal('team-select-modal'); }
 

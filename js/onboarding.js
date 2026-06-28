@@ -30,6 +30,9 @@ function hideOnboarding() {
   document.getElementById('onboarding').style.display = 'none';
   document.querySelector('.bottom-nav').style.display = 'flex';
   localStorage.setItem('pitchline-onboarded','1');
+  if (selectedTeams.length > 0) localStorage.setItem('pitchline-favteams', JSON.stringify(selectedTeams));
+  if (selectedLeagues.length > 0) localStorage.setItem('pitchline-fav-leagues', JSON.stringify(selectedLeagues));
+  if (typeof Store !== 'undefined' && Store.notify) Store.notify();
 }
 
 function renderOnboardStep() {

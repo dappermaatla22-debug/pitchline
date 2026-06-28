@@ -72,6 +72,11 @@ function renderHomeScreen() {
 
 function renderCompetitionsScreen() {
   var matches = Store.getMatches();
+  if (typeof COMP_FILTER !== 'undefined' && COMP_FILTER !== 'all') {
+    var leagueMap = { 'PL':'Premier League', 'PD':'La Liga', 'BL1':'Bundesliga', 'SA':'Serie A', 'FL1':'Ligue 1' };
+    var leagueName = leagueMap[COMP_FILTER];
+    if (leagueName) matches = matches.filter(function(m){ return m.league === leagueName || m.league === COMP_FILTER; });
+  }
   var live = matches.filter(function(m){ return m.status === 'live'; });
   var upcoming = matches.filter(function(m){ return m.status === 'upcoming'; });
   var tomorrow = matches.filter(function(m){ return m.status === 'tomorrow'; });
@@ -182,21 +187,23 @@ function renderWorldCupScreen() {
 }
 
 function renderWCMatchCard(game, isLive) {
+  var home = game.home || game.home_team_name_en || 'TBD';
+  var away = game.away || game.away_team_name_en || 'TBD';
   var statusColor = isLive ? 'var(--danger)' : game.status === 'finished' ? 'var(--success)' : 'var(--text-muted)';
-  var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : game.local_date || '';
+  var statusText = isLive ? 'LIVE' : game.status === 'finished' ? 'FT' : game.date || '';
   return '<div class="match-card" onclick="openWCMatchDetail(\'' + game.id + '\')">'
     + '<div class="match-teams">'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">'
-    + teamLogo(game.home_team_name_en, null, 28)
-    + '<span class="team-name">' + game.home_team_name_en + '</span>'
+    + teamLogo(home, null, 28)
+    + '<span class="team-name">' + home + '</span>'
     + '</div>'
     + '<div style="text-align:center;">'
     + '<span class="vs-badge" style="font-size:14px;">' + (game.score || 'vs') + '</span>'
     + '<div style="font-size:11px;color:' + statusColor + ';font-weight:600;margin-top:2px;">' + statusText + '</div>'
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end;">'
-    + '<span class="team-name away">' + game.away_team_name_en + '</span>'
-    + teamLogo(game.away_team_name_en, null, 28)
+    + '<span class="team-name away">' + away + '</span>'
+    + teamLogo(away, null, 28)
     + '</div>'
     + '</div>'
     + '<div class="match-meta"><span class="match-league">Group ' + (game.group || '?') + ' · Matchday ' + (game.matchday || '?') + '</span></div>'
@@ -213,10 +220,10 @@ function renderWCStats(games, groups, teams) {
       var a = parseInt(g.awayScore);
       totalGoals += h + a;
       totalFinished++;
-      if (!teamGoals[g.home_team_name_en]) teamGoals[g.home_team_name_en] = 0;
-      if (!teamGoals[g.away_team_name_en]) teamGoals[g.away_team_name_en] = 0;
-      teamGoals[g.home_team_name_en] += h;
-      teamGoals[g.away_team_name_en] += a;
+      if (!teamGoals[g.home || g.home_team_name_en]) teamGoals[g.home || g.home_team_name_en] = 0;
+      if (!teamGoals[g.away || g.away_team_name_en]) teamGoals[g.away || g.away_team_name_en] = 0;
+      teamGoals[g.home || g.home_team_name_en] += h;
+      teamGoals[g.away || g.away_team_name_en] += a;
     }
   });
   var avgGoals = totalFinished > 0 ? (totalGoals / totalFinished).toFixed(1) : '0.0';
@@ -397,7 +404,7 @@ function renderStatsScreen() {
 
 function renderNewsScreen() {
   var html = '<div class="app-header"><div class="header-title">News</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
-  html += '<div class="chip-row"><div class="chip active">All</div><div class="chip">Transfers</div><div class="chip">Analysis</div><div class="chip">Injuries</div><div class="chip">Tactics</div></div>';
+  html += '<div class="chip-row" id="news-chips"><div class="chip active" onclick="filterNews(\'all\',this)">All</div><div class="chip" onclick="filterNews(\'Transfer\',this)">Transfers</div><div class="chip" onclick="filterNews(\'Analysis\',this)">Analysis</div><div class="chip" onclick="filterNews(\'Injury\',this)">Injuries</div><div class="chip" onclick="filterNews(\'Tactics\',this)">Tactics</div></div>';
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
   var NEWS_DATA = [
@@ -409,7 +416,9 @@ function renderNewsScreen() {
     { id:'n6', category:'Analysis', catColor:'var(--success)', title:'xG breakdown: Which teams are overperforming?', summary:'Our latest expected goals analysis reveals some surprising overperformers across Europe.', time:'12 hrs ago' }
   ];
 
-  NEWS_DATA.forEach(function(article) {
+  var filteredNews = NEWS_FILTER === 'all' ? NEWS_DATA : NEWS_DATA.filter(function(a){ return a.category === NEWS_FILTER; });
+
+  filteredNews.forEach(function(article) {
     html += '<div class="news-card" style="margin-bottom:12px;" onclick="openNewsDetail(\'' + article.id + '\')">';
     html += '<div class="news-card-img" style="background:linear-gradient(135deg,var(--bg-elevated),var(--bg-card));"><span style="font-size:11px;font-weight:600;color:' + article.catColor + ';text-transform:uppercase;letter-spacing:0.5px;">' + article.category + '</span></div>';
     html += '<div style="padding:12px;">';

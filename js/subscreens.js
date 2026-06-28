@@ -48,7 +48,7 @@ function renderMatchSummary(match, pred) {
   html += '<button class="btn btn-secondary" onclick="openComparison(\'' + match.home + '\',\'' + match.away + '\')">' + ICONS.compare + '</button>';
   html += '</div>';
 
-  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + match.home + '</div>' + renderFormGuide(pred ? pred.homeForm : ['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + match.away + '</div>' + renderFormGuide(pred ? pred.awayForm : ['D','W','L','W','W']) + '</div></div></div>';
+  html += '<div style="margin-bottom:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:10px;">Recent Form</div><div style="display:flex;gap:16px;"><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + match.home + '</div>' + renderFormGuide((pred && pred.homeForm) ? pred.homeForm : ['W','W','D','W','L']) + '</div><div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">' + match.away + '</div>' + renderFormGuide((pred && pred.awayForm) ? pred.awayForm : ['D','W','L','W','W']) + '</div></div></div>';
 
   var venue = getVenueInfo(match.id);
   var weather = getWeatherInfo();
@@ -498,7 +498,7 @@ function renderSavedScreen() {
   var saved = Store.getSavedPredictions();
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Saved Predictions</div><button class="btn-icon" onclick="exportSaved()">' + ICONS.download + '</button></div>';
 
-  html += '<div class="chip-row"><div class="chip active">Active</div><div class="chip">Past</div><div class="chip">History</div></div>';
+  html += '<div class="chip-row" id="saved-chips"><div class="chip active" onclick="filterSaved(\'active\',this)">Active</div><div class="chip" onclick="filterSaved(\'past\',this)">Past</div><div class="chip" onclick="filterSaved(\'history\',this)">History</div></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
@@ -612,7 +612,7 @@ function renderNewsDetailScreen(newsId) {
   else if (article.image === 'injury') iconSvg = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="' + article.catColor + '" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>';
   else iconSvg = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="' + article.catColor + '" stroke-width="1.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>';
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Article</div><button class="btn-icon" onclick="sharePred(\'' + newsId + '\')">' + ICONS.share + '</button></div>';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">Article</div><button class="btn-icon" onclick="shareNews(\'' + newsId + '\')">' + ICONS.share + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
@@ -629,7 +629,7 @@ function renderNewsDetailScreen(newsId) {
   });
   html += '</div>';
 
-  html += '<div style="display:flex;gap:10px;margin-top:16px;margin-bottom:20px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'news\')">Back to News</button><button class="btn btn-secondary" onclick="sharePred(\'' + newsId + '\')">' + ICONS.share + '</button></div>';
+  html += '<div style="display:flex;gap:10px;margin-top:16px;margin-bottom:20px;"><button class="btn btn-primary" style="flex:1;" onclick="navigate(\'news\')">Back to News</button><button class="btn btn-secondary" onclick="shareNews(\'' + newsId + '\')">' + ICONS.share + '</button></div>';
 
   html += '<div style="height:20px;"></div></div>';
   return html;
@@ -642,7 +642,7 @@ function renderStandingsScreen(leagueCode) {
 
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + (leagueNames[code] || code) + ' Standings</div></div>';
 
-  html += '<div class="chip-row"><div class="chip active">Overall</div><div class="chip">Home</div><div class="chip">Away</div></div>';
+  html += '<div class="chip-row" id="standings-chips"><div class="chip active" onclick="filterStandings(\'overall\',this)">Overall</div><div class="chip" onclick="filterStandings(\'home\',this)">Home</div><div class="chip" onclick="filterStandings(\'away\',this)">Away</div></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
@@ -707,7 +707,7 @@ function renderWCMatchDetailScreen(wcGameId) {
   } else if (isFinished) {
     html += '<div style="font-size:13px;color:var(--success);margin-top:4px;font-weight:600;">Full Time</div>';
   } else {
-    html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px;">' + game.date + '</div>';
+    html += '<div style="font-size:13px;color:var(--text-muted);margin-top:4px;">' + (game.local_date || game.date || '') + '</div>';
   }
   html += '</div>';
   html += '<div style="text-align:center;flex:1;"><div style="font-size:16px;font-weight:700;">' + game.away + '</div></div>';

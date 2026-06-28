@@ -137,9 +137,13 @@
 <script src="js/onboarding.js"></script>
 <script src="js/app.js"></script>
 <script>
+  var COMP_FILTER = 'all';
   function filterCompetition(code, el) {
+    COMP_FILTER = code;
     document.querySelectorAll('#filter-competitions .chip').forEach(function(c) { c.classList.remove('active'); });
     el.classList.add('active');
+    closeModal('filter-drawer');
+    if (typeof currentScreen !== 'undefined') renderScreen(currentScreen);
   }
 
   function toggleTeamChip(el) { el.classList.toggle('active'); }

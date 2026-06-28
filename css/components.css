@@ -380,9 +380,11 @@
 }
 
 .notif-badge {
-  position:absolute; top:4px; right:4px;
-  width:8px; height:8px; background:var(--accent);
-  border-radius:50%; border:2px solid var(--bg-surface);
+  position:absolute; top:2px; right:2px;
+  min-width:16px; height:16px; padding:0 4px;
+  background:var(--accent); color:#fff;
+  border-radius:var(--r-full); border:2px solid var(--bg-surface);
+  font-size:9px; font-weight:700; line-height:12px; text-align:center;
 }
 
 .tag { display:inline-flex; align-items:center; padding:2px 8px; border-radius:var(--r-full); font-size:11px; font-weight:500; background:var(--bg-elevated); color:var(--text-secondary); border:1px solid var(--border); }
