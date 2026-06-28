@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#121212">
+  <meta name="description" content="High-confidence football predictions powered by multi-model AI">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Pitchline">
+  <title>Pitchline</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon/pitchline-icon.svg">
+  <link rel="apple-touch-icon" href="icon/icon-192.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <main id="main-content" style="flex:1;overflow:hidden;">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:40px;">
+      <svg width="80" height="80" viewBox="0 0 192 192" style="margin-bottom:24px;">
+        <defs><linearGradient id="lbg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#1a1a1a"/><stop offset="100%" style="stop-color:#121212"/></linearGradient><linearGradient id="laccent" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FF4D7D"/><stop offset="100%" style="stop-color:#ff6b90"/></linearGradient></defs>
+        <rect width="192" height="192" rx="40" fill="url(#lbg)"/>
+        <g transform="translate(96,80) scale(0.7)"><circle cx="0" cy="0" r="50" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="2"/><polygon points="0,-22 21,-7 13,18 -13,18 -21,-7" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/></g>
+        <polyline points="30,140 60,115 80,120 105,95 125,100 162,70" fill="none" stroke="url(#laccent)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="162" cy="70" r="5" fill="#FF4D7D"/>
+      </svg>
+      <div style="font-size:24px;font-weight:800;letter-spacing:-0.5px;margin-bottom:8px;">PITCH<span style="color:#FF4D7D;">LINE</span></div>
+      <div style="font-size:14px;color:var(--text-muted);margin-bottom:24px;">Loading matches...</div>
+      <div class="progress-bar" style="width:120px;"><div class="progress-fill" style="width:60%;background:var(--accent);animation:loading-bar 1.5s ease infinite;"></div></div>
+    </div>
+  </main>
+
+  <nav class="bottom-nav" id="bottom-nav" style="display:none;">
+    <div class="nav-item active" data-tab="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+      <span>Home</span>
+    </div>
+    <div class="nav-item" data-tab="competitions">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="7"/><rect x="3" y="14" width="18" height="7"/><path d="M3 10h18M3 17h18"/></svg>
+      <span>Competitions</span>
+    </div>
+    <div class="nav-item" data-tab="worldcup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 000 20M12 2a14.5 14.5 0 010 20M2 12h20"/></svg>
+      <span>World Cup</span>
+    </div>
+    <div class="nav-item" data-tab="profile">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </div>
+  </nav>
+</div>
+
+<div id="onboarding" class="onboarding-screen" style="display:none;"></div>
+
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="confirm-title">Are you sure?</div>
+    <p id="confirm-body" style="font-size:14px;color:var(--text-secondary);margin-bottom:24px;line-height:1.5;"></p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <button class="btn btn-primary btn-full" onclick="confirmAction()">Confirm</button>
+      <button class="btn btn-ghost btn-full" data-close-modal="confirm-modal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="team-select-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Favourite Team</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
+      <div class="chip" onclick="toggleTeamChip(this,'Arsenal')">Arsenal</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Chelsea')">Chelsea</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Liverpool')">Liverpool</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Man City')">Man City</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Real Madrid')">Real Madrid</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Barcelona')">Barcelona</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Bayern Munich')">Bayern Munich</div>
+      <div class="chip" onclick="toggleTeamChip(this,'PSG')">PSG</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Inter Milan')">Inter Milan</div>
+      <div class="chip" onclick="toggleTeamChip(this,'Juventus')">Juventus</div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary btn-full" onclick="addSelectedTeams()">Add Teams</button>
+      <button class="btn btn-ghost" data-close-modal="team-select-modal">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="filter-drawer-overlay"></div>
+<div class="drawer" id="filter-drawer">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div style="font-size:17px;font-weight:600;">Filters</div>
+    <button class="btn-icon" onclick="closeFilterDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div style="margin-bottom:20px;">
+    <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:10px;">Competition</div>
+    <div style="display:flex;flex-direction:column;gap:6px;" id="filter-competitions">
+      <div class="chip active" style="justify-content:flex-start;" onclick="filterCompetition('all',this)">All</div>
+      <div class="chip" style="justify-content:flex-start;" onclick="filterCompetition('PL',this)">&#127467;&#127471; Premier League</div>
+      <div class="chip" style="justify-content:flex-start;" onclick="filterCompetition('PD',this)">&#127466;&#127480; La Liga</div>
+      <div class="chip" style="justify-content:flex-start;" onclick="filterCompetition('BL1',this)">&#127465;&#127466; Bundesliga</div>
+      <div class="chip" style="justify-content:flex-start;" onclick="filterCompetition('SA',this)">&#127470;&#127481; Serie A</div>
+      <div class="chip" style="justify-content:flex-start;" onclick="filterCompetition('FL1',this)">&#127467;&#127479; Ligue 1</div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-full" onclick="closeFilterDrawer();showToast('Filters applied')">Apply</button>
+  <button class="btn btn-ghost btn-full" style="margin-top:8px;" onclick="closeFilterDrawer()">Reset</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<style>
+  @keyframes loading-bar {
+    0% { width: 20%; }
+    50% { width: 80%; }
+    100% { width: 20%; }
+  }
+</style>
+
+<script src="data/mock.js"></script>
+<script src="js/api.js"></script>
+<script src="data/store.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/components.js"></script>
+<script src="js/screens.js"></script>
+<script src="js/subscreens.js"></script>
+<script src="js/onboarding.js"></script>
+<script src="js/app.js"></script>
+<script>
+  function filterCompetition(code, el) {
+    document.querySelectorAll('#filter-competitions .chip').forEach(function(c) { c.classList.remove('active'); });
+    el.classList.add('active');
+  }
+
+  function toggleTeamChip(el) { el.classList.toggle('active'); }
+
+  function addSelectedTeams() {
+    var chips = document.querySelectorAll('#team-select-modal .chip.active');
+    chips.forEach(function(c) {
+      Store.addFavTeam(c.textContent.trim());
+    });
+    closeModal('team-select-modal');
+    showToast('Teams added to favourites');
+    if (typeof currentScreen !== 'undefined' && currentScreen === 'profile') navigate('profile');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initApp();
+  });
+
+  function initApp() {
+    document.getElementById('bottom-nav').style.display = 'flex';
+    navigate('home');
+
+    document.querySelectorAll('.nav-item').forEach(function(el) {
+      el.addEventListener('click', function() { navigate(el.dataset.tab); });
+    });
+
+    document.getElementById('filter-drawer-overlay').addEventListener('click', closeFilterDrawer);
+
+    document.querySelectorAll('[data-close-modal]').forEach(function(el) {
+      el.addEventListener('click', function() { closeModal(el.dataset.closeModal); });
+    });
+
+    Store.fetchAllData();
+
+    setInterval(function() {
+      Store.refreshMatches();
+    }, 60000);
+
+    if (!localStorage.getItem('pitchline-onboarded')) {
+      setTimeout(showOnboarding, 1200);
+    }
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      });
+    }
+  }
+</script>
+</body>
+</html>
