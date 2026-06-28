@@ -318,14 +318,19 @@ function generateShareCard(pred) {
   canvas.height = 720;
   var ctx = canvas.getContext('2d');
 
+  try {
   var grad = ctx.createLinearGradient(0, 0, 720, 720);
   grad.addColorStop(0, '#1a1a2e');
   grad.addColorStop(0.5, '#16213e');
   grad.addColorStop(1, '#0f3460');
   ctx.fillStyle = grad;
-  ctx.beginPath();
-  ctx.roundRect(0, 0, 720, 720, 40);
-  ctx.fill();
+  if (ctx.roundRect) {
+    ctx.beginPath();
+    ctx.roundRect(0, 0, 720, 720, 40);
+    ctx.fill();
+  } else {
+    ctx.fillRect(0, 0, 720, 720);
+  }
 
   ctx.beginPath();
   ctx.arc(600, 100, 120, 0, Math.PI * 2);
@@ -381,6 +386,14 @@ function generateShareCard(pred) {
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
   ctx.font = '12px Inter, sans-serif';
   ctx.fillText('pitchline.app', 40, 680);
+  } catch(e) {
+    ctx.fillStyle = '#1a1a2e';
+    ctx.fillRect(0, 0, 720, 720);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText(pred.home + ' vs ' + pred.away, 40, 360);
+    ctx.fillText(pred.outcome + ' (' + pred.confidence + '%)', 40, 400);
+  }
 
   return canvas;
 }
@@ -390,23 +403,29 @@ function sharePred(predId) {
   if (!pred) pred = Store.getWCPredictions().find(function(p){ return p.id === predId; });
   if (!pred) { showToast('Nothing to share'); return; }
 
-  var canvas = generateShareCard(pred);
-  canvas.toBlob(function(blob) {
-    if (navigator.share && navigator.canShare) {
-      var file = new File([blob], 'pitchline-prediction.png', {type:'image/png'});
-      if (navigator.canShare({files:[file]})) {
-        navigator.share({ files:[file], title:'Pitchline Prediction', text: pred.home + ' vs ' + pred.away + ' \u2014 ' + pred.outcome + ' (' + pred.confidence + '%)' });
-        return;
+  try {
+    var canvas = generateShareCard(pred);
+    canvas.toBlob(function(blob) {
+      if (!blob) { showToast('Failed to generate image'); return; }
+      if (navigator.share && navigator.canShare) {
+        var file = new File([blob], 'pitchline-prediction.png', {type:'image/png'});
+        if (navigator.canShare({files:[file]})) {
+          navigator.share({ files:[file], title:'Pitchline Prediction', text: pred.home + ' vs ' + pred.away + ' — ' + pred.outcome + ' (' + pred.confidence + '%)' });
+          return;
+        }
       }
-    }
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = 'pitchline-' + predId + '.png';
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Prediction card downloaded');
-  });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'pitchline-' + predId + '.png';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Prediction card downloaded');
+    });
+  } catch(e) {
+    console.warn('Share card failed:', e);
+    showToast('Share failed — try again');
+  }
 }
 
 function shareMatch(matchId) {

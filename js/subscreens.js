@@ -929,6 +929,7 @@ function renderWCSummary(game, pred) {
 
   html += '<div style="display:flex;gap:10px;margin-bottom:14px;">';
   html += '<button class="btn btn-primary" style="flex:1;" onclick="openPredDetail(\'' + (pred ? pred.id : '') + '\')">' + ICONS.eye + ' View Analysis</button>';
+  html += '<button class="btn btn-secondary" onclick="sharePred(\'' + (pred ? pred.id : '') + '\')">' + ICONS.share + ' Share</button>';
   html += '<button class="btn btn-secondary" onclick="savePrediction(\'' + (pred ? pred.id : '') + '\')">' + ICONS.bookmark + '</button>';
   html += '</div>';
 
@@ -1290,7 +1291,8 @@ function renderWCMatchDetailScreen(wcGameId) {
     }
   } catch(e) { formattedDate = game.date || ''; }
 
-  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + game.home + ' vs ' + game.away + '</div><button class="btn-icon" onclick="shareMatch(\'' + wcGameId + '\')">' + ICONS.share + '</button></div>';
+  var wcPredId = pred ? pred.id : '';
+  var html = '<div class="app-header"><button class="btn-icon" onclick="navigateBack()">' + ICONS.chevronLeft + '</button><div class="header-title">' + game.home + ' vs ' + game.away + '</div><button class="btn-icon" onclick="' + (wcPredId ? 'sharePred(\'' + wcPredId + '\')' : 'shareMatch(\'' + wcGameId + '\')') + '">' + ICONS.share + '</button></div>';
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;">';
 
