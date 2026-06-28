@@ -980,27 +980,97 @@ function renderWCSummary(game, pred) {
 function renderWCLineups(game) {
   var homeFormation = game.homeFormation || '4-3-3';
   var awayFormation = game.awayFormation || '4-3-3';
+  var realPlayers = game._realPlayers || null;
   var realDetail = game._realDetail || null;
-
-  var homePlayers = [
-    {num:'1',name:game.home.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:92},
-    {num:'2',name:'RB',pos:'RB',x:18,y:78},{num:'4',name:'CB',pos:'CB',x:38,y:80},
-    {num:'5',name:'CB',pos:'CB',x:62,y:80},{num:'3',name:'LB',pos:'LB',x:82,y:78},
-    {num:'6',name:'CDM',pos:'CDM',x:50,y:65},{num:'8',name:'CM',pos:'CM',x:35,y:58},
-    {num:'10',name:'CM',pos:'CM',x:65,y:58},{num:'7',name:'RW',pos:'RW',x:15,y:45},
-    {num:'9',name:'ST',pos:'ST',x:50,y:40},{num:'11',name:'LW',pos:'LW',x:85,y:45}
-  ];
-  var awayPlayers = [
-    {num:'1',name:game.away.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:8},
-    {num:'2',name:'RB',pos:'RB',x:82,y:22},{num:'4',name:'CB',pos:'CB',x:62,y:20},
-    {num:'5',name:'CB',pos:'CB',x:38,y:20},{num:'3',name:'LB',pos:'LB',x:18,y:22},
-    {num:'6',name:'CDM',pos:'CDM',x:50,y:35},{num:'8',name:'CM',pos:'CM',x:35,y:42},
-    {num:'10',name:'CM',pos:'CM',x:65,y:42},{num:'7',name:'RW',pos:'RW',x:85,y:55},
-    {num:'9',name:'ST',pos:'ST',x:50,y:60},{num:'11',name:'LW',pos:'LW',x:15,y:55}
-  ];
 
   var tc_home = getTeamColor(game.home);
   var tc_away = getTeamColor(game.away);
+
+  var posToXY = {
+    'GK':{x:50,y:92},'G':{x:50,y:92},
+    'RB':{x:18,y:78},'LB':{x:82,y:78},
+    'CB':{x:50,y:80},'RCB':{x:38,y:80},'LCB':{x:62,y:80},'CBR':{x:38,y:80},'CBL':{x:62,y:80},
+    'CDM':{x:50,y:65},'DM':{x:50,y:65},
+    'CM':{x:35,y:58},'RM':{x:15,y:58},'LM':{x:85,y:58},'RCM':{x:35,y:58},'LCM':{x:65,y:58},
+    'AM':{x:50,y:48},'CAM':{x:50,y:48},'RW':{x:15,y:45},'LW':{x:85,y:45},
+    'ST':{x:50,y:40},'CF':{x:50,y:40},'SS':{x:50,y:45},
+    'RF':{x:30,y:40},'LF':{x:70,y:40}
+  };
+
+  var posOrder = ['GK','RB','CB','LB','CDM','CM','RW','ST','LW','G','DF','MF','FW'];
+
+  function buildHomePlayers() {
+    if (realPlayers && realPlayers.home && realPlayers.home.length > 0) {
+      var gks = realPlayers.home.filter(function(p){ return p.position === 'GK' || p.positionShort === 'GK' || p.position === 'Goalkeeper'; });
+      var others = realPlayers.home.filter(function(p){ return p.position !== 'GK' && p.positionShort !== 'GK' && p.position !== 'Goalkeeper'; });
+      var sorted = gks.concat(others);
+      var formationParts = homeFormation.split('-').map(function(n){ return parseInt(n); });
+      var posMap = ['GK'];
+      if (formationParts.length >= 3) {
+        posMap.push('RB');
+        for (var i = 0; i < formationParts[0] - 2; i++) posMap.push('CB');
+        posMap.push('LB');
+        var midCount = formationParts[1];
+        for (var j = 0; j < midCount; j++) posMap.push('CM');
+        var fwCount = formationParts[2];
+        if (fwCount === 3) { posMap.push('RW'); posMap.push('ST'); posMap.push('LW'); }
+        else if (fwCount === 2) { posMap.push('ST'); posMap.push('ST'); }
+        else { for (var k = 0; k < fwCount; k++) posMap.push('ST'); }
+      }
+      return sorted.slice(0, 11).map(function(p, idx) {
+        var pos = posMap[idx] || 'CM';
+        var xy = posToXY[pos] || {x:50,y:50};
+        var offset = (idx > 0 && posMap[idx] === posMap[idx-1]) ? ((idx % 2 === 0 ? 1 : -1) * 12) : 0;
+        return {num: String(p.number || (idx+1)), name: p.name || pos, pos: pos, x: Math.max(8, Math.min(92, xy.x + offset)), y: xy.y};
+      });
+    }
+    return [
+      {num:'1',name:game.home.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:92},
+      {num:'2',name:'RB',pos:'RB',x:18,y:78},{num:'4',name:'CB',pos:'CB',x:38,y:80},
+      {num:'5',name:'CB',pos:'CB',x:62,y:80},{num:'3',name:'LB',pos:'LB',x:82,y:78},
+      {num:'6',name:'CDM',pos:'CDM',x:50,y:65},{num:'8',name:'CM',pos:'CM',x:35,y:58},
+      {num:'10',name:'CM',pos:'CM',x:65,y:58},{num:'7',name:'RW',pos:'RW',x:15,y:45},
+      {num:'9',name:'ST',pos:'ST',x:50,y:40},{num:'11',name:'LW',pos:'LW',x:85,y:45}
+    ];
+  }
+
+  function buildAwayPlayers() {
+    if (realPlayers && realPlayers.away && realPlayers.away.length > 0) {
+      var gks = realPlayers.away.filter(function(p){ return p.position === 'GK' || p.positionShort === 'GK' || p.position === 'Goalkeeper'; });
+      var others = realPlayers.away.filter(function(p){ return p.position !== 'GK' && p.positionShort !== 'GK' && p.position !== 'Goalkeeper'; });
+      var sorted = gks.concat(others);
+      var formationParts = awayFormation.split('-').map(function(n){ return parseInt(n); });
+      var posMap = ['GK'];
+      if (formationParts.length >= 3) {
+        posMap.push('RB');
+        for (var i = 0; i < formationParts[0] - 2; i++) posMap.push('CB');
+        posMap.push('LB');
+        var midCount = formationParts[1];
+        for (var j = 0; j < midCount; j++) posMap.push('CM');
+        var fwCount = formationParts[2];
+        if (fwCount === 3) { posMap.push('RW'); posMap.push('ST'); posMap.push('LW'); }
+        else if (fwCount === 2) { posMap.push('ST'); posMap.push('ST'); }
+        else { for (var k = 0; k < fwCount; k++) posMap.push('ST'); }
+      }
+      return sorted.slice(0, 11).map(function(p, idx) {
+        var pos = posMap[idx] || 'CM';
+        var xy = posToXY[pos] || {x:50,y:50};
+        var offset = (idx > 0 && posMap[idx] === posMap[idx-1]) ? ((idx % 2 === 0 ? 1 : -1) * 12) : 0;
+        return {num: String(p.number || (idx+1)), name: p.name || pos, pos: pos, x: Math.max(8, Math.min(92, xy.x + offset)), y: xy.y};
+      });
+    }
+    return [
+      {num:'1',name:game.away.substring(0,3).toUpperCase() + ' GK',pos:'GK',x:50,y:8},
+      {num:'2',name:'RB',pos:'RB',x:82,y:22},{num:'4',name:'CB',pos:'CB',x:62,y:20},
+      {num:'5',name:'CB',pos:'CB',x:38,y:20},{num:'3',name:'LB',pos:'LB',x:18,y:22},
+      {num:'6',name:'CDM',pos:'CDM',x:50,y:35},{num:'8',name:'CM',pos:'CM',x:35,y:42},
+      {num:'10',name:'CM',pos:'CM',x:65,y:42},{num:'7',name:'RW',pos:'RW',x:85,y:55},
+      {num:'9',name:'ST',pos:'ST',x:50,y:60},{num:'11',name:'LW',pos:'LW',x:15,y:55}
+    ];
+  }
+
+  var homePlayers = buildHomePlayers();
+  var awayPlayers = buildAwayPlayers();
 
   var html = '<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:14px;font-weight:600;cursor:pointer;" onclick="openTeamProfile(\'' + game.home.replace(/'/g, "\\'") + '\')">' + game.home + '</div><span style="font-size:12px;color:var(--text-muted);font-weight:600;">' + homeFormation + '</span></div>';
   html += '<div class="pitch-container">';
@@ -1022,11 +1092,26 @@ function renderWCLineups(game) {
   });
   html += '</div></div>';
 
+  var hasReal = realPlayers && realPlayers.home && realPlayers.home.length > 0;
   html += '<div class="card" style="margin-bottom:14px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Bench</div>';
   html += '<div style="display:flex;gap:12px;">';
-  html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.home + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">Sub 1, Sub 2, Sub 3, Sub 4, Sub 5, Sub 6, Sub 7</div></div>';
-  html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.away + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">Sub 1, Sub 2, Sub 3, Sub 4, Sub 5, Sub 6, Sub 7</div></div>';
+  if (hasReal && realPlayers.home.length > 11) {
+    var homeSubs = realPlayers.home.slice(11).map(function(p){ return p.name; });
+    html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.home + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' + homeSubs.join(', ') + '</div></div>';
+  } else {
+    html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.home + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">Lineup pending</div></div>';
+  }
+  if (hasReal && realPlayers.away && realPlayers.away.length > 11) {
+    var awaySubs = realPlayers.away.slice(11).map(function(p){ return p.name; });
+    html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.away + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">' + awaySubs.join(', ') + '</div></div>';
+  } else {
+    html += '<div style="flex:1;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">' + game.away + '</div><div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">Lineup pending</div></div>';
+  }
   html += '</div></div>';
+
+  if (!hasReal) {
+    html += '<div class="card" style="margin-bottom:14px;text-align:center;padding:12px;"><div style="font-size:12px;color:var(--text-muted);">Real lineups will be available before kick-off</div></div>';
+  }
 
   return html;
 }
@@ -1141,6 +1226,22 @@ function renderWCMatchDetailScreen(wcGameId) {
       game._realDetail = detail;
       if (detail.homeFormation) game.homeFormation = detail.homeFormation;
       if (detail.awayFormation) game.awayFormation = detail.awayFormation;
+    }
+  });
+
+  // Fetch real player data from worldcup26.ir for lineups
+  Promise.all([
+    API.fetchWCPlayers(game.home).catch(function() { return []; }),
+    API.fetchWCPlayers(game.away).catch(function() { return []; })
+  ]).then(function(results) {
+    var homePlayers = results[0] || [];
+    var awayPlayers = results[1] || [];
+    if (homePlayers.length > 0 || awayPlayers.length > 0) {
+      game._realPlayers = { home: homePlayers, away: awayPlayers };
+      if (currentScreen === 'wc-match-detail' && _wcDetailTab === 'lineups') {
+        var content = document.getElementById('wc-tab-content');
+        if (content) content.innerHTML = renderWCLineups(game);
+      }
     }
   });
 

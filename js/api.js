@@ -151,6 +151,7 @@ var API = (function() {
       leagueFlag: getLeagueFlag((leagueInfo || {}).code || ''),
       time: ev.date ? formatTime(ev.date) : '',
       date: ev.date ? formatDateLabel(ev.date) : '',
+      rawDate: ev.date || '',
       status: status,
       score: score,
       halfTime: null,
@@ -272,6 +273,7 @@ var API = (function() {
       leagueFlag: getLeagueFlag(comp.code),
       time: formatTime(m.utcDate),
       date: formatDateLabel(m.utcDate),
+      rawDate: m.utcDate || '',
       status: normalizeFDStatus(m.status),
       score: m.score && m.score.fullTime ? ((m.score.fullTime.home != null ? m.score.fullTime.home : 0) + ' - ' + (m.score.fullTime.away != null ? m.score.fullTime.away : 0)) : null,
       halfTime: m.score && m.score.halfTime ? ((m.score.halfTime.home != null ? m.score.halfTime.home : 0) + ' - ' + (m.score.halfTime.away != null ? m.score.halfTime.away : 0)) : null,
@@ -583,6 +585,7 @@ var API = (function() {
             group: m.group || '',
             matchday: m.matchday || '',
             date: m.utcDate || '',
+            rawDate: m.utcDate || '',
             status: status,
             type: m.stage || 'GROUP',
             stadiumId: '',
@@ -626,6 +629,27 @@ var API = (function() {
       status: status, type: g.type || 'group', stadiumId: g.stadium_id || '',
       finished: g.finished === 'TRUE'
     };
+  }
+
+  // ─── WC Player Data (worldcup26.ir) ──────────────────────────────────
+  function fetchWCPlayers(teamName) {
+    return fetchExternal(WC_BASE + '/get/players?team=' + encodeURIComponent(teamName))
+      .then(function(data) {
+        return (data.players || []).map(function(p) {
+          return {
+            name: p.name || p.player_name || '',
+            number: p.shirt_number || p.number || '',
+            position: p.position || '',
+            positionShort: p.position_short || '',
+            captain: p.captain || false,
+            goals: p.goals || 0,
+            assists: p.assists || 0,
+            yellowCards: p.yellow_cards || 0,
+            redCards: p.red_cards || 0
+          };
+        });
+      })
+      .catch(function() { return []; });
   }
 
   // ─── World Cup Predictions ─────────────────────────────────────────────
@@ -724,6 +748,7 @@ var API = (function() {
     fetchWorldCupFromFD: fetchWorldCupFromFD,
     fetchWorldCupGroups: fetchWorldCupGroups,
     fetchWorldCupTeams: fetchWorldCupTeams,
-    fetchWorldCupStadiums: fetchWorldCupStadiums
+    fetchWorldCupStadiums: fetchWorldCupStadiums,
+    fetchWCPlayers: fetchWCPlayers
   };
 })();

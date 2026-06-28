@@ -326,12 +326,24 @@ function renderWCBracket(games) {
   var final_ = games.filter(function(g){ return g.matchday === 'Final' || (g.stage === 'FINAL'); });
 
   if (r16.length === 0 && qf.length === 0 && sf.length === 0 && final_.length === 0) {
-    r16 = games.filter(function(g){ return g.type === 'knockout' || (!g.group && g.status !== 'live'); }).slice(0, 8);
+    r16 = games.filter(function(g){ return !g.group && (g.type === 'knockout' || g.stage); }).slice(0, 8);
     if (r16.length >= 8) {
-      qf = r16.length >= 8 ? [{home:'TBD',away:'TBD',id:'qf1'},{home:'TBD',away:'TBD',id:'qf2'},{home:'TBD',away:'TBD',id:'qf3'},{home:'TBD',away:'TBD',id:'qf4'}] : [];
+      qf = [{home:'TBD',away:'TBD',id:'qf1'},{home:'TBD',away:'TBD',id:'qf2'},{home:'TBD',away:'TBD',id:'qf3'},{home:'TBD',away:'TBD',id:'qf4'}];
       sf = [{home:'TBD',away:'TBD',id:'sf1'},{home:'TBD',away:'TBD',id:'sf2'}];
+      third = [{home:'TBD',away:'TBD',id:'third'}];
       final_ = [{home:'TBD',away:'TBD',id:'final'}];
     }
+  }
+
+  function formatBracketDate(utcStr) {
+    if (!utcStr) return '';
+    try {
+      var d = new Date(utcStr);
+      if (isNaN(d.getTime())) return '';
+      var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    } catch(e) { return ''; }
   }
 
   function bracketTeam(game, side) {
@@ -353,10 +365,16 @@ function renderWCBracket(games) {
 
   function bracketMatch(game) {
     var id = game ? game.id : '';
-    var onclick = id ? 'onclick="openWCMatchDetail(\'' + id + '\')"' : '';
+    var onclick = id && id.indexOf('TBD') === -1 ? 'onclick="openWCMatchDetail(\'' + id + '\')"' : '';
+    var dateStr = game ? formatBracketDate(game.date) : '';
+    var statusBadge = '';
+    if (game && game.status === 'live') statusBadge = '<div style="font-size:9px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:0.5px;">LIVE</div>';
+    else if (game && game.status === 'finished') statusBadge = '<div style="font-size:9px;font-weight:700;color:var(--success);">FT</div>';
+    else if (dateStr) statusBadge = '<div style="font-size:9px;color:var(--text-muted);">' + dateStr + '</div>';
     var html = '<div class="bracket-match" ' + onclick + '>';
     html += bracketTeam(game, 'home');
     html += bracketTeam(game, 'away');
+    if (statusBadge) html += '<div style="padding:2px 10px;text-align:center;border-top:1px solid var(--border);">' + statusBadge + '</div>';
     html += '</div>';
     return html;
   }
@@ -384,6 +402,15 @@ function renderWCBracket(games) {
   html += '</div>';
 
   html += '<div class="bracket-round">';
+  html += '<div class="bracket-round-title">3rd Place</div>';
+  if (third.length > 0) {
+    html += bracketMatch(third[0]);
+  } else {
+    html += bracketMatch(null);
+  }
+  html += '</div>';
+
+  html += '<div class="bracket-round">';
   html += '<div class="bracket-round-title">Final</div>';
   if (final_.length > 0) {
     html += bracketMatch(final_[0]);
@@ -394,7 +421,16 @@ function renderWCBracket(games) {
 
   html += '</div>';
 
-  html += '<div class="card" style="margin-top:16px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">How the Bracket Works</div><div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">48 teams begin in 12 groups. The top 2 from each group plus the 4 best third-placed teams advance to the Round of 16. Knockout matches are decided by extra time and penalties if needed.</div></div>';
+  var finished = games.filter(function(g){ return g.status === 'finished'; });
+  html += '<div class="card" style="margin-top:16px;"><div style="font-size:13px;font-weight:600;margin-bottom:6px;">Tournament Progress</div>';
+  html += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+  html += '<div style="flex:1;text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--accent);">' + r16.length + '</div><div style="font-size:10px;color:var(--text-muted);">R16</div></div>';
+  html += '<div style="flex:1;text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--strong);">' + qf.length + '</div><div style="font-size:10px;color:var(--text-muted);">QF</div></div>';
+  html += '<div style="flex:1;text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--elite);">' + sf.length + '</div><div style="font-size:10px;color:var(--text-muted);">SF</div></div>';
+  html += '<div style="flex:1;text-align:center;"><div style="font-size:18px;font-weight:700;color:var(--warning);">' + final_.length + '</div><div style="font-size:10px;color:var(--text-muted);">Final</div></div>';
+  html += '</div>';
+  html += '<div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">48 teams in 12 groups. Top 2 per group + 4 best 3rd-placed teams advance to Round of 16. Knockouts decided by extra time and penalties if needed.</div>';
+  html += '</div>';
 
   return html;
 }
@@ -445,9 +481,15 @@ function filterPreds(tier, el) {
 
 var FIXTURE_DATE_FILTER = 'all';
 var FIXTURE_LEAGUE_FILTER = 'all';
+var FIXTURE_SELECTED_DATE = null;
 
 function filterFixturesDate(val, el) {
   FIXTURE_DATE_FILTER = val;
+  if (val === 'date-pick') {
+    showFixturesDatePicker();
+    return;
+  }
+  FIXTURE_SELECTED_DATE = null;
   document.querySelectorAll('#fixture-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
   if (el) el.classList.add('active');
   renderFixturesScreen();
@@ -457,6 +499,58 @@ function filterFixturesLeague(val, el) {
   FIXTURE_LEAGUE_FILTER = val;
   document.querySelectorAll('#fixture-league-chips .chip').forEach(function(c){ c.classList.remove('active'); });
   if (el) el.classList.add('active');
+  renderFixturesScreen();
+}
+
+function showFixturesDatePicker() {
+  var overlay = document.getElementById('fixtures-date-picker');
+  if (overlay) overlay.remove();
+  var today = new Date();
+  var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var html = '<div style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:600;display:flex;align-items:flex-end;justify-content:center;" id="fixtures-date-picker" onclick="this.remove()">';
+  html += '<div style="width:100%;max-width:430px;background:var(--bg-surface);border-radius:var(--r-xl) var(--r-xl) 0 0;padding:20px 16px 32px;transform:translateY(0);animation:slideUp 280ms cubic-bezier(0.16,1,0.3,1);" onclick="event.stopPropagation()">';
+  html += '<div style="width:36px;height:4px;background:var(--border-strong);border-radius:var(--r-full);margin:0 auto 16px;"></div>';
+  html += '<div style="font-size:16px;font-weight:600;margin-bottom:14px;">Select Date</div>';
+  html += '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;">';
+
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(today);
+    d.setDate(today.getDate() + i);
+    var dateStr = d.toISOString().split('T')[0];
+    var dayName = days[d.getDay()];
+    var dayNum = d.getDate();
+    var monthName = months[d.getMonth()];
+    var isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    var isSelected = FIXTURE_SELECTED_DATE === dateStr;
+    var label = i === 0 ? 'Today' : (i === 1 ? 'Tomorrow' : dayName);
+    html += '<div class="fixture-cal-day' + (isSelected ? ' selected' : '') + '" onclick="selectFixturesDate(\'' + dateStr + '\')" style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 12px;border-radius:var(--r-md);border:1px solid ' + (isSelected ? 'var(--accent)' : 'var(--border)') + ';background:' + (isSelected ? 'var(--accent-dim)' : 'var(--bg-elevated)') + ';cursor:pointer;min-width:52px;flex-shrink:0;">';
+    html += '<div style="font-size:10px;font-weight:500;color:' + (isSelected ? 'var(--accent)' : 'var(--text-muted)') + ';">' + label + '</div>';
+    html += '<div style="font-size:17px;font-weight:700;color:' + (isSelected ? 'var(--accent)' : 'var(--text-primary)') + ';">' + dayNum + '</div>';
+    html += '<div style="font-size:10px;color:' + (isSelected ? 'var(--accent)' : 'var(--text-muted)') + ';">' + monthName + '</div>';
+    if (isWeekend && !isSelected) html += '<div style="width:4px;height:4px;border-radius:50%;background:var(--accent);opacity:0.5;"></div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '<div style="display:flex;gap:8px;margin-top:14px;"><button class="btn btn-ghost" style="flex:1;" onclick="clearFixturesDate()">Clear</button><button class="btn btn-primary" style="flex:1;" onclick="document.getElementById(\'fixtures-date-picker\').remove();renderFixturesScreen()">Apply</button></div>';
+  html += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+function selectFixturesDate(dateStr) {
+  FIXTURE_SELECTED_DATE = dateStr;
+  FIXTURE_DATE_FILTER = 'date-pick';
+  document.querySelectorAll('#fixture-filter-chips .chip').forEach(function(c){ c.classList.remove('active'); });
+  var dateChip = document.querySelector('#fixture-filter-chips .chip[data-filter="date-pick"]');
+  if (dateChip) dateChip.classList.add('active');
+  document.querySelectorAll('.fixture-cal-day').forEach(function(el){ el.classList.remove('selected'); });
+}
+
+function clearFixturesDate() {
+  FIXTURE_SELECTED_DATE = null;
+  FIXTURE_DATE_FILTER = 'all';
+  var picker = document.getElementById('fixtures-date-picker');
+  if (picker) picker.remove();
   renderFixturesScreen();
 }
 
@@ -470,6 +564,21 @@ function renderFixturesScreen() {
     matches = matches.filter(function(m){ return m.status === 'upcoming'; });
   } else if (df === 'finished') {
     matches = matches.filter(function(m){ return m.status === 'finished'; });
+  } else if (df === 'date-pick' && FIXTURE_SELECTED_DATE) {
+    matches = matches.filter(function(m){
+      if (!m.rawDate && !m.date) return false;
+      try {
+        var matchDate = m.rawDate ? new Date(m.rawDate) : null;
+        if (!matchDate && m.date) {
+          if (m.date === 'Today') matchDate = new Date();
+          else if (m.date === 'Tomorrow') { matchDate = new Date(); matchDate.setDate(matchDate.getDate() + 1); }
+        }
+        if (matchDate) {
+          return matchDate.toISOString().split('T')[0] === FIXTURE_SELECTED_DATE;
+        }
+        return false;
+      } catch(e) { return false; }
+    });
   }
 
   var lf = FIXTURE_LEAGUE_FILTER;
@@ -481,6 +590,16 @@ function renderFixturesScreen() {
   var upcoming = matches.filter(function(m){ return m.status === 'upcoming'; });
   var finished = matches.filter(function(m){ return m.status === 'finished'; });
 
+  var dateLabel = '';
+  if (FIXTURE_SELECTED_DATE && df === 'date-pick') {
+    try {
+      var d = new Date(FIXTURE_SELECTED_DATE + 'T12:00:00');
+      var days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      dateLabel = days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+    } catch(e) { dateLabel = FIXTURE_SELECTED_DATE; }
+  }
+
   var html = '<div class="app-header"><div class="header-title">Fixtures</div><div class="header-actions"><button class="btn-icon" onclick="navigate(\'search\')">' + ICONS.search + '</button></div></div>';
 
   html += '<div class="chip-row" id="fixture-filter-chips">';
@@ -488,6 +607,7 @@ function renderFixturesScreen() {
   html += '<div class="chip' + (df==='live'?' active':'') + '" onclick="filterFixturesDate(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live (' + live.length + ')</div>';
   html += '<div class="chip' + (df==='upcoming'?' active':'') + '" onclick="filterFixturesDate(\'upcoming\',this)">Upcoming (' + upcoming.length + ')</div>';
   html += '<div class="chip' + (df==='finished'?' active':'') + '" onclick="filterFixturesDate(\'finished\',this)">Results (' + finished.length + ')</div>';
+  html += '<div class="chip' + (df==='date-pick'?' active':'') + '" data-filter="date-pick" onclick="filterFixturesDate(\'date-pick\',this)">' + (df === 'date-pick' ? '&#128197; ' + (dateLabel || 'Pick Date') : '&#128197; Pick Date') + '</div>';
   html += '</div>';
 
   html += '<div class="chip-row" id="fixture-league-chips">';
@@ -498,6 +618,10 @@ function renderFixturesScreen() {
   html += '<div class="chip' + (lf==='SA'?' active':'') + '" onclick="filterFixturesLeague(\'SA\',this)">&#127470;&#127481; Serie A</div>';
   html += '<div class="chip' + (lf==='FL1'?' active':'') + '" onclick="filterFixturesLeague(\'FL1\',this)">&#127467;&#127479; Ligue 1</div>';
   html += '</div>';
+
+  if (dateLabel && df === 'date-pick') {
+    html += '<div style="padding:0 16px;margin-bottom:8px;"><div style="font-size:13px;font-weight:600;color:var(--accent);">' + dateLabel + ' \u00b7 ' + matches.length + ' matches</div></div>';
+  }
 
   html += '<div style="overflow-y:auto;flex:1;padding:0 16px;" id="fixture-list">';
   if (matches.length === 0) {
