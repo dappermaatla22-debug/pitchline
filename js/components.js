@@ -18,7 +18,8 @@ var TEAM_COLORS = {
   'Napoli': {bg:'#12A0D7',fg:'#fff',id:113}, 'AS Roma': {bg:'#8E1F2F',fg:'#fff',id:100}, 'Roma': {bg:'#8E1F2F',fg:'#fff',id:100},
   'Lazio': {bg:'#87D8F7',fg:'#000',id:110},
   'Australia': {bg:'#FFCD00',fg:'#000',flag:'au'}, 'Turkey': {bg:'#E30A17',fg:'#fff',flag:'tr'}, 'Qatar': {bg:'#8D1B3D',fg:'#fff',flag:'qa'},
-  'Switzerland': {bg:'#D52B1E',fg:'#fff',flag:'ch'}, 'United States': {bg:'#002868',fg:'#fff',flag:'us'}, 'Germany': {bg:'#000000',fg:'#fff',flag:'de'},
+  'Switzerland': {bg:'#D52B1E',fg:'#fff',flag:'ch'}, 'United States': {bg:'#002868',fg:'#fff',flag:'us'}, 'USA': {bg:'#002868',fg:'#fff',flag:'us'}, 'USMNT': {bg:'#002868',fg:'#fff',flag:'us'},
+  'Germany': {bg:'#000000',fg:'#fff',flag:'de'},
   'Ivory Coast': {bg:'#F77F00',fg:'#000',flag:'ci'}, 'Japan': {bg:'#003087',fg:'#fff',flag:'jp'}, 'Brazil': {bg:'#009739',fg:'#fff',flag:'br'},
   'Argentina': {bg:'#74ACDF',fg:'#fff',flag:'ar'}, 'France': {bg:'#002395',fg:'#fff',flag:'fr'}, 'England': {bg:'#CF081F',fg:'#fff',flag:'gb-eng'},
   'Spain': {bg:'#AA151B',fg:'#fff',flag:'es'}, 'Portugal': {bg:'#006600',fg:'#fff',flag:'pt'}, 'Italy': {bg:'#004B87',fg:'#fff',flag:'it'},
@@ -37,7 +38,7 @@ var TEAM_COLORS = {
   'Algeria': {bg:'#006233',fg:'#fff',flag:'dz'}, 'Nigeria': {bg:'#008751',fg:'#fff',flag:'ng'}, 'Mali': {bg:'#14B53A',fg:'#fff',flag:'ml'},
   'Burkina Faso': {bg:'#009E49',fg:'#fff',flag:'bf'}, 'DR Congo': {bg:'#007FFF',fg:'#fff',flag:'cd'}, 'Guinea': {bg:'#CE1126',fg:'#fff',flag:'gn'},
   'Zambia': {bg:'#198A38',fg:'#fff',flag:'zm'}, 'Cape Verde': {bg:'#003893',fg:'#fff',flag:'cv'}, 'Gabon': {bg:'#009E60',fg:'#fff',flag:'ga'},
-  'Uganda': {bg:'#FCDC04',fg:'#000',flag:'ug'}, 'Iceland': {bg:'#003897',fg:'#fff',flag:'is'},   'Albania': {bg:'#E41E20',fg:'#fff',flag:'al'},
+  'Uganda': {bg:'#FCDC04',fg:'#000',flag:'ug'}, 'Iceland': {bg:'#003897',fg:'#fff',flag:'is'}, 'Albania': {bg:'#E41E20',fg:'#fff',flag:'al'},
   'Ireland': {bg:'#169B62',fg:'#fff',flag:'ie'}, 'Republic of Ireland': {bg:'#169B62',fg:'#fff',flag:'ie'}, 'Bulgaria': {bg:'#00966E',fg:'#fff',flag:'bg'},
   'New Zealand': {bg:'#000000',fg:'#fff',flag:'nz'}, 'Costa Rica': {bg:'#002B7F',fg:'#fff',flag:'cr'},
   'Panama': {bg:'#D2161B',fg:'#fff',flag:'pa'}, 'Jamaica': {bg:'#009B3A',fg:'#000',flag:'jm'},
@@ -46,20 +47,7 @@ var TEAM_COLORS = {
   'Canada Women': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'Haiti': {bg:'#00209F',fg:'#fff',flag:'ht'},
   'Curaçao': {bg:'#00A551',fg:'#fff',flag:'cw'}, 'Suriname': {bg:'#377E3F',fg:'#fff',flag:'sr'},
   'Nicaragua': {bg:'#0067C6',fg:'#fff',flag:'ni'}, 'Bermuda': {bg:'#CF0A2C',fg:'#fff',flag:'bm'},
-  'Guadeloupe': {bg:'#02411C',fg:'#fff',flag:'gp'}, 'Martinique': {bg:'#00653E',fg:'#fff',flag:'mq'},
-  'Canada': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'USA': {bg:'#002868',fg:'#fff',flag:'us'}, 'USMNT': {bg:'#002868',fg:'#fff',flag:'us'},
-  'Saudi Arabia': {bg:'#006C35',fg:'#fff',flag:'sa'}, 'Iran': {bg:'#239F40',fg:'#fff',flag:'ir'},
-  'Japan': {bg:'#003087',fg:'#fff',flag:'jp'}, 'South Korea': {bg:'#003478',fg:'#fff',flag:'kr'},
-  'Australia': {bg:'#FFCD00',fg:'#000',flag:'au'}, 'Qatar': {bg:'#8D1B3D',fg:'#fff',flag:'qa'},
-  'Ghana': {bg:'#CE1126',fg:'#fff',flag:'gh'}, 'Cameroon': {bg:'#007A5E',fg:'#fff',flag:'cm'},
-  'Senegal': {bg:'#00853E',fg:'#fff',flag:'sn'}, 'Tunisia': {bg:'#E70013',fg:'#fff',flag:'tn'},
-  'Morocco': {bg:'#C1272D',fg:'#fff',flag:'ma'}, 'Ecuador': {bg:'#FFD100',fg:'#000',flag:'ec'},
-  'Uruguay': {bg:'#5FC2DA',fg:'#000',flag:'uy'}, 'Serbia': {bg:'#C6363C',fg:'#fff',flag:'rs'},
-  'Croatia': {bg:'#171796',fg:'#fff',flag:'hr'}, 'Poland': {bg:'#DC143C',fg:'#fff',flag:'pl'},
-  'Denmark': {bg:'#C8102E',fg:'#fff',flag:'dk'}, 'Switzerland': {bg:'#D52B1E',fg:'#fff',flag:'ch'},
-  'Netherlands': {bg:'#FF6600',fg:'#fff',flag:'nl'}, 'Belgium': {bg:'#ED2939',fg:'#fff',flag:'be'},
-  'Mexico': {bg:'#006847',fg:'#fff',flag:'mx'}, 'Colombia': {bg:'#FCD116',fg:'#000',flag:'co'},
-  'Peru': {bg:'#D91023',fg:'#fff',flag:'pe'}, 'Chile': {bg:'#D52B1E',fg:'#fff',flag:'cl'}
+  'Guadeloupe': {bg:'#02411C',fg:'#fff',flag:'gp'}, 'Martinique': {bg:'#00653E',fg:'#fff',flag:'mq'}
 };
 
 function getTeamColor(name) {
@@ -92,12 +80,12 @@ function teamLogo(name, crest, size) {
 
   if (url) {
     var badgeId = 'tb_' + name.replace(/\W/g,'') + '_' + size;
-    return '<div id="' + badgeId + '" class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;flex-shrink:0;background:' + tc.bg + ';display:flex;align-items:center;justify-content:center;">'
+    return '<div id="' + badgeId + '" class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;overflow:hidden;flex-shrink:0;background:' + tc.bg + ';display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,0.2);">'
       + '<img src="' + url + '" alt="' + name + '" style="width:100%;height:100%;object-fit:contain;" loading="lazy" onerror="this.style.display=\'none\';var s=this.nextElementSibling;if(s)s.style.display=\'flex\';">'
       + '<span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + ';">' + initials + '</span>'
       + '</div>';
   }
-  return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + ';flex-shrink:0;">' + initials + '</div>';
+  return '<div class="team-badge" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:' + fontSize + 'px;font-weight:700;color:' + tc.fg + ';background:' + tc.bg + ';flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.2);">' + initials + '</div>';
 }
 
 function renderConfidenceBadge(tier) {
@@ -189,7 +177,7 @@ function renderPredCard(pred) {
     + '</div>'
     + '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">'
     + '<div class="pred-outcome">\u2192 ' + pred.outcome + '</div>'
-    + (pred.verdict === 'correct' ? '<span style="background:var(--success);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">✅ CORRECT</span>' : pred.verdict === 'wrong' ? '<span style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">❌ WRONG</span>' : '')
+    + (pred.verdict === 'correct' ? '<span style="background:var(--success);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">\u2705 CORRECT</span>' : pred.verdict === 'wrong' ? '<span style="background:var(--danger);color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;">\u274c WRONG</span>' : '')
     + '</div>'
     + '</div>'
     + '<div style="display:flex;flex-direction:column;align-items:center;gap:6px;">' + renderScoreRing(pred.confidence, 60) + renderConfidenceBadge(pred.tier) + '</div>'
