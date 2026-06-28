@@ -52,7 +52,7 @@ function renderHomeScreen() {
     + '</div>';
 
   if (live.length > 0) {
-    html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">' + (typeof t === 'function' ? t('liveNow') : 'Live Now') + '</span><span style="font-size:12px;font-weight:600;color:var(--danger);background:rgba(244,63,94,0.12);padding:2px 8px;border-radius:var(--r-full);">' + live.length + '</span></div><span class="section-link" onclick="navigate(\'fixtures\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding:0 var(--sp-4) 4px;scroll-snap-type:x mandatory;scrollbar-width:none;">' + live.map(function(m) { return renderLiveMatchCard(m); }).join('') + '</div></div>';
+    html += '<div class="section"><div class="section-header"><div style="display:flex;align-items:center;gap:8px;"><div style="width:8px;height:8px;border-radius:50%;background:var(--danger);animation:pulse 2s infinite;"></div><span class="section-title">' + (typeof t === 'function' ? t('liveNow') : 'Live Now') + '</span><span style="font-size:12px;font-weight:600;color:var(--danger);background:rgba(244,63,94,0.12);padding:2px 8px;border-radius:var(--r-full);">' + live.length + '</span></div><span class="section-link" onclick="navigate(\'fixtures\')">See More</span></div><div style="display:flex;gap:12px;overflow-x:auto;padding:0 var(--sp-4) 4px;scroll-snap-type:x mandatory;scrollbar-width:none;">' + live.map(function(m) { return renderLiveMatchCardWithAnimations(m); }).join('') + '</div></div>';
   }
 
   if (predictions.length === 0 && matches.length === 0) {

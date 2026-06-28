@@ -193,9 +193,15 @@
 
     Store.fetchAllData();
     Store.fetchWorldCupData();
+    startLiveClock();
 
     setInterval(function() {
       Store.refreshMatches().then(function() {
+        // Check for score changes before re-rendering
+        var matches = Store.getMatches();
+        matches.forEach(function(m) {
+          if (m.status === 'live' && m.score) checkScoreChange(m.id, m.score);
+        });
         if (currentScreen === 'home' || currentScreen === 'fixtures') renderScreen(currentScreen);
       });
     }, 30000);

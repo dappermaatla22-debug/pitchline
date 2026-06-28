@@ -136,14 +136,132 @@ function checkScoreChange(matchId, newScore) {
     var el = document.querySelector('[data-score="' + matchId + '"]');
     if (el) {
       el.classList.add('score-bump');
-      setTimeout(function() { el.classList.remove('score-bump'); }, 500);
+      el.classList.add('score-glow');
+      setTimeout(function() { el.classList.remove('score-bump','score-glow'); }, 1500);
     }
+    // Flash the live card
+    var card = document.querySelector('[data-live-card="' + matchId + '"]');
+    if (card) { card.classList.add('live-card-updated'); setTimeout(function(){ card.classList.remove('live-card-updated'); }, 1000); }
     playGoalSound();
     sendNotification('Goal!', 'Score changed to ' + newScore);
+    showGoalFlash(matchId, newScore);
     return true;
   }
   prevScores[matchId] = newScore;
   return false;
+}
+
+// ─── LIVE CLOCK TICKER ──────────────────────────────────────────────────
+var liveClockInterval = null;
+var liveMatchMinutes = {};
+function startLiveClock() {
+  if (liveClockInterval) return;
+  liveClockInterval = setInterval(function() {
+    var matches = Store.getMatches();
+    var live = matches.filter(function(m){ return m.status === 'live'; });
+    live.forEach(function(m) {
+      if (!liveMatchMinutes[m.id]) {
+        liveMatchMinutes[m.id] = parseInt((m.minute || '0').replace("'","")) || 45;
+      }
+      liveMatchMinutes[m.id]++;
+      if (liveMatchMinutes[m.id] > 90) liveMatchMinutes[m.id] = 90;
+      // Update minute display
+      var el = document.querySelector('[data-minute="' + m.id + '"]');
+      if (el) {
+        el.textContent = liveMatchMinutes[m.id] + "'";
+        el.classList.add('live-minute-tick');
+        setTimeout(function(){ el.classList.remove('live-minute-tick'); }, 300);
+      }
+      // Update progress bar
+      var bar = document.querySelector('[data-progress="' + m.id + '"]');
+      if (bar) {
+        bar.style.width = Math.min((liveMatchMinutes[m.id] / 90) * 100, 100) + '%';
+      }
+    });
+  }, 8000); // tick every 8 seconds for realistic feel
+}
+function stopLiveClock() {
+  if (liveClockInterval) { clearInterval(liveClockInterval); liveClockInterval = null; }
+}
+
+// ─── GOAL FLASH OVERLAY ─────────────────────────────────────────────────
+function showGoalFlash(matchId, score) {
+  var matches = Store.getMatches();
+  var match = matches.find(function(m){ return m.id === matchId; });
+  if (!match) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'goal-flash-overlay';
+
+  // Generate particles
+  var particles = '';
+  for (var i = 0; i < 20; i++) {
+    var px = (Math.random() - 0.5) * 300;
+    var py = -(Math.random() * 400 + 100);
+    var size = Math.random() * 6 + 3;
+    var delay = Math.random() * 0.5;
+    particles += '<div class="goal-flash-particle" style="left:50%;top:50%;width:'+size+'px;height:'+size+'px;--px:'+px+'px;--py:'+py+'px;animation-delay:'+delay+'s;"></div>';
+  }
+
+  overlay.innerHTML = '<div class="goal-flash-particles">' + particles + '</div>'
+    + '<div class="goal-flash-text">GOAL!</div>'
+    + '<div class="goal-flash-score">' + score + '</div>'
+    + '<div class="goal-flash-team">' + match.home + ' vs ' + match.away + '</div>';
+
+  document.body.appendChild(overlay);
+  overlay.classList.add('out');
+  setTimeout(function() { overlay.remove(); }, 2500);
+}
+
+// ─── LIVE EVENT TICKER ──────────────────────────────────────────────────
+var LIVE_EVENTS = [
+  'GOAL scored by a fantastic strike!',
+  'Yellow card shown for a late tackle',
+  'Substitution made',
+  'VAR review in progress',
+  'Corner kick awarded',
+  'Free kick in a dangerous position',
+  'Offside flag raised',
+  'Injury stoppage',
+  'Penalty awarded!',
+  'Brilliant save by the goalkeeper'
+];
+function getLiveTickerText(match) {
+  var events = [];
+  events.push('\u26BD ' + match.home + ' ' + (match.score || '0-0') + ' ' + match.away);
+  events.push('\u23F1 ' + (liveMatchMinutes[match.id] || match.minute || '45') + "' - Match in progress");
+  events.push('\u25CF LIVE \u2022 ' + match.league);
+  return events.join('     \u2022     ');
+}
+
+// ─── UPDATE LIVE CARD WITH ANIMATIONS ───────────────────────────────────
+function renderLiveMatchCardWithAnimations(match) {
+  var predictions = Store.getPredictions();
+  var pred = match.predId ? predictions.find(function(p){ return p.id === match.predId; }) : null;
+  var minute = liveMatchMinutes[match.id] || parseInt((match.minute || '0').replace("'","")) || 45;
+  var progressPct = Math.min((minute / 90) * 100, 100);
+  var tickerText = getLiveTickerText(match);
+
+  return '<div class="live-score-card" data-live-card="' + match.id + '" onclick="openMatchDetail(\'' + match.id + '\')">'
+    + '<div class="live-card-header">'
+    + '<span class="live-card-league">' + match.league + '</span>'
+    + '<span class="live-card-time"><span class="live-dot"></span><span data-minute="' + match.id + '">' + minute + "'</span></span>"
+    + '</div>'
+    + '<div class="live-card-teams">'
+    + '<div class="live-card-team">'
+    + teamLogo(match.home, match.homeCrest, 36)
+    + '<span class="live-card-name">' + match.home + '</span>'
+    + '</div>'
+    + '<div class="live-card-score" data-score="' + match.id + '">' + (match.score || '0 - 0') + '</div>'
+    + '<div class="live-card-team live-card-team-right">'
+    + '<span class="live-card-name">' + match.away + '</span>'
+    + teamLogo(match.away, match.awayCrest, 36)
+    + '</div>'
+    + '</div>'
+    + '<div class="match-progress"><div class="match-progress-fill" data-progress="' + match.id + '" style="width:' + progressPct + '%;"></div></div>'
+    + (pred ? '<div class="live-card-pred">' + renderConfidenceBadge(pred.tier) + ' ' + pred.outcome + '</div>' : '<div class="live-card-pred" style="color:rgba(255,255,255,0.4);font-size:11px;">In progress</div>')
+    + '<div class="live-ticker"><span class="live-ticker-inner">' + tickerText + '</span></div>'
+    + '</div>';
 }
 
 // Share prediction card
