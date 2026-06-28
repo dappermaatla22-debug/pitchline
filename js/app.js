@@ -699,11 +699,10 @@ function filterDate(val, el) {
 function getFilteredHomeMatches(matches, predictions) {
   var f = DATE_FILTER;
   if (f === 'today') {
-    return { matches: matches.filter(function(m){ return m.status !== 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date === 'Today'; }) };
+    return { matches: matches.filter(function(m){ return m.status !== 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date !== 'Tomorrow'; }) };
   } else if (f === 'tomorrow') {
     return { matches: matches.filter(function(m){ return m.status === 'tomorrow'; }), predictions: predictions.filter(function(p){ return p.date === 'Tomorrow'; }) };
   } else {
-    // Specific weekday — filter by date string match
     var filtered = predictions.filter(function(p){ return p.date && p.date.toLowerCase().indexOf(f) > -1; });
     var filteredMatches = matches.filter(function(m){ return m.date && m.date.toLowerCase().indexOf(f) > -1; });
     return { matches: filteredMatches.length ? filteredMatches : matches, predictions: filtered.length ? filtered : predictions };

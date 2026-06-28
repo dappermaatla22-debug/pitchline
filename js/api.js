@@ -78,6 +78,15 @@ var API = (function() {
     d.setDate(d.getDate() + 7);
     return d.toISOString().split('T')[0];
   }
+  function getDateRange(days) {
+    var dates = [];
+    for (var i = 0; i < days; i++) {
+      var d = new Date();
+      d.setDate(d.getDate() + i);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  }
 
   // ─── ESPN API (FREE, no key) ──────────────────────────────────────────
   var ESPN_LEAGUES = {
@@ -97,8 +106,10 @@ var API = (function() {
     return fetchExternal(ESPN_BASE + '/' + endpoint);
   }
 
-  function espnFetchLeague(espnLeague) {
-    return espnFetch(espnLeague + '/scoreboard?dates=' + getToday());
+  function espnFetchLeague(espnLeague, date) {
+    var url = espnLeague + '/scoreboard';
+    if (date) url += '?dates=' + date;
+    return espnFetch(url);
   }
 
   function espnNormalizeEvent(ev, leagueInfo) {
@@ -162,7 +173,15 @@ var API = (function() {
     });
     return Promise.all(promises).then(function(results) {
       var all = [];
-      results.forEach(function(r) { all = all.concat(r); });
+      var seen = {};
+      results.forEach(function(r) {
+        r.forEach(function(m) {
+          if (!seen[m.apiId]) {
+            seen[m.apiId] = true;
+            all.push(m);
+          }
+        });
+      });
       return all;
     });
   }
@@ -286,22 +305,50 @@ var API = (function() {
 
   // ─── Multi-source public fetchers ─────────────────────────────────────
   function fetchAllMatches() {
-    return fetchWithFallback([
-      { name: 'ESPN', fetchFn: fetchESPNAll },
-      { name: 'football-data.org', fetchFn: fdFetchAll }
-    ]).catch(function(e) {
-      console.warn('[API] All sources failed for fetchAllMatches:', e);
-      return [];
+    return Promise.all([
+      fetchESPNAll().catch(function(e) { console.warn('[API] ESPN failed:', e); return []; }),
+      fdFetchAll().catch(function(e) { console.warn('[API] football-data.org failed:', e); return []; })
+    ]).then(function(results) {
+      var espnMatches = results[0] || [];
+      var fdMatches = results[1] || [];
+      var merged = [];
+      var seen = {};
+      espnMatches.forEach(function(m) {
+        seen[m.home + '_' + m.away + '_' + m.date] = true;
+        merged.push(m);
+      });
+      fdMatches.forEach(function(m) {
+        var key = m.home + '_' + m.away + '_' + m.date;
+        if (!seen[key]) {
+          seen[key] = true;
+          merged.push(m);
+        }
+      });
+      return merged;
     });
   }
 
   function fetchLiveMatches() {
-    return fetchWithFallback([
-      { name: 'ESPN', fetchFn: fetchESPNLive },
-      { name: 'football-data.org', fetchFn: fdFetchLive }
-    ]).catch(function(e) {
-      console.warn('[API] All sources failed for fetchLiveMatches:', e);
-      return [];
+    return Promise.all([
+      fetchESPNLive().catch(function(e) { console.warn('[API] ESPN live failed:', e); return []; }),
+      fdFetchLive().catch(function(e) { console.warn('[API] football-data.org live failed:', e); return []; })
+    ]).then(function(results) {
+      var espnLive = results[0] || [];
+      var fdLive = results[1] || [];
+      var merged = [];
+      var seen = {};
+      espnLive.forEach(function(m) {
+        seen[m.home + '_' + m.away] = true;
+        merged.push(m);
+      });
+      fdLive.forEach(function(m) {
+        var key = m.home + '_' + m.away;
+        if (!seen[key]) {
+          seen[key] = true;
+          merged.push(m);
+        }
+      });
+      return merged;
     });
   }
 
@@ -310,7 +357,20 @@ var API = (function() {
   }
 
   function fetchTomorrowMatches() {
-    return fetchAllMatches();
+    var leagueKeys = Object.keys(ESPN_LEAGUES);
+    var promises = leagueKeys.map(function(key) {
+      return espnFetchLeague(key).then(function(data) {
+        var events = data.events || [];
+        return events.map(function(ev) {
+          return espnNormalizeEvent(ev, ESPN_LEAGUES[key]);
+        });
+      }).catch(function() { return []; });
+    });
+    return Promise.all(promises).then(function(results) {
+      var all = [];
+      results.forEach(function(r) { all = all.concat(r); });
+      return all;
+    });
   }
 
   function fetchWeekMatches() {
@@ -338,10 +398,14 @@ var API = (function() {
     Object.keys(ESPN_LEAGUES).forEach(function(k) {
       if (ESPN_LEAGUES[k].code === code) espnKey = k;
     });
-    return fetchWithFallback([
-      espnKey ? { name: 'ESPN', fetchFn: function() { return fetchESPNStandings(espnKey); } } : null,
-      { name: 'football-data.org', fetchFn: function() { return fdFetchStandings(code); } }
-    ].filter(Boolean)).catch(function() { return []; });
+    return Promise.all([
+      espnKey ? fetchESPNStandings(espnKey).catch(function() { return []; }) : Promise.resolve([]),
+      fdFetchStandings(code).catch(function() { return []; })
+    ]).then(function(results) {
+      var espnStandings = results[0] || [];
+      var fdStandings = results[1] || [];
+      return espnStandings.length > 0 ? espnStandings : fdStandings;
+    });
   }
 
   function fetchMatchDetail(id) {

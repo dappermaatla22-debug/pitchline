@@ -127,6 +127,7 @@ var Store = (function() {
           state.liveMatches = matches.filter(function(m) { return m.status === 'live'; });
           state.todayMatches = matches.filter(function(m) { return m.date === 'Today'; });
           state.tomorrowMatches = matches.filter(function(m) { return m.date === 'Tomorrow'; });
+          state.weekMatches = matches.filter(function(m) { return m.status === 'upcoming'; });
           state.predictions = API.generatePredictions(matches);
           generateNotifications(matches);
         }

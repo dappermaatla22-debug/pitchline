@@ -6,8 +6,11 @@ function renderHomeScreen() {
   var predictions = filtered.predictions;
   var live = allMatches.filter(function(m){ return m.status === 'live'; });
   var today = allPredictions.filter(function(p){ return p.date === 'Today'; });
-  var elite = today.filter(function(p){ return p.tier === 'elite'; });
-  var strong = today.filter(function(p){ return p.tier === 'strong'; });
+  var upcoming = allPredictions.filter(function(p){ return p.date !== 'Today'; });
+  var elitePreds = allPredictions.filter(function(p){ return p.tier === 'elite'; });
+  var strongPreds = allPredictions.filter(function(p){ return p.tier === 'strong'; });
+  var elite = elitePreds.length > 0 ? elitePreds : today.filter(function(p){ return p.tier === 'elite'; });
+  var strong = strongPreds.length > 0 ? strongPreds : today.filter(function(p){ return p.tier === 'strong'; });
 
   var days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
