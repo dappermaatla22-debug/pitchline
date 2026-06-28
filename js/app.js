@@ -193,14 +193,16 @@ function showGoalFlash(matchId, score) {
   var overlay = document.createElement('div');
   overlay.className = 'goal-flash-overlay';
 
-  // Generate particles
+  // Generate particles — mobile-friendly spread
   var particles = '';
-  for (var i = 0; i < 20; i++) {
-    var px = (Math.random() - 0.5) * 300;
-    var py = -(Math.random() * 400 + 100);
-    var size = Math.random() * 6 + 3;
-    var delay = Math.random() * 0.5;
-    particles += '<div class="goal-flash-particle" style="left:50%;top:50%;width:'+size+'px;height:'+size+'px;--px:'+px+'px;--py:'+py+'px;animation-delay:'+delay+'s;"></div>';
+  for (var i = 0; i < 16; i++) {
+    var angle = (i / 16) * Math.PI * 2;
+    var dist = 80 + Math.random() * 120;
+    var px = Math.cos(angle) * dist;
+    var py = Math.sin(angle) * dist - 40;
+    var size = 3 + Math.random() * 4;
+    var delay = Math.random() * 0.3;
+    particles += '<div class="goal-flash-particle" style="left:50%;top:45%;width:'+size+'px;height:'+size+'px;--px:'+px+'px;--py:'+py+'px;animation-delay:'+delay+'s;"></div>';
   }
 
   overlay.innerHTML = '<div class="goal-flash-particles">' + particles + '</div>'
@@ -209,29 +211,17 @@ function showGoalFlash(matchId, score) {
     + '<div class="goal-flash-team">' + match.home + ' vs ' + match.away + '</div>';
 
   document.body.appendChild(overlay);
-  overlay.classList.add('out');
-  setTimeout(function() { overlay.remove(); }, 2500);
+  setTimeout(function() { overlay.remove(); }, 2600);
 }
 
 // ─── LIVE EVENT TICKER ──────────────────────────────────────────────────
-var LIVE_EVENTS = [
-  'GOAL scored by a fantastic strike!',
-  'Yellow card shown for a late tackle',
-  'Substitution made',
-  'VAR review in progress',
-  'Corner kick awarded',
-  'Free kick in a dangerous position',
-  'Offside flag raised',
-  'Injury stoppage',
-  'Penalty awarded!',
-  'Brilliant save by the goalkeeper'
-];
 function getLiveTickerText(match) {
+  var minute = liveMatchMinutes[match.id] || match.minute || '45';
   var events = [];
   events.push('\u26BD ' + match.home + ' ' + (match.score || '0-0') + ' ' + match.away);
-  events.push('\u23F1 ' + (liveMatchMinutes[match.id] || match.minute || '45') + "' - Match in progress");
-  events.push('\u25CF LIVE \u2022 ' + match.league);
-  return events.join('     \u2022     ');
+  events.push('\u23F1 ' + minute + "' \u2022 " + match.league);
+  events.push('\u25CF LIVE \u2022 ' + match.league + ' \u2022 Matchday ' + (match.matchday || ''));
+  return events.join('         ');
 }
 
 // ─── UPDATE LIVE CARD WITH ANIMATIONS ───────────────────────────────────
@@ -249,17 +239,17 @@ function renderLiveMatchCardWithAnimations(match) {
     + '</div>'
     + '<div class="live-card-teams">'
     + '<div class="live-card-team">'
-    + teamLogo(match.home, match.homeCrest, 36)
+    + teamLogo(match.home, match.homeCrest, 32)
     + '<span class="live-card-name">' + match.home + '</span>'
     + '</div>'
     + '<div class="live-card-score" data-score="' + match.id + '">' + (match.score || '0 - 0') + '</div>'
     + '<div class="live-card-team live-card-team-right">'
     + '<span class="live-card-name">' + match.away + '</span>'
-    + teamLogo(match.away, match.awayCrest, 36)
+    + teamLogo(match.away, match.awayCrest, 32)
     + '</div>'
     + '</div>'
     + '<div class="match-progress"><div class="match-progress-fill" data-progress="' + match.id + '" style="width:' + progressPct + '%;"></div></div>'
-    + (pred ? '<div class="live-card-pred">' + renderConfidenceBadge(pred.tier) + ' ' + pred.outcome + '</div>' : '<div class="live-card-pred" style="color:rgba(255,255,255,0.4);font-size:11px;">In progress</div>')
+    + (pred ? '<div class="live-card-pred">' + renderConfidenceBadge(pred.tier) + ' ' + pred.outcome + '</div>' : '')
     + '<div class="live-ticker"><span class="live-ticker-inner">' + tickerText + '</span></div>'
     + '</div>';
 }
