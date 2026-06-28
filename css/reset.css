@@ -5,7 +5,7 @@ a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; border: none; background: none; }
 input, select, textarea { font-family: inherit; }
 img, svg { display: block; max-width: 100%; }
-svg { flex-shrink: 0; }
+svg { width: 1em; height: 1em; flex-shrink: 0; }
 img[style*="inline"], img.team-logo { display: inline-block; }
 ul, ol { list-style: none; }
 ::-webkit-scrollbar { width: 4px; height: 4px; }

@@ -148,8 +148,25 @@ function renderWorldCupScreen() {
 
   var html = '<div class="app-header"><button class="btn-icon" onclick="navigate(\'home\')">' + ICONS.chevronLeft + '</button><div class="header-title" style="display:flex;align-items:center;gap:8px;justify-content:center;"><span style="font-size:20px;flex-shrink:0;">&#127942;</span> <span>World Cup 2026</span></div><div style="width:40px;flex-shrink:0;"></div></div>';
 
+  var todayGames = games.filter(function(g) {
+    if (g.status === 'live' || g.status === 'finished') {
+      try {
+        var gd = new Date(g.date || g.rawDate || '');
+        var now = new Date();
+        return gd.toDateString() === now.toDateString();
+      } catch(e) { return false; }
+    }
+    return false;
+  });
+  if (todayGames.length === 0) {
+    todayGames = games.filter(function(g) {
+      return (g.status === 'live') || (g.status === 'finished');
+    }).slice(0, 6);
+  }
+
   html += '<div class="chip-row" id="wc-filter-chips">';
   html += '<div class="chip' + (filter==='all'?' active':'') + '" onclick="setWCFilter(\'all\',this)">All</div>';
+  html += '<div class="chip' + (filter==='today'?' active':'') + '" onclick="setWCFilter(\'today\',this)">&#128197; Today (' + todayGames.length + ')</div>';
   html += '<div class="chip' + (filter==='live'?' active':'') + '" onclick="setWCFilter(\'live\',this)"><span style="color:var(--danger);">&#9679;</span> Live (' + liveGames.length + ')</div>';
   html += '<div class="chip' + (filter==='upcoming'?' active':'') + '" onclick="setWCFilter(\'upcoming\',this)">Upcoming (' + upcomingGames.length + ')</div>';
   html += '<div class="chip' + (filter==='finished'?' active':'') + '" onclick="setWCFilter(\'finished\',this)">Results (' + finishedGames.length + ')</div>';
@@ -167,6 +184,30 @@ function renderWorldCupScreen() {
   } else if (filter === 'stats') {
     html += renderWCStats(games, groups, wc.teams || []);
   } else {
+    if (filter === 'today') {
+      if (todayGames.length > 0) {
+        var todayFinished = todayGames.filter(function(g){ return g.status === 'finished'; });
+        var todayLive = todayGames.filter(function(g){ return g.status === 'live'; });
+        var todayUpcoming = todayGames.filter(function(g){ return g.status !== 'finished' && g.status !== 'live'; });
+        if (todayLive.length > 0) {
+          html += '<div style="font-size:12px;font-weight:600;color:var(--danger);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">&#9679; Live Now (' + todayLive.length + ')</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
+          todayLive.forEach(function(g) { html += renderWCMatchCard(g, true); });
+          html += '</div>';
+        }
+        if (todayFinished.length > 0) {
+          html += '<div style="font-size:12px;font-weight:600;color:var(--success);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">&#10003; Results (' + todayFinished.length + ')</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
+          todayFinished.forEach(function(g) { html += renderWCMatchCard(g, false); });
+          html += '</div>';
+        }
+        if (todayUpcoming.length > 0) {
+          html += '<div style="font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">Upcoming (' + todayUpcoming.length + ')</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
+          todayUpcoming.forEach(function(g) { html += renderWCMatchCard(g, false); });
+          html += '</div>';
+        }
+      } else {
+        html += '<div style="text-align:center;padding:40px 20px;"><div style="font-size:14px;color:var(--text-muted);">No World Cup matches today</div></div>';
+      }
+    } else {
     if (filter === 'all' || filter === 'live') {
       if (liveGames.length > 0) {
         html += '<div style="font-size:12px;font-weight:600;color:var(--danger);letter-spacing:0.5px;text-transform:uppercase;margin:12px 0 8px;">&#9679; Live Now (' + liveGames.length + ')</div><div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">';
@@ -226,7 +267,8 @@ function renderWorldCupScreen() {
         html += '</div>';
       });
     }
-  }
+    } // end today/other filter
+  } // end bracket/stats/other else
 
   html += '<div style="height:20px;"></div></div>';
   return html;
@@ -439,6 +481,14 @@ function renderPredictionsScreen() {
   var predictions = Store.getPredictions();
   var wcPreds = Store.getWCPredictions();
   var allPreds = predictions.concat(wcPreds);
+  allPreds.sort(function(a, b) {
+    var da = a.rawDate || a.date || '';
+    var db = b.rawDate || b.date || '';
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    try { return new Date(da) - new Date(db); } catch(e) { return 0; }
+  });
   var elite = allPreds.filter(function(p){ return p.tier === 'elite'; });
   var strong = allPreds.filter(function(p){ return p.tier === 'strong'; });
   var moderate = allPreds.filter(function(p){ return p.tier === 'moderate'; });
@@ -471,6 +521,14 @@ function filterPreds(tier, el) {
   el.classList.add('active');
   var predictions = Store.getPredictions().concat(Store.getWCPredictions());
   var filtered = tier === 'all' ? predictions : predictions.filter(function(p){ return p.tier === tier; });
+  filtered.sort(function(a, b) {
+    var da = a.rawDate || a.date || '';
+    var db = b.rawDate || b.date || '';
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    try { return new Date(da) - new Date(db); } catch(e) { return 0; }
+  });
   var list = document.getElementById('pred-list');
   if (list) {
     list.innerHTML = filtered.length === 0

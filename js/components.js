@@ -46,7 +46,20 @@ var TEAM_COLORS = {
   'Canada Women': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'Haiti': {bg:'#00209F',fg:'#fff',flag:'ht'},
   'Curaçao': {bg:'#00A551',fg:'#fff',flag:'cw'}, 'Suriname': {bg:'#377E3F',fg:'#fff',flag:'sr'},
   'Nicaragua': {bg:'#0067C6',fg:'#fff',flag:'ni'}, 'Bermuda': {bg:'#CF0A2C',fg:'#fff',flag:'bm'},
-  'Guadeloupe': {bg:'#02411C',fg:'#fff',flag:'gp'}, 'Martinique': {bg:'#00653E',fg:'#fff',flag:'mq'}
+  'Guadeloupe': {bg:'#02411C',fg:'#fff',flag:'gp'}, 'Martinique': {bg:'#00653E',fg:'#fff',flag:'mq'},
+  'Canada': {bg:'#FF0000',fg:'#fff',flag:'ca'}, 'USA': {bg:'#002868',fg:'#fff',flag:'us'}, 'USMNT': {bg:'#002868',fg:'#fff',flag:'us'},
+  'Saudi Arabia': {bg:'#006C35',fg:'#fff',flag:'sa'}, 'Iran': {bg:'#239F40',fg:'#fff',flag:'ir'},
+  'Japan': {bg:'#003087',fg:'#fff',flag:'jp'}, 'South Korea': {bg:'#003478',fg:'#fff',flag:'kr'},
+  'Australia': {bg:'#FFCD00',fg:'#000',flag:'au'}, 'Qatar': {bg:'#8D1B3D',fg:'#fff',flag:'qa'},
+  'Ghana': {bg:'#CE1126',fg:'#fff',flag:'gh'}, 'Cameroon': {bg:'#007A5E',fg:'#fff',flag:'cm'},
+  'Senegal': {bg:'#00853E',fg:'#fff',flag:'sn'}, 'Tunisia': {bg:'#E70013',fg:'#fff',flag:'tn'},
+  'Morocco': {bg:'#C1272D',fg:'#fff',flag:'ma'}, 'Ecuador': {bg:'#FFD100',fg:'#000',flag:'ec'},
+  'Uruguay': {bg:'#5FC2DA',fg:'#000',flag:'uy'}, 'Serbia': {bg:'#C6363C',fg:'#fff',flag:'rs'},
+  'Croatia': {bg:'#171796',fg:'#fff',flag:'hr'}, 'Poland': {bg:'#DC143C',fg:'#fff',flag:'pl'},
+  'Denmark': {bg:'#C8102E',fg:'#fff',flag:'dk'}, 'Switzerland': {bg:'#D52B1E',fg:'#fff',flag:'ch'},
+  'Netherlands': {bg:'#FF6600',fg:'#fff',flag:'nl'}, 'Belgium': {bg:'#ED2939',fg:'#fff',flag:'be'},
+  'Mexico': {bg:'#006847',fg:'#fff',flag:'mx'}, 'Colombia': {bg:'#FCD116',fg:'#000',flag:'co'},
+  'Peru': {bg:'#D91023',fg:'#fff',flag:'pe'}, 'Chile': {bg:'#D52B1E',fg:'#fff',flag:'cl'}
 };
 
 function getTeamColor(name) {

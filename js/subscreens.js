@@ -316,9 +316,9 @@ function renderMatchDetailScreen(matchId) {
 
 // ─── Prediction Detail Screen ─────────────────────────────────────────────────
 function renderPredDetailScreen(predId) {
-  var predictions = Store.getPredictions();
+  var predictions = Store.getPredictions().concat(Store.getWCPredictions());
   var pred = predictions.find(function(p){ return p.id === predId; });
-  if (!pred) return renderEmptyState('predictions','Prediction not found','','','');
+  if (!pred) return renderEmptyState('predictions','Prediction not found','','Go Back',"navigateBack()");
   var agreeColor = pred.tier === 'elite' ? 'var(--elite)' : pred.tier === 'strong' ? 'var(--strong)' : 'var(--moderate)';
   var confText = pred.confidence >= 80 ? 'Very high model agreement' : pred.confidence >= 65 ? 'Good model agreement' : 'Moderate agreement';
 

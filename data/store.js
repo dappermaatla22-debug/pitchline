@@ -101,6 +101,10 @@ var Store = (function() {
           state.tomorrowMatches = allMatches.filter(function(m) { return m.date === 'Tomorrow'; });
           state.weekMatches = allMatches.filter(function(m) { return m.status === 'upcoming'; });
           state.predictions = API.generatePredictions(allMatches);
+          allMatches.forEach(function(m) {
+            var pred = state.predictions.find(function(p) { return p.matchId === m.id; });
+            if (pred) m.predId = pred.id;
+          });
 
           var teamNames = [];
           allMatches.forEach(function(m) {
@@ -130,6 +134,10 @@ var Store = (function() {
           state.tomorrowMatches = matches.filter(function(m) { return m.date === 'Tomorrow'; });
           state.weekMatches = matches.filter(function(m) { return m.status === 'upcoming'; });
           state.predictions = API.generatePredictions(matches);
+          matches.forEach(function(m) {
+            var pred = state.predictions.find(function(p) { return p.matchId === m.id; });
+            if (pred) m.predId = pred.id;
+          });
           generateNotifications(matches);
         }
         state.lastFetch = Date.now();
